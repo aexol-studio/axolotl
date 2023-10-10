@@ -1,0 +1,14 @@
+{
+    "files": [],
+    "references": [
+        {
+            "path": "./packages/core"
+        },
+        {
+            "path": "./adapters/stucco"
+        },
+        {
+            "path": "./examples/mailik"
+        },
+    ]
+}

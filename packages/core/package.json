@@ -1,0 +1,16 @@
+{
+  "name": "@jenot/core",
+  "version": "0.0.1",
+  "private": false,
+  "main": "./lib/index.js",
+  "author": "Aexol, Artur Czemiel",
+  "type": "module",
+  "scripts": {
+    "build": "tspc",
+    "start": "tspc --watch",
+    "lint": "tspc && eslint \"./src/**/*.{ts,js}\" --quiet --fix"
+  },
+  "dependencies": {
+    "graphql-js-tree": "^1.0.6"
+  }
+}
