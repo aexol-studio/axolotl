@@ -21,7 +21,7 @@ const beers: Array<{
 
 const resolvers = createResolvers({
   Query: {
-    beers: (input, args) => beers,
+    beers: () => beers,
   },
   Mutation: {
     addBeer: (input, args) => {
@@ -63,6 +63,6 @@ applyMiddleware(
   { Query: { beers: true } },
 );
 
-graphqlYogaAdapter(resolvers as any).listen(4000, () => {
+graphqlYogaAdapter(resolvers).listen(4000, () => {
   console.log('LISTENING');
 });
