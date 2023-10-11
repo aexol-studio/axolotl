@@ -131,3 +131,16 @@ Packages to support integration between different schemas. It means that it shou
 - [] write documentation
 - [] implement e2e testing functionality that takes, query, headers, result and runs the test
 - [] create command to use npx @aexol-studio/axolotl https://github.com/facebook/create-react-app/blob/main/packages/create-react-app/createReactApp.js here is the good example
+
+## Development
+
+To start developing you need to know few things:
+- this is npm workspaces monorepo
+- there is sequential build order for command:
+```sh
+$ npm run build --ws --if-present
+```
+- to run an example execute:
+```sh
+$ npm run start -w beerpub
+```
