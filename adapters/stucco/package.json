@@ -1,5 +1,5 @@
 {
-  "name": "@jenot/stucco",
+  "name": "@aexol-studio/axolotl-stucco",
   "version": "0.0.1",
   "private": false,
   "main": "./lib/index.js",

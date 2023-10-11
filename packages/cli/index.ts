@@ -1,18 +1,17 @@
 import { Command } from 'commander';
-import { generateModels } from '@jenot/core';
+import { generateModels } from '@aexol-studio/axolotl-core';
 
 const program = new Command();
 
 program
-  .name('jenot')
-  .description('CLI for jenot backend framework, type-safe, schema-first, development.')
+  .name('axolotl')
+  .description('CLI for axolotl backend framework, type-safe, schema-first, development.')
   .version('0.0.0');
 
 program
   .command('init')
-  .description('init jenot framework')
+  .description('init axolotl framework')
   .action((str, options) => {
-    process.env.GRAAL_DEV = 'development';
     generateModels({
       schemaPath: './schema.graphql',
       modelsPath: './models.ts',

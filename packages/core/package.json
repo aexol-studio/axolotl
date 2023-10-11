@@ -1,5 +1,5 @@
 {
-  "name": "@jenot/core",
+  "name": "@aexol-studio/axolotl-core",
   "version": "0.0.1",
   "private": false,
   "main": "./lib/index.js",

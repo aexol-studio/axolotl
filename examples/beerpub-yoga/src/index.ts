@@ -4,6 +4,15 @@ import { stuccoAdapter, updateStuccoJson } from '@aexol-studio/axolotl-stucco';
 import { Models } from '@/src/models.js';
 import { readFileSync, writeFileSync } from 'fs';
 import path from 'path';
+import { createSchema, createYoga } from 'graphql-yoga';
+
+const yoga = () => {
+  const schema = createSchema({
+    typeDefs: '',
+    resolvers: {},
+  });
+};
+
 const beerFilePath = path.join(process.cwd(), 'beers.json');
 const beers: Array<{
   name: string;

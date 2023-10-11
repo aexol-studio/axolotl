@@ -1,5 +1,5 @@
 {
-  "name": "@jenot/cli",
+  "name": "@aexol-studio/axolotl",
   "version": "0.0.1",
   "private": false,
   "main": "./lib/index.js",
@@ -11,11 +11,11 @@
     "lint": "tspc && eslint \"./src/**/*.{ts,js}\" --quiet --fix"
   },
   "bin": {
-    "jenot": "lib/index.js"
+    "axolotl": "lib/index.js"
   },
   "dependencies": {
     "commander": "^11.0.0",
-    "@jenot/core": "^0.0.1",
+    "@aexol-studio/axolotl-core": "^0.0.1",
     "graphql-js-tree": "^1.0.6"
   }
 }

@@ -15,7 +15,7 @@ type ResolversUnknown<InputType> = {
 };
 export { generateModels };
 
-export const Jenot = <
+export const Axolotl = <
   Models,
   Inp,
   Resolvers = {
@@ -47,7 +47,7 @@ export const Jenot = <
   const createResolvers = <Z>(k: Z | Resolvers) => k as Z;
 
   if (!production) {
-    // We need to generate models for Jenot to work this is called with CLI but also on every dev run to keep things in sync
+    // We need to generate models for Axolotl to work this is called with CLI but also on every dev run to keep things in sync
     generateModels({ schemaPath, modelsPath });
   }
 
@@ -85,7 +85,7 @@ export const Jenot = <
       throw new Error(`Cannot find resolver for type: "${type}" and field "${field}"`);
     }
     if (typeof fieldResolver !== 'function') {
-      throw new Error('Jenot resolver must be a function');
+      throw new Error('Axolotl resolver must be a function');
     }
     return fieldResolver(input, args);
   };

@@ -1,0 +1,43 @@
+type Beer implements Node{
+	name: String!
+	price: Int!
+	_id: String!
+	createdAt: String!
+}
+
+type Query{
+	beers: [Beer!]
+}
+
+type Mutation{
+	addBeer(
+		beer: CreateBeer!
+	): String
+	deleteBeer(
+		_id: String!
+	): Boolean
+	updateBeer(
+		beer: UpdateBeer!
+		_id: String!
+	): Boolean
+}
+
+input CreateBeer{
+	name: String!
+	price: Int!
+}
+
+interface Node{
+	_id: String!
+	createdAt: String!
+}
+
+input UpdateBeer{
+	name: String
+	price: Int
+}
+
+schema{
+	query: Query
+	mutation: Mutation
+}
