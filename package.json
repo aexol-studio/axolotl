@@ -36,6 +36,7 @@
     "workspaces": [
         "packages/core",
         "adapters/stucco",
+        "adapters/graphql-yoga",
         "packages/cli",
         "examples/beerpub",
         "examples/beerpub-yoga"

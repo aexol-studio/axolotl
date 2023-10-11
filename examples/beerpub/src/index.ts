@@ -1,6 +1,6 @@
 import { FieldResolveInput } from 'stucco-js';
 import { Axolotl } from '@aexol-studio/axolotl-core';
-import { stuccoAdapter, updateStuccoJson } from '@aexol-studio/axolotl-stucco';
+import { stuccoAdapter } from '@aexol-studio/axolotl-stucco';
 import { Models } from '@/src/models.js';
 import { readFileSync, writeFileSync } from 'fs';
 import path from 'path';
@@ -12,9 +12,7 @@ const beers: Array<{
   createdAt: string;
 }> = JSON.parse(readFileSync(beerFilePath, 'utf-8'));
 
-const { applyMiddleware, sendResponse, serve, createResolvers } = Axolotl<Models, FieldResolveInput>({
-  adapter: stuccoAdapter,
-  resolverGenerators: [updateStuccoJson],
+const { applyMiddleware, createResolvers } = Axolotl<Models, FieldResolveInput>({
   modelsPath: './src/models.ts',
   schemaPath: './schema.graphql',
 });
@@ -52,7 +50,7 @@ const resolvers = createResolvers({
   },
 });
 
-export default serve(async (input) => {
+export default async (input: FieldResolveInput) => {
   applyMiddleware(
     resolvers,
     [
@@ -63,5 +61,5 @@ export default serve(async (input) => {
     ],
     { Query: { beers: true } },
   );
-  return sendResponse(input, resolvers);
-});
+  return stuccoAdapter(resolvers)(input);
+};

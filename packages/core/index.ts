@@ -7,12 +7,17 @@ interface CustomHandler<InputType, ArgumentsType = unknown> {
 interface CustomMiddlewareHandler<InputType> {
   (input: InputType): InputType;
 }
-
-type ResolversUnknown<InputType> = {
+export type ResolversUnknown<InputType> = {
   [x: string]: {
     [x: string]: (input: InputType, args?: any) => any | undefined | Promise<any | undefined>;
   };
 };
+
+export const AxolotlAdapter =
+  <Inp>() =>
+  <T>(fn: (passedResolvers: ResolversUnknown<Inp>, production?: boolean) => T) =>
+    fn;
+
 export { generateModels };
 
 export const Axolotl = <
@@ -24,18 +29,11 @@ export const Axolotl = <
     };
   },
 >({
-  adapter,
-  resolverGenerators,
   production,
   schemaPath,
   modelsPath,
 }: {
-  adapter: (inp: Inp) => {
-    type?: string;
-    field?: string;
-    args?: object;
-  };
-  resolverGenerators?: Array<(resolvers: ResolversUnknown<Inp>) => void>;
+  // input is only required for frameworks with external routing
   schemaPath: string;
   modelsPath: string;
   // Instead of controlling developer and production mode by some force envs we allow to control it however you want. Generators don't run on production
@@ -60,44 +58,21 @@ export const Axolotl = <
       };
     },
   ) => {
-    Object.entries(k).map(([key, value]) => {
-      (r as Record<string, Record<string, Handler>>)[key][value as string] = (input: Inp) =>
-        middlewares.reduce((a, b) => {
-          return b(a);
-        }, input);
+    Object.entries(k).forEach(([typeName, fields]) => {
+      Object.keys(fields as Record<string, true>).forEach((fieldName) => {
+        const oldResolver = (r as Record<string, Record<string, Handler>>)[typeName][fieldName];
+        (r as Record<string, Record<string, Handler>>)[typeName][fieldName] = middlewares.reduce((a, b) => {
+          return (input, args) => {
+            const middlewaredInput = b(input);
+            return a(middlewaredInput, args);
+          };
+        }, oldResolver);
+      });
     });
-  };
-
-  const sendResponse = (input: Inp, passedResolvers: Resolvers) => {
-    if (!production) {
-      // If we need to generate some files when resolvers are specified
-      resolverGenerators?.forEach((rg) => rg(passedResolvers as ResolversUnknown<Inp>));
-    }
-    const { field, type, args } = adapter(input);
-    if (!type) return null;
-    if (!field) return null;
-    const typeResolver = passedResolvers[type as keyof Resolvers];
-    if (!typeResolver) {
-      throw new Error(`Cannot find resolver for type: "${type}"`);
-    }
-    const fieldResolver = typeResolver[field as keyof typeof typeResolver];
-    if (!fieldResolver) {
-      throw new Error(`Cannot find resolver for type: "${type}" and field "${field}"`);
-    }
-    if (typeof fieldResolver !== 'function') {
-      throw new Error('Axolotl resolver must be a function');
-    }
-    return fieldResolver(input, args);
-  };
-
-  const serve = (fn: (input: Inp) => Promise<any>) => {
-    return fn;
   };
 
   return {
     createResolvers,
     applyMiddleware,
-    sendResponse,
-    serve,
   };
 };

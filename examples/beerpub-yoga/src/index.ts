@@ -1,19 +1,17 @@
-import { FieldResolveInput } from 'stucco-js';
 import { Axolotl } from '@aexol-studio/axolotl-core';
-import { stuccoAdapter, updateStuccoJson } from '@aexol-studio/axolotl-stucco';
 import { Models } from '@/src/models.js';
 import { readFileSync, writeFileSync } from 'fs';
 import path from 'path';
-import { createSchema, createYoga } from 'graphql-yoga';
+import { YogaInitialContext } from 'graphql-yoga';
+import { graphqlYogaAdapter } from '@aexol-studio/axolotl-graphql-yoga';
 
-const yoga = () => {
-  const schema = createSchema({
-    typeDefs: '',
-    resolvers: {},
-  });
-};
+const { applyMiddleware, createResolvers } = Axolotl<Models, [any, any, YogaInitialContext]>({
+  modelsPath: './src/models.ts',
+  schemaPath: './schema.graphql',
+});
 
 const beerFilePath = path.join(process.cwd(), 'beers.json');
+
 const beers: Array<{
   name: string;
   price: number;
@@ -21,16 +19,9 @@ const beers: Array<{
   createdAt: string;
 }> = JSON.parse(readFileSync(beerFilePath, 'utf-8'));
 
-const { applyMiddleware, sendResponse, serve, createResolvers } = Axolotl<Models, FieldResolveInput>({
-  adapter: stuccoAdapter,
-  resolverGenerators: [updateStuccoJson],
-  modelsPath: './src/models.ts',
-  schemaPath: './schema.graphql',
-});
-
 const resolvers = createResolvers({
   Query: {
-    beers: () => beers,
+    beers: (input, args) => beers,
   },
   Mutation: {
     addBeer: (input, args) => {
@@ -61,16 +52,17 @@ const resolvers = createResolvers({
   },
 });
 
-export default serve(async (input) => {
-  applyMiddleware(
-    resolvers,
-    [
-      (input) => {
-        console.log('DUPA');
-        return input;
-      },
-    ],
-    { Query: { beers: true } },
-  );
-  return sendResponse(input, resolvers);
+applyMiddleware(
+  resolvers,
+  [
+    (input) => {
+      console.log('DUPA');
+      return input;
+    },
+  ],
+  { Query: { beers: true } },
+);
+
+graphqlYogaAdapter(resolvers as any).listen(4000, () => {
+  console.log('LISTENING');
 });

@@ -5,7 +5,7 @@
     "main": "lib/index.js",
     "type": "module",
     "scripts": {
-        "start": "gecli dev",
+        "start": "node lib/index.js",
         "build": "tsc",
         "watch": "tsc --watch",
         "update": "gecli codegen models && gecli schema && gecli codegen typings"

@@ -35,11 +35,10 @@ Then write your index.ts file.
 ```ts
 import { FieldResolveInput } from 'stucco-js';
 import { Axolotl } from '@aexol-studio/axolotl-core';
-import { stuccoAdapter, updateStuccoJson } from '@aexol-studio/axolotl-stucco';
+import { stuccoAdapter } from '@aexol-studio/axolotl-stucco';
 import { Models } from '@/src/models.js';
 import { readFileSync, writeFileSync } from 'fs';
 import path from 'path';
-
 const beerFilePath = path.join(process.cwd(), 'beers.json');
 const beers: Array<{
   name: string;
@@ -48,9 +47,7 @@ const beers: Array<{
   createdAt: string;
 }> = JSON.parse(readFileSync(beerFilePath, 'utf-8'));
 
-const { applyMiddleware, sendResponse, serve, createResolvers } = Axolotl<Models, FieldResolveInput>({
-  adapter: stuccoAdapter,
-  resolverGenerators: [updateStuccoJson],
+const { applyMiddleware, createResolvers } = Axolotl<Models, FieldResolveInput>({
   modelsPath: './src/models.ts',
   schemaPath: './schema.graphql',
 });
@@ -88,7 +85,7 @@ const resolvers = createResolvers({
   },
 });
 
-export default serve(async (input) => {
+export default async (input: FieldResolveInput) => {
   applyMiddleware(
     resolvers,
     [
@@ -99,8 +96,8 @@ export default serve(async (input) => {
     ],
     { Query: { beers: true } },
   );
-  return sendResponse(input, resolvers);
-});
+  return stuccoAdapter(resolvers)(input);
+};
 
 ```
 
@@ -113,6 +110,12 @@ Me [aexol](https://github.com/aexol) is the author of the lib. I was in the type
 
 ### Adapters
 Place to develop adapters for popular nodejs frameworks.
+#### How to write adapter
+```ts
+import { AxolotlAdapter } from '@aexol-studio/axolotl-core';
+```
+
+Just wrap your adapter in AxolotlAdapter function which receives resolvers without type specified
 
 ### Examples
 Place to experiments with axolotl and its packages
@@ -124,6 +127,7 @@ Packages to support super fast local development
 Packages to support integration between different schemas. It means that it should be easy set up multiple schemas and runtime for one backend
 
 ### To do
-- [] try to implement graphql-yoga adapter as a presentation that listen based frameworks can work with axolotl too
+- [x] try to implement graphql-yoga adapter as a presentation that listen based frameworks can work with axolotl too
 - [] write documentation
-- [] provide option to bootstrap an axolotl project
+- [] implement e2e testing functionality that takes, query, headers, result and runs the test
+- [] create command to use npx @aexol-studio/axolotl https://github.com/facebook/create-react-app/blob/main/packages/create-react-app/createReactApp.js here is the good example
