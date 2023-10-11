@@ -5,10 +5,19 @@
             "path": "./packages/core"
         },
         {
+            "path": "./packages/cli"
+        },
+        {
             "path": "./adapters/stucco"
         },
         {
-            "path": "./examples/mailik"
+            "path": "./adapters/graphql-yoga"
+        },
+        {
+            "path": "./examples/beerpub"
+        },
+        {
+            "path": "./examples/beerpub-yoga"
         },
     ]
 }
