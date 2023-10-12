@@ -1,62 +1,38 @@
-import { Axolotl } from '@aexol-studio/axolotl-core';
+import { Axolotl } from '@aexol/axolotl-core';
 import { Models } from '@/src/models.js';
-import { readFileSync, writeFileSync } from 'fs';
-import path from 'path';
-import { YogaInitialContext } from 'graphql-yoga';
-import { graphqlYogaAdapter } from '@aexol-studio/axolotl-graphql-yoga';
+import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
+import { BeerOrm } from '@/src/ormBeersFile.js';
 
-const { applyMiddleware, createResolvers } = Axolotl<Models, [any, any, YogaInitialContext]>({
+const { applyMiddleware, createResolvers } = Axolotl(graphqlYogaAdapter)<Models>({
   modelsPath: './src/models.ts',
   schemaPath: './schema.graphql',
 });
 
-const beerFilePath = path.join(process.cwd(), 'beers.json');
-
-const beers: Array<{
-  name: string;
-  price: number;
-  _id: string;
-  createdAt: string;
-}> = JSON.parse(readFileSync(beerFilePath, 'utf-8'));
+const Beer = BeerOrm();
 
 const resolvers = createResolvers({
   Query: {
-    beers: () => beers,
+    beers: () => Beer.list(),
   },
   Mutation: {
     addBeer: (input, args) => {
-      const beerId = Math.random().toString(8);
-      beers.push({
-        _id: beerId,
-        createdAt: new Date().toISOString(),
-        ...args.beer,
-      });
-      writeFileSync(beerFilePath, JSON.stringify(beers));
-      return beerId;
+      return Beer.create(args.beer);
     },
     deleteBeer: (input, args) => {
-      const deletedIndex = beers.findIndex((b) => b._id === args._id);
-      beers.splice(deletedIndex, 1);
-      writeFileSync(beerFilePath, JSON.stringify(beers));
-      return true;
+      return Beer.remove(args);
     },
     updateBeer: (input, args) => {
-      const updatedIndex = beers.findIndex((b) => b._id === args._id);
-      beers[updatedIndex] = {
-        ...beers[updatedIndex],
-        ...args.beer,
-      };
-      writeFileSync(beerFilePath, JSON.stringify(beers));
-      return true;
+      return Beer.update(args._id, args.beer);
     },
   },
 });
 
+// This is yoga specific
 applyMiddleware(
   resolvers,
   [
     (input) => {
-      console.log('DUPA');
+      console.log('Hello from Middleware I run only on Query.beers');
       return input;
     },
   ],

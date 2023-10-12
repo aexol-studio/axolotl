@@ -2,7 +2,7 @@
 import { FieldResolveInput } from 'stucco-js';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import * as path from 'path';
-import { AxolotlAdapter } from '@aexol-studio/axolotl-core';
+import { AxolotlAdapter } from '@aexol/axolotl-core';
 
 export const stuccoAdapter = AxolotlAdapter<FieldResolveInput>()(
   (passedResolvers, production) => (input: FieldResolveInput) => {

@@ -6,16 +6,16 @@
     "type": "module",
     "scripts": {
         "start": "node lib/index.js",
-        "build": "tsc",
-        "watch": "tsc --watch",
+        "build": "tspc",
+        "watch": "tspc --watch",
         "update": "gecli codegen models && gecli schema && gecli codegen typings"
     },
     "author": "GraphQL Editor Centaur Generator",
     "license": "ISC",
     "dependencies": {
-        "@aexol-studio/axolotl-cli": "^0.0.1",
-        "@aexol-studio/axolotl-core": "^0.0.1",
-        "@aexol-studio/axolotl-stucco": "^0.0.1",
+        "@aexol/axolotl-cli": "^0.0.1",
+        "@aexol/axolotl-core": "^0.0.1",
+        "@aexol/axolotl-stucco": "^0.0.1",
         "graphql": "^16.8.1",
         "graphql-yoga": "^4.0.5",
         "node-fetch": "^3.2.10",

@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { generateModels } from '@aexol-studio/axolotl-core';
+import { generateModels } from '@aexol/axolotl-core';
 
 const program = new Command();
 

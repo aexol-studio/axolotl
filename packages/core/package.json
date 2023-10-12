@@ -1,5 +1,5 @@
 {
-  "name": "@aexol-studio/axolotl-core",
+  "name": "@aexol/axolotl-core",
   "version": "0.0.1",
   "private": false,
   "main": "./lib/index.js",

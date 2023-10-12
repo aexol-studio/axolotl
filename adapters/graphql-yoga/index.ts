@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { readFileSync } from 'fs';
-import { AxolotlAdapter } from '@aexol-studio/axolotl-core';
+import { AxolotlAdapter } from '@aexol/axolotl-core';
 import { YogaInitialContext, createSchema, createYoga } from 'graphql-yoga';
 import { createServer } from 'http';
 import * as path from 'path';

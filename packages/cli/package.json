@@ -1,5 +1,5 @@
 {
-  "name": "@aexol-studio/axolotl",
+  "name": "@aexol/axolotl",
   "version": "0.0.1",
   "private": false,
   "main": "./lib/index.js",
@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "commander": "^11.0.0",
-    "@aexol-studio/axolotl-core": "^0.0.1",
+    "@aexol/axolotl-core": "^0.0.1",
     "graphql-js-tree": "^1.0.6"
   }
 }
