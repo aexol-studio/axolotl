@@ -8,16 +8,16 @@ type T = {
   };
 };
 
-type STARTERS = 'stucco' | 'yoga';
+export type STARTERS = 'stucco' | 'yoga';
 export const STARTER_DICT: T = {
   stucco: {
     example: 'beerpub-stucco',
     repo: 'axolotl-starter-stucco',
-    description: 'Starter with stucco',
+    description: 'stucco.js starter',
   },
   yoga: {
     example: 'beerpub-yoga',
     repo: 'axolotl-starter-yoga',
-    description: 'Starter with yoga',
+    description: 'GraphQL Yoga starter',
   },
 };

@@ -1,41 +1,51 @@
 import { execSync } from 'child_process';
-import chalk, { Color } from 'chalk';
 import { Command } from 'commander';
-import path from 'path';
+import chalk from 'chalk';
 import fs from 'fs';
-import { BASE_REPOSITORY, MESSAGE_BRAKE, STARTER_DICT } from './consts.js';
-type Message = { message: string; color?: typeof Color };
+
+import { BASE_REPOSITORY, STARTER_DICT, STARTERS } from './consts.js';
+import { correctPath, isPathValid, log, toUpperCase } from './utils.js';
 
 export const createApp = (program: Command) => {
-  Object.keys(STARTER_DICT).forEach((starter) => {
+  Object.entries(STARTER_DICT).forEach(([key, { description, repo, example }]) => {
+    const starter = key as STARTERS;
     program
-      .command(`create-${starter} [destination] [name]`)
-      .description(`${STARTER_DICT[starter as keyof typeof STARTER_DICT].description}`)
+      .command(`create-${starter} [dir] [name]`)
+      .description(
+        `${chalk.magenta('Axolotl Starter')} - ${description} - directory [dir] and name [name] are optional`,
+      )
       .action((_destination, _name) => {
         const destination = (_destination || './') as string;
-        const name = (_name || STARTER_DICT[starter as keyof typeof STARTER_DICT].repo) as string;
+        const name = (_name || repo) as string;
         const path = correctPath(destination, name);
 
-        const installationMessages: Message[] = [
-          { message: `Installing starter GraphQL Server - ${toUpperCase(starter)}...` },
-          { message: `This may take a while...`, color: 'yellow' as const },
+        const installationMessages = [
+          {
+            message: `Installing starter ${chalk.magenta('GraphQL Axolotl Server')} - GraphQL ${toUpperCase(
+              starter,
+            )} example...`,
+          },
+          { message: `This may take a while...`, color: 'white' as const },
         ];
-
         log(installationMessages);
-        if (invokeCommands(path, starter, _name !== undefined)) {
-          const successMessages: Message[] = [
-            { message: `Starter ${starter} created.` },
-            { message: `To run it, type:` },
+
+        if (invokeCommands(path, example, _name !== undefined)) {
+          const successMessages = [
             {
-              message: `cd ${chalk.yellow(
-                `${STARTER_DICT[starter as keyof typeof STARTER_DICT].repo}`,
-              )} && ${chalk.yellow(`npm run start`)}`,
+              message: `Starter ${chalk.magenta('GraphQL Axolotl Server')} - GraphQL ${toUpperCase(
+                starter,
+              )} example created.`,
+            },
+            { message: `To run it, type:`, color: 'white' as const },
+            {
+              message: `cd ${chalk.magenta(`${repo}`)} && ${chalk.magenta(`npm run start`)}`,
+              color: 'yellow' as const,
             },
           ];
 
           log(successMessages);
         } else {
-          const errorMessages: Message[] = [
+          const errorMessages = [
             { message: `Starter ${starter} failed.`, color: 'red' as const },
             { message: `Please try again.`, color: 'red' as const },
           ];
@@ -46,19 +56,20 @@ export const createApp = (program: Command) => {
   });
 };
 
-function toUpperCase(str: string) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
 function invokeCommands(path: string, example: string, different: boolean) {
   try {
+    if (!isPathValid(path)) {
+      log([{ message: `Path ${path} is not valid.`, color: 'red' as const }]);
+      return false;
+    }
+
     const commands = [
       `git clone -n --depth=1 --filter=tree:0 ${BASE_REPOSITORY} ${path}`,
       `cd ${path} && git sparse-checkout set --include=examples/${example} && git checkout`,
     ];
     commands.forEach((command) => !runCommand(command) && process.exit(1));
 
-    //NOT SURE ABOUT THIS PART
+    // NOT SURE ABOUT THIS PART
     const json = JSON.parse(fs.readFileSync(`${path}/package.json`, 'utf8'));
     const modifiedJson = {
       ...json,
@@ -66,32 +77,26 @@ function invokeCommands(path: string, example: string, different: boolean) {
     };
     const updated = JSON.stringify(modifiedJson, null, 2);
     if (updated !== json) fs.writeFileSync(`${path}/package.json`, updated, 'utf8');
-    //NOT SURE ABOUT THIS PART
+    // NOT SURE ABOUT THIS PART
 
-    if (!runCommand(`cd ${path} && npm install`)) process.exit(1);
+    const install = runCommand(`cd ${path} && npm install`);
+    if (!install) process.exit(1);
+
     return true;
   } catch (error) {
     return false;
   }
 }
 
-function correctPath(destination: string, name: string): string {
-  destination = destination.replace(/\/+$/, '');
-  if (!destination.startsWith('./')) destination = `./${destination}`;
-  return path.posix.join(destination, name);
-}
-
-function log(messages: Message[]) {
-  console.log(chalk.yellow(MESSAGE_BRAKE));
-  messages.forEach((message) => console.log(chalk[message.color || 'green'](message.message)));
-  console.log(chalk.yellow(MESSAGE_BRAKE));
-}
-
 function runCommand(command: string) {
   try {
     execSync(command, { stdio: 'inherit' });
   } catch (e) {
-    log([{ message: `Command ${command} failed.` }, { message: `Please try again.` }]);
+    console.error(e);
+    log([
+      { message: `Command ${command} failed.`, color: 'red' as const },
+      { message: `Please try again.`, color: 'white' as const },
+    ]);
     return false;
   }
   return true;
