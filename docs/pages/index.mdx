@@ -1,0 +1,48 @@
+# 🦎 Axolotl
+
+This is super alpha version of universal backend( or frontend if you want to create something special) framework ensuring GraphQL Resolvers and arguments type-safety. 
+
+## 🤔 Why? 
+
+Writing GraphQL for backend developers is still complicated when you want to go schema-first instead of code-first. Moreover I felt like we need an **evolutionary** framework. 
+
+For example using `apollo-server` but want to switch to `graphql-yoga` ? No problem just change an adapter. 
+
+Want to experiment with `stucco-js` with Go lang core? No problem change the adapter. 
+
+Want to set up every part of your system in different graphql server with microservices?. No problem.
+
+## 😮 What?
+
+Axolotl is a framework overlord/wrapper to forget about type-casting and looking into schema. With it you can just forget about those 😉
+- models generate runtime on dev
+- you can generate more files runtime in your adapter
+
+## 🫠 How?
+
+Axolotl provides type-safety and it is up to you to choose an adapter (or write your own). And develop your GraphQL thing super-fast. How it runs it depends what framework you choose under the hood. I am starting with `stucco` adapter which is Golang compiled backend running in TS
+
+```ts
+// choose your adapter
+const { applyMiddleware, createResolvers } = Axolotl(yourAdapter)<Models>({
+  modelsPath: './src/models.ts',
+  schemaPath: './schema.graphql',
+});
+
+const resolvers = createResolvers({
+  Query: {
+    hello: () => "World"
+  },
+});
+```
+
+```graphql
+type Query{
+    hello: String!
+}
+```
+
+## 🧌 Who?
+
+Me [aexol](https://github.com/aexol) is the author of the lib. I was in the type-safety rabbit hole while building [GraphQL Zeus](https://github.com/graphql-editor/graphql-zeus) a GraphQL Client downloaded almost Million of times. While maintaining zeus and developing together with all-the-time changing TypeScript is really hard. I discovered - I can write something simpler - much powerful, that community needs, that integrates with everything - using the same knowledge.
+
