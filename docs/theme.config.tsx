@@ -2,7 +2,12 @@ import React from 'react';
 import { DocsThemeConfig } from 'nextra-theme-docs';
 
 const config: DocsThemeConfig = {
-  logo: <span>🦎 Axolotl v.0.6.2</span>,
+  logo: (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }} className="flex">
+      <img style={{ borderRadius: '0.25rem' }} width="32" src="/axolotlicon.png" />
+      <span>Axolotl v.0.6.2</span>
+    </div>
+  ),
   project: {
     link: 'https://github.com/aexol-studio/axolotl',
   },
