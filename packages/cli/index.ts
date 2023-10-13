@@ -1,5 +1,7 @@
+#!/usr/bin/env node
 import { Command } from 'commander';
 import { generateModels } from '@aexol/axolotl-core';
+import { createApp } from './create/index.js';
 
 const program = new Command();
 
@@ -17,5 +19,7 @@ program
       modelsPath: './models.ts',
     });
   });
+
+createApp(program);
 
 program.parse();
