@@ -14,7 +14,7 @@ const config: DocsThemeConfig = {
   chat: {
     link: 'https://discord.gg/CgJYkntsbS',
   },
-  docsRepositoryBase: 'https://github.com/aexol-studio/axolotl',
+  docsRepositoryBase: 'https://github.com/aexol-studio/axolotl/tree/main/docs',
   footer: {
     component: <a href="https://aexol.com">Aexol</a>,
   },
