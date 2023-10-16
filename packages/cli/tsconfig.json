@@ -12,19 +12,14 @@
     "strictNullChecks": true,
     "skipLibCheck": true,
     "strict": true,
+    "allowSyntheticDefaultImports": true,
     "outDir": "./lib",
-    "lib": [
-      "ESNext",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "rootDir": "./",
     "baseUrl": "./",
     "composite": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     },
     "plugins": [
       {
@@ -36,9 +31,5 @@
       }
     ]
   },
-  "exclude": [
-    "lib",
-    "node_modules",
-    "jest.config.js"
-  ]
+  "exclude": ["lib", "node_modules", "jest.config.js"]
 }
