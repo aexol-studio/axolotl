@@ -1,1 +1,1 @@
-# Axolotl nextra docs
+# Axolotl docs

@@ -1,0 +1,38 @@
+# GraphQL Yoga
+
+Install adapter
+
+```sh
+$ npm i @aexol/axolotl-core @aexol/axolotl-graphql-yoga
+```
+
+Now you need a `schema.graphql` file or a URL with settings to download the schema from upstream. Out of it Axolotl can generate simple type definitions needed for the library out of your GraphQL Schema.
+
+`models.ts` are located where you specify when initiating Axolotl
+
+First execute init command
+
+```sh
+$ npx @aexol/axolotl init
+```
+
+Then write your `index.ts` file.
+
+```ts
+import { Axolotl } from '@aexol/axolotl-core';
+import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
+import { Models } from '@/src/models.js';
+
+const { createResolvers } = Axolotl(graphqlYogaAdapter)<Models>({
+  modelsPath: './src/models.ts',
+  schemaPath: './schema.graphql',
+});
+
+const resolvers = createResolvers({
+    // your type-safe resolvers here
+});
+
+graphqlYogaAdapter(resolvers).listen(4000, () => {
+  console.log('LISTENING');
+});
+```

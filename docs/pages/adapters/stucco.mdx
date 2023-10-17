@@ -1,0 +1,34 @@
+# Stucco
+
+Install adapter
+
+```sh
+$ npm i @aexol/axolotl-stucco stucco-js
+```
+
+Then write your `index.ts` file. In stucco the default export of the file is the
+router. Stucco will also generate `stucco.json` file every time you change the
+code. This file is used by the stucco GoLang router.
+
+```ts
+import { FieldResolveInput } from 'stucco-js';
+import { Axolotl } from '@aexol/axolotl-core';
+import { stuccoAdapter } from '@aexol/axolotl-stucco';
+import { Models } from '@/src/models.js';
+
+// choose your adapter
+const { applyMiddleware, createResolvers } = Axolotl(stuccoAdapter)<Models>({
+  modelsPath: './src/models.ts',
+  schemaPath: './schema.graphql',
+});
+
+const Beer = BeerOrm();
+
+const resolvers = createResolvers({
+  // your type-safe resolvers here
+});
+
+export default async (input: FieldResolveInput) => {
+  return stuccoAdapter(resolvers)(input);
+};
+```
