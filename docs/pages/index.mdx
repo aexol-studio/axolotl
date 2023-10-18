@@ -22,7 +22,7 @@ Axolotl is a framework overlord/wrapper to forget about type-casting and looking
 
 Axolotl provides type-safety and it is up to you to choose an adapter (or write your own). And develop your GraphQL thing super-fast. How it runs it depends what framework you choose under the hood. I am starting with `stucco` adapter which is Golang compiled backend running in TS
 
-```ts
+```ts filename="index.ts"
 // choose your adapter
 const { applyMiddleware, createResolvers } = Axolotl(yourAdapter)<Models>({
   modelsPath: './src/models.ts',
@@ -36,12 +36,18 @@ const resolvers = createResolvers({
 });
 ```
 
-```graphql
+```graphql filename="schema.graphql"
 type Query{
     hello: String!
 }
 ```
-
+## 🤯 Graph
+So you can write resolvers usually just once and then easily migrate to other GraphQL Server, Deploy, etc.
+```mermaid
+graph LR;
+    Resolvers-->Adapter-->Run
+    Adapter-->Deploy
+```
 ## 🧌 Who?
 
 Me [aexol](https://github.com/aexol) is the author of the lib. I was in the type-safety rabbit hole while building [GraphQL Zeus](https://github.com/graphql-editor/graphql-zeus) a GraphQL Client downloaded almost Million of times. While maintaining zeus and developing together with all-the-time changing TypeScript is really hard. I discovered - I can write something simpler - much powerful, that community needs, that integrates with everything - using the same knowledge.

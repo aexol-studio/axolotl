@@ -29,6 +29,11 @@ const config: DocsThemeConfig = {
     dark: 80,
     light: 10,
   },
+  useNextSeoProps() {
+    return {
+      titleTemplate: '%s – Axolotl GraphQL Framework',
+    };
+  },
 };
 
 export default config;
