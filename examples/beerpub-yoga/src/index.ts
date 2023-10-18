@@ -39,6 +39,11 @@ applyMiddleware(
   { Query: { beers: true } },
 );
 
+const e2eTests = () => {
+  const beers = resolvers.Query.beers();
+  console.log();
+};
+
 graphqlYogaAdapter(resolvers).listen(4000, () => {
   console.log('LISTENING');
 });
