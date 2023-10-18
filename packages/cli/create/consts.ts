@@ -1,17 +1,33 @@
-export const MESSAGE_BRAKE = `~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`;
+export const MESSAGE_BRAKE = `~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`;
 export const BASE_REPOSITORY = `https://github.com/aexol-studio/axolotl`;
 type T = {
   [key in STARTERS]: {
-    example: `beerpub-${key}`;
+    example: string;
     repo: `axolotl-starter-${key}`;
     description: string;
   };
 };
 
 export type STARTERS = 'stucco' | 'yoga';
+
+/**
+ * ```
+ * example: 'beerpub',
+ * ```
+ * folder name placed at examples folder
+ * ```
+ * repo: 'axolotl-starter-stucco',
+ * ```
+ * repository name
+ * ```
+ * description: 'stucco.js starter',
+ * ```
+ * description of starter
+ * ```
+ */
 export const STARTER_DICT: T = {
   stucco: {
-    example: 'beerpub-stucco',
+    example: 'beerpub',
     repo: 'axolotl-starter-stucco',
     description: 'stucco.js starter',
   },
