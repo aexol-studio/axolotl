@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { FieldType, Options, Parser, ParserField, TypeDefinition, getTypeName } from 'graphql-js-tree';
 
 const TAB = (n: number) =>

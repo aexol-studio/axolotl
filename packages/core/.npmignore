@@ -1,5 +1,5 @@
 .env
-/node_modules
+node_modules
 *.test.js
 *.test.js.map
 *.test.d.ts

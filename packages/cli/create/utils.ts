@@ -1,7 +1,9 @@
-import fs from 'node:fs';
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { execSync } from 'node:child_process';
-import chalk, { Color } from 'chalk';
+import * as chalk from 'chalk';
+
+const { Color } = chalk;
 
 import { BASE_REPOSITORY, MESSAGE_BRAKE } from './consts.js';
 
