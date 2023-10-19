@@ -1,5 +1,6 @@
 .env
-/lib
 /node_modules
-.graphql-editor-auth.json
+*.test.js
+*.test.js.map
+*.test.d.ts
 tsconfig.tsbuildinfo

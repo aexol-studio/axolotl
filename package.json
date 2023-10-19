@@ -5,7 +5,8 @@
     "main": "lib/index.js",
     "type": "module",
     "scripts": {
-        "start": "npm run start --ws --if-present"
+        "start": "npm run start --ws --if-present",
+        "test": "node --test  **/*.test.js"
     },
     "author": "GraphQL Editor Centaur Generator",
     "license": "ISC",

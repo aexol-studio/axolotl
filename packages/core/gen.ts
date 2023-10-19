@@ -58,14 +58,7 @@ const buildEnumArgs = (args: ParserField[]) => {
   return `{\n${inputFields.join(',\n')}\n}`;
 };
 
-export const generateModels = ({
-  schemaPath = './schema.graphql',
-  modelsPath = './models.ts',
-}: {
-  schemaPath: string;
-  modelsPath: string;
-}) => {
-  const fileContent = readFileSync(schemaPath, 'utf8');
+const generateModelsString = (fileContent: string) => {
   const { nodes } = Parser.parse(fileContent);
 
   const scalars = nodes.filter((n) => n.data.type === TypeDefinition.ScalarTypeDefinition);
@@ -94,6 +87,17 @@ export const generateModels = ({
 
   const typesFullString = `export type Models = {\n${typesString}\n};\n`;
 
-  const modelsString = [scalarsString, enumsString, inputsString, typesFullString].filter(Boolean).join('\n\n');
+  return [scalarsString, enumsString, inputsString, typesFullString].filter(Boolean).join('\n\n');
+};
+
+export const generateModels = ({
+  schemaPath = './schema.graphql',
+  modelsPath = './models.ts',
+}: {
+  schemaPath: string;
+  modelsPath: string;
+}) => {
+  const fileContent = readFileSync(schemaPath, 'utf8');
+  const modelsString = generateModelsString(fileContent);
   writeFileSync(modelsPath, modelsString);
 };
