@@ -14,8 +14,8 @@
     "axolotl": "lib/index.js"
   },
   "dependencies": {
-    "commander": "^11.0.0",
     "@aexol/axolotl-core": "^0.0.1",
+    "commander": "^11.0.0",
     "graphql-js-tree": "^1.0.6"
   }
 }
