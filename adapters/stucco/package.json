@@ -1,6 +1,6 @@
 {
   "name": "@aexol/axolotl-stucco",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "private": false,
   "main": "./lib/index.js",
   "author": "Aexol, Artur Czemiel",
@@ -11,6 +11,7 @@
     "lint": "tspc && eslint \"./src/**/*.{ts,js}\" --quiet --fix"
   },
   "dependencies": {
-    "stucco-js": "^0.10.18"
+    "stucco-js": "^0.10.18",
+    "@aexol/axolotl-core": "^0.0.3"
   }
 }

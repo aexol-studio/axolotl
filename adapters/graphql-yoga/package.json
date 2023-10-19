@@ -1,6 +1,6 @@
 {
   "name": "@aexol/axolotl-graphql-yoga",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "private": false,
   "main": "./lib/index.js",
   "author": "Aexol, Artur Czemiel",
@@ -13,6 +13,6 @@
   "dependencies": {
     "graphql": "^16.8.1",
     "graphql-yoga": "^4.0.5",
-    "stucco-js": "^0.10.18"
+    "@aexol/axolotl-core": "^0.0.3"
   }
 }
