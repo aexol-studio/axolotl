@@ -1,7 +1,9 @@
 # 🚀 Getting Started
 
+Install dependencies. Install stucco adapter or yoga one.
+
 ```sh
-$ npm i @aexol/axolotl-core @aexol/axolotl-stucco
+$ npm i @aexol/axolotl-core @aexol/axolotl-stucco @aexol/axolotl-graphql-yoga
 ```
 
 Now you need a `schema.graphql` file or a URL with settings to download the schema from upstream. Out of it Axolotl can generate simple type definitions needed for the library out of your GraphQL Schema.
@@ -16,7 +18,7 @@ $ npx @aexol/axolotl init
 
 Then write your index.ts file.
 
-```ts
+```ts filename="index.ts"
 import { FieldResolveInput } from 'stucco-js';
 import { Axolotl } from '@aexol/axolotl-core';
 import { stuccoAdapter } from '@aexol/axolotl-stucco';
@@ -52,7 +54,7 @@ const resolvers = createResolvers({
 And choose an adapter. Base idea is that code should run with every GraphQL Server available in nodejs.
 
 ## I choose stucco-js
-```ts
+```ts filename="index.ts"
 
 // This is stucco specific
 export default async (input: FieldResolveInput) => {
@@ -72,7 +74,7 @@ export default async (input: FieldResolveInput) => {
 ```
 
 ## I choose graphql-yoga
-```ts
+```ts filename="index.ts"
 //This you should add on the top
 
 // And change the Axolotl import to yoga specific
@@ -101,7 +103,7 @@ graphqlYogaAdapter(resolvers).listen(4000, () => {
 
 ### Simple Beer ORM
 I created simple beer orm to spin off examples without a DB.
-```ts
+```ts filename="ormBeersFile.ts"
 import { readFileSync, writeFileSync } from 'fs';
 import path from 'path';
 

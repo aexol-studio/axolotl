@@ -4,7 +4,7 @@ import { DocsThemeConfig } from 'nextra-theme-docs';
 const config: DocsThemeConfig = {
   logo: (
     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }} className="flex">
-      <img style={{ borderRadius: '0.25rem' }} width="32" src="/axolotlicon.png" />
+      <img style={{ borderRadius: '0.25rem' }} width="32" src="/axodark.png" />
       <span>Axolotl v.0.6.2</span>
     </div>
   ),
@@ -28,6 +28,11 @@ const config: DocsThemeConfig = {
   primarySaturation: {
     dark: 80,
     light: 10,
+  },
+  useNextSeoProps() {
+    return {
+      titleTemplate: '%s – Axolotl GraphQL Framework',
+    };
   },
 };
 

@@ -10,13 +10,12 @@ Then write your `index.ts` file. In stucco the default export of the file is the
 router. Stucco will also generate `stucco.json` file every time you change the
 code. This file is used by the stucco GoLang router.
 
-```ts
+```ts filename="index.ts"
 import { FieldResolveInput } from 'stucco-js';
 import { Axolotl } from '@aexol/axolotl-core';
 import { stuccoAdapter } from '@aexol/axolotl-stucco';
 import { Models } from '@/src/models.js';
 
-// choose your adapter
 const { applyMiddleware, createResolvers } = Axolotl(stuccoAdapter)<Models>({
   modelsPath: './src/models.ts',
   schemaPath: './schema.graphql',

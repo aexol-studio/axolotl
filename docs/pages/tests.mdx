@@ -1,0 +1,40 @@
+# E2E Type-Safe Tests helper
+
+While having many testing frameworks already we are not going to include one
+here. 
+
+
+In this example I split the content of our backend to multiple files
+
+```ts filename="setup.ts"
+export const axolotl = Axolotl(yourAdapter)<Models>({
+  modelsPath: './src/models.ts',
+  schemaPath: './schema.graphql',
+});
+```
+
+```ts filename="resolvers.ts"
+import { axolotl } from './setup.js'
+export const resolvers = axolotl.createResolvers({
+  Query: {
+    hello: () => "World"
+  },
+});
+```
+
+So in this file we test
+
+```ts filename="index.spec.ts"
+import { resolvers } from './resolvers.js'
+// You can reuse resolvers in tests to test their resolving functions in any testing framework
+
+describe("Tests for resolvers", () => {
+    it("Returns world", () => {
+        const result = resolvers.Query.hello()
+        expect(result).toEqual("World")
+    })
+})
+```
+
+If you want to run full e2e tests on your server of choice - to test the server
+additionaly you should write tests with full gql queries using your framework of choice
