@@ -16,15 +16,16 @@ export const createApp = (program: Command) => {
       .on('--help', () => {
         console.log('');
         console.log(
-          `  ${chalk.magenta('[dir]')} - optional argument, if not provided, starter will be created in ${chalk.red(
-            'generated',
-          )} directory`,
+          `  ${chalk.magenta(
+            '[dir?: string]',
+          )} - optional argument, if not provided, starter will be created in ${chalk.red('generated')} directory`,
         );
         console.log('');
         console.log(chalk.gray(`New project in ${chalk.red('generated')} directory`));
-        console.log(`    $ axolotl create-${starter}`);
-        console.log(chalk.gray('New project in specific destination'));
-        console.log(`    $ axolotl create-${starter} test/my-graphql-server`);
+        console.log(`$ axolotl create-${starter}`);
+        console.log('');
+        console.log(chalk.gray(`New project in ${chalk.magenta('passed')} destination`));
+        console.log(`$ axolotl create-${starter} test/my-graphql-server`);
         console.log('');
       });
   });

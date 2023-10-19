@@ -1,8 +1,9 @@
-import * as path from 'path';
-import chalk, { Color } from 'chalk';
-import { BASE_REPOSITORY, MESSAGE_BRAKE } from './consts.js';
 import fs from 'fs';
+import * as path from 'path';
 import { execSync } from 'child_process';
+import chalk, { Color } from 'chalk';
+
+import { BASE_REPOSITORY, MESSAGE_BRAKE } from './consts.js';
 
 type Message = { message: string; color?: typeof Color };
 
@@ -21,16 +22,6 @@ export const createAppAction = ({
   const name = _destination ? '.' : repo;
   const path = correctPath(destination, name);
 
-  const isFolderExist = fs.existsSync(path);
-  const folderErrorMessages = [
-    { message: `Folder ${path} already exists.`, color: 'red' as const },
-    { message: `Please try again.`, color: 'white' as const },
-  ];
-  if (isFolderExist) {
-    log(folderErrorMessages);
-    process.exit(1);
-  }
-
   const installationMessages = [
     {
       message: `Installing starter ${chalk.magenta('GraphQL Axolotl Server')} - GraphQL ${firstLetterToUpperCase(
@@ -40,7 +31,9 @@ export const createAppAction = ({
     { message: `This may take a while...`, color: 'white' as const },
   ];
   log(installationMessages);
-  if (runCommands(path, example, name)) {
+
+  const trigger = runCommands(path, example);
+  if ('success' in trigger) {
     const successMessages = [
       {
         message: `Starter ${chalk.magenta('GraphQL Axolotl Server')} - GraphQL ${firstLetterToUpperCase(
@@ -49,7 +42,7 @@ export const createAppAction = ({
       },
       { message: `To run it, type:`, color: 'white' as const },
       {
-        message: `cd ${chalk.magenta(`${repo}`)} && ${chalk.magenta(`npm run start`)}`,
+        message: `cd ${chalk.magenta(`${path}`)} && ${chalk.magenta(`npm run start`)}`,
         color: 'yellow' as const,
       },
     ];
@@ -58,6 +51,8 @@ export const createAppAction = ({
   } else {
     const errorMessages = [
       { message: `Starter ${chalk.magenta('GraphQL Axolotl Server')} failed.`, color: 'red' as const },
+      { message: ``, color: 'white' as const },
+      { message: `${chalk.yellow('Reason:')} ${trigger.error}`, color: 'white' as const },
     ];
 
     log(errorMessages, true);
@@ -65,63 +60,51 @@ export const createAppAction = ({
   }
 };
 
-function runCommands(path: string, example: string, name?: string): boolean {
+function runCommands(path: string, example: string): { error: string } | { success: boolean } {
   try {
     const system = checkSystem({ node: '16.20' });
-    if (!system) return false;
+    if (system.error) return { error: system.error };
 
-    if (!isPathValid(path)) return false;
+    if (fs.existsSync(path)) return { error: 'folder already exists' };
+    if (!isPathValid(path)) return { error: 'invalid path' };
+    if (!runCommand(`git --version`, false)) return { error: 'git is not installed' };
 
     const clone = runCommand(`git clone -n --depth=1 --filter=tree:0 ${BASE_REPOSITORY} ${path}`);
-    if (!clone) return false;
+    if (!clone) return { error: "can't clone repository" };
 
     const checkout = runCommand(
       `cd ${path} && git config core.sparseCheckout true && git sparse-checkout set examples/${example} && git checkout && git config core.sparseCheckout false`,
     );
-    if (!checkout) return false;
+    if (!checkout) return { error: "can't clone repository" };
 
     let copy;
     if (system.platform === 'win32') {
       copy = runCommand(`cd ${path} && xcopy /E /Y examples\\${example} . && rmdir /S /Q examples`);
     } else copy = runCommand(`cd ${path} && cp -r examples/${example}/* . && rm -rf examples`);
-    if (!copy) return false;
+    if (!copy) return { error: "can't clone repository" };
 
     let cleanUpGit;
     if (system.platform === 'win32') {
       cleanUpGit = runCommand(`cd ${path} && rmdir /S /Q .git`);
     } else cleanUpGit = runCommand(`cd ${path} && rm -rf .git`);
-    if (!cleanUpGit) return false;
+    if (!cleanUpGit) return { error: "can't clone repository" };
 
     // init new git - if fails nothing happens we can continue
     runCommand(`cd ${path} && git init --quiet`, false);
+    if (!runCommand(`cd ${path} && npm install`)) return { error: 'problem with installing dependencies' };
 
-    const json = JSON.parse(fs.readFileSync(`${path}/package.json`, 'utf8'));
-    const modified = {
-      ...json,
-      name: name || json.name,
-    };
-    const updated = JSON.stringify(modified, null, 2);
-    if (updated !== JSON.stringify(json, null, 2)) fs.writeFileSync(`${path}/package.json`, updated, 'utf8');
-
-    const install = runCommand(`cd ${path} && npm install`);
-    if (!install) return false;
-
-    return true;
+    return { success: true };
   } catch (error) {
-    return false;
+    return { error: 'command failed' };
   }
 }
 
 const runCommand = (command: string, withLog = true) => {
   try {
-    execSync(command, { stdio: 'inherit' });
+    const stdio = withLog ? 'inherit' : 'ignore';
+    execSync(command, { stdio });
   } catch (e) {
-    if (withLog) {
-      log([
-        { message: `Command ${command} failed.`, color: 'red' as const },
-        { message: `Please try again.`, color: 'white' as const },
-      ]);
-    }
+    if (withLog) log([{ message: `Command ${command} failed.`, color: 'red' as const }]);
     return false;
   }
   return true;
@@ -163,25 +146,15 @@ const isPathValid = (path: string) => {
 };
 
 const checkSystem = ({ node: _node }: { node: string }) => {
-  const node = checkNodeVersion(_node);
-  if (!node) return undefined;
+  const check = checkNodeVersion(_node);
+  if ('error' in check) return { error: check.error };
 
   const isWindows = process.platform === 'win32';
   const isMacOS = process.platform === 'darwin';
   const isLinux = process.platform === 'linux';
 
-  if (!isWindows && !isMacOS && !isLinux) {
-    const systemErrorMessages = [
-      { message: `Unsupported system.`, color: 'red' as const },
-      { message: `Please try again.`, color: 'white' as const },
-    ];
-    log(systemErrorMessages);
-    return undefined;
-  }
-  return {
-    platform: process.platform,
-    node,
-  };
+  if (!isWindows && !isMacOS && !isLinux) return { error: 'Unsupported system.' };
+  return { platform: process.platform, node: check.nodeVersion };
 };
 
 const checkNodeVersion = (version: string) => {
@@ -190,12 +163,11 @@ const checkNodeVersion = (version: string) => {
   const [major, minor] = nodeVersion.split('.');
 
   if (Number(major) < Number(_major) || (Number(major) === Number(_major) && Number(minor) < Number(_minor))) {
-    const nodeErrorMessages = [
-      { message: `You need Node.js version ${version} or higher to run this app.`, color: 'red' as const },
-      { message: `You are currently running Node.js ${nodeVersion}.`, color: 'red' as const },
-    ];
-    log(nodeErrorMessages);
-    return false;
+    return {
+      error: `You need Node.js version ${chalk.red(
+        version,
+      )} or higher to run this app. You are currently running Node.js ${chalk.magenta(nodeVersion)}.`,
+    };
   }
-  return nodeVersion;
+  return { nodeVersion };
 };

@@ -1,5 +1,6 @@
-export const MESSAGE_BRAKE = `~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`;
+export const MESSAGE_BRAKE = `~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`;
 export const BASE_REPOSITORY = `git@github.com:aexol-studio/axolotl.git`;
+
 type T = {
   [key in STARTERS]: {
     example: string;
