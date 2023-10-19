@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 
 import { STARTER_DICT, STARTERS } from './consts.js';
 import { createAppAction } from './utils.js';

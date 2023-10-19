@@ -1,13 +1,11 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { execSync } from 'node:child_process';
-import * as chalk from 'chalk';
-
-const { Color } = chalk;
+import chalk, { ColorName } from 'chalk';
 
 import { BASE_REPOSITORY, MESSAGE_BRAKE } from './consts.js';
 
-type Message = { message: string; color?: typeof Color };
+type Message = { message: string; color?: ColorName };
 
 export const createAppAction = ({
   starter,
