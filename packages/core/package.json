@@ -1,6 +1,6 @@
 {
   "name": "@aexol/axolotl-core",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "private": false,
   "main": "./lib/index.js",
   "author": "Aexol, Artur Czemiel",
@@ -10,6 +10,9 @@
     "start": "tspc --watch",
     "lint": "tspc && eslint \"./src/**/*.{ts,js}\" --quiet --fix"
   },
+  "files": [
+    "lib"
+  ],
   "dependencies": {
     "graphql-js-tree": "^1.0.6"
   }

@@ -1,6 +1,6 @@
 {
   "name": "@aexol/axolotl",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "private": false,
   "main": "./lib/index.js",
   "author": "Aexol, Artur Czemiel",
@@ -13,8 +13,11 @@
   "bin": {
     "axolotl": "lib/index.js"
   },
+  "files": [
+    "lib"
+  ],
   "dependencies": {
-    "@aexol/axolotl-core": "^0.0.4",
+    "@aexol/axolotl-core": "^0.0.5",
     "commander": "^11.0.0",
     "graphql-js-tree": "^1.0.6"
   }
