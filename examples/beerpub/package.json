@@ -17,11 +17,11 @@
         "node-fetch": "^3.2.10",
         "stucco-js": "^0.10.17",
         "ws": "^8.12.0",
-        "@aexol/axolotl-core": "^0.0.4",
-        "@aexol/axolotl-stucco": "^0.0.4"
+        "@aexol/axolotl-core": "^0.0.5",
+        "@aexol/axolotl-stucco": "^0.0.5"
     },
     "devDependencies": {
-        "@aexol/axolotl": "^0.0.4"
+        "@aexol/axolotl": "^0.0.5"
     },
     "workspaces": [
         "packages/core"

@@ -14,8 +14,8 @@
     "author": "GraphQL Editor Centaur Generator",
     "license": "ISC",
     "dependencies": {
-        "@aexol/axolotl-core": "^0.0.4",
-        "@aexol/axolotl-stucco": "^0.0.4",
+        "@aexol/axolotl-core": "^0.0.5",
+        "@aexol/axolotl-stucco": "^0.0.5",
         "graphql": "^16.8.1",
         "graphql-yoga": "^4.0.5",
         "node-fetch": "^3.2.10",
@@ -23,7 +23,7 @@
         "ws": "^8.12.0"
     },
     "devDependencies": {
-        "@aexol/axolotl": "^0.0.4"
+        "@aexol/axolotl": "^0.0.5"
     },
     "workspaces": [
         "packages/core"
