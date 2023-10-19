@@ -6,7 +6,7 @@
     "type": "module",
     "scripts": {
         "start": "npm run start --ws --if-present",
-        "test": "node --test  **/*.test.js"
+        "test": "glob -c \"node --test \" \"./packages/**/*.test.js\""
     },
     "author": "GraphQL Editor Centaur Generator",
     "license": "ISC",
@@ -19,6 +19,7 @@
         "eslint": "^8.23.1",
         "eslint-config-prettier": "^8.5.0",
         "eslint-plugin-prettier": "^4.2.1",
+        "glob": "^10.3.10",
         "jest": "^29.5.0",
         "prettier": "^2.7.1",
         "ts-node": "^10.9.1",
