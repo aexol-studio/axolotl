@@ -1,6 +1,7 @@
 {
   "index": "Axolotl",
-  "getting-started":"Getting Started",
-  "adapters":"Adapters",
-  "tests":"Tests"
+  "getting-started": "Getting Started",
+  "from-examples": "From Examples",
+  "adapters": "Adapters",
+  "tests": "Tests"
 }
