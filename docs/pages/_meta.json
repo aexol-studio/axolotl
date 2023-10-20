@@ -1,8 +1,11 @@
 {
   "index": "Axolotl",
   "getting-started": "Getting Started",
-  "from-examples": "From Examples",
+  "from-examples": "Start from Starter",
   "infer-source": "Infer Source",
   "adapters": "Adapters",
-  "tests": "Tests"
+  "tests": "Tests",
+  "deploy": "Deploy",
+  "development":"Development",
+  "roadmap":"Roadmap"
 }
