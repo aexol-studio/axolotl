@@ -46,8 +46,8 @@ import { setSourceTypeFromResolver } from '@aexol/axolotl-core'
 const convertSource = setSourceTypeFromResolver(QueryResolvers.onlyUserCanPass)
 
 export default createResolvers({
-  Query:{
-    onlyUserCanPass: async (input,args) =>{
+  World:{
+    restOfTheStory: async (input,args) =>{
       const user = await getUser(input)
       if(!user){
         throw new Error("You shall not pass!!!");
