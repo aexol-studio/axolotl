@@ -90,3 +90,11 @@ export const Axolotl =
       applyMiddleware,
     };
   };
+
+export const setSourceTypeFromResolver =
+  <T extends (...args: any[]) => any | Promise<any>, R = ReturnType<T> extends Promise<infer RR> ? RR : ReturnType<T>>(
+    fn: T,
+  ) =>
+  (source: any) => {
+    return source as R;
+  };

@@ -1,0 +1,62 @@
+# Infer Source Type
+
+In GraphQL usually there is no way to know the source type from incoming data to
+the resolver. This is because you as a developer control the way everything is
+resolved.
+
+```graphql filename="schema.graphql"
+type Query{
+  onlySomeCanPass: World
+}
+type World{
+  restOfTheStory: String
+}
+```
+
+So this way the type of source will contain some user data which is not known
+when you look at the graph and it is internal backend information.
+
+So imagine you create resolvers this way:
+
+```ts filename="query.ts"
+export default createResolvers({
+  Query:{
+    onlyUserCanPass: async (input,args) =>{
+      const user = await getUser(input)
+      if(!user){
+        throw new Error("You shall not pass!!!");
+      }
+      return {
+        userId: user.id,
+        username: "Gandalf"
+      }
+    }
+  }
+})
+```
+
+So when we create a new resolver for World.restOfTheStory there will be
+different stories for different users. So we need to know what has been returned.
+
+
+```ts filename="world.ts"
+import QueryResolvers from './query.js'
+import { setSourceTypeFromResolver } from '@aexol/axolotl-core'
+
+const convertSource = setSourceTypeFromResolver(QueryResolvers.onlyUserCanPass)
+
+export default createResolvers({
+  Query:{
+    onlyUserCanPass: async (input,args) =>{
+      const user = await getUser(input)
+      if(!user){
+        throw new Error("You shall not pass!!!");
+      }
+      // this is type-safe now.
+      const src = convertSource(input.source)
+      if(src.username === "Gandalf") return "Fall down and return later"
+      return "Go safely through the bridge"
+    }
+  }
+})
+```

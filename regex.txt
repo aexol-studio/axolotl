@@ -1,5 +1,5 @@
 "@aexol([^"]*)": "([^"]*)"
-"@aexol$1": "VERSION"
+"@aexol$1": "^0.0.8"
 
 Example
-"@aexol$1": "^0.0.7"
+"@aexol$1": "^0.0.8"
