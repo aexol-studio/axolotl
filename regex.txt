@@ -1,0 +1,5 @@
+"@aexol([^"]*)": "([^"]*)"
+"@aexol$1": "VERSION"
+
+Example
+"@aexol$1": "^0.0.7"

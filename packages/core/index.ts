@@ -3,10 +3,10 @@
 
 import { generateModels } from '@/gen.js';
 
-interface CustomHandler<InputType, ArgumentsType = unknown> {
+export interface CustomHandler<InputType, ArgumentsType = unknown> {
   (input: InputType, args: ArgumentsType extends { args: infer R } ? R : never): any;
 }
-interface CustomMiddlewareHandler<InputType> {
+export interface CustomMiddlewareHandler<InputType> {
   (input: InputType): InputType;
 }
 
