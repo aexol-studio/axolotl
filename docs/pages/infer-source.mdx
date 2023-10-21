@@ -48,13 +48,11 @@ const convertSource = setSourceTypeFromResolver(QueryResolvers.onlyUserCanPass)
 export default createResolvers({
   World:{
     restOfTheStory: async (input,args) =>{
-      const user = await getUser(input)
-      if(!user){
-        throw new Error("You shall not pass!!!");
-      }
-      // this is type-safe now.
+      // this is type-safe now. And we know that user is logged in.
+      // the inferred source type is { userId: string; username:string } 
       const src = convertSource(input.source)
-      if(src.username === "Gandalf") return "Fall down and return later"
+      if(src.username === "Balrog") return "Die"
+      if(src.username === "Gandalf") return "Fall down and return later."
       return "Go safely through the bridge"
     }
   }
