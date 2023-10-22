@@ -39,6 +39,6 @@ applyMiddleware(
   { Query: { beers: true } },
 );
 
-graphqlYogaAdapter(resolvers).listen(4000, () => {
-  console.log('LISTENING');
+graphqlYogaAdapter(resolvers).listen(parseInt(process.env.PORT || '4000'), () => {
+  console.log('LISTENING to ' + process.env.PORT || '4000');
 });
