@@ -2,6 +2,9 @@
 
 This is super alpha version of universal backend( or frontend if you want to create something special) framework ensuring GraphQL Resolvers and arguments type-safety. 
 
+[Full documentation](https://axolotl-docs.vercel.app)
+[Discord channel](https://discord.gg/f8SfgGBHRz)
+
 ## 🤔 Why? 
 
 Writing GraphQL for backend developers is still complicated when you want to go schema-first instead of code-first. Moreover I felt like we need an **evolutionary** framework. 
@@ -15,12 +18,16 @@ Want to set up every part of your system in different graphql server with micros
 ## 😮 What?
 
 Axolotl is a framework overlord/wrapper to forget about type-casting and looking into schema. With it you can just forget about those 😉
-- models generate runtime on dev
-- you can generate more files runtime in your adapter
+- ⚙️ models generate runtime on dev providing type safety
+- 🏃 migrate between different GraphQL Servers
+- 🧐 write your own adapters for different purposes
+- 😂 easy to setup,start and integrate
+- 🫡 from GraphQL Editor and Aexol teams
+- 🪦 No RIP we will maintain forever
 
 ## 🫠 How?
 
-Axolotl provides type-safety and it is up to you to choose an adapter (or write your own). And develop your GraphQL thing super-fast. How it runs it depends what framework you choose under the hood. I am starting with `stucco` adapter which is Golang compiled backend running in TS
+Axolotl provides type-safety and it is up to you to choose an adapter (or write your own). And develop your GraphQL thing super-fast. How it runs it depends what framework you choose under the hood. 
 
 ### With stucco
 
