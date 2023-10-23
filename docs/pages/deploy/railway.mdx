@@ -4,3 +4,22 @@ We will always point to the official docs, but also provide you with an example
 on how to do it faster with axolotl.
 
 [Link to Railway.app docs](https://docs.railway.app/deploy/railway-up)
+
+
+## Step by Step
+
+1. Create project on railway.app
+2. Connect the repository or repository sub-folder
+3. Should work ✨
+
+
+### Monorepo
+
+If you are using monorepo with internal deps - the best way to build is to
+change the default build command to:
+
+```
+npm run build --ws --if-present
+```
+
+or provide your own `Dockerfile`

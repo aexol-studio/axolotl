@@ -58,6 +58,7 @@ And choose an adapter. Base idea is that code should run with every GraphQL Serv
 
 // This is stucco specific
 export default async (input: FieldResolveInput) => {
+  // applying middlewares to chosen resolvers
   applyMiddleware(
     resolvers,
     [

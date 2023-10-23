@@ -6,6 +6,7 @@
   "adapters": "Adapters",
   "tests": "Tests",
   "deploy": "Deploy",
+  "examples":"Examples",
   "development":"Development",
   "roadmap":"Roadmap"
 }

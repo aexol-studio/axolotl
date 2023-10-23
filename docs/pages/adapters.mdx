@@ -5,3 +5,55 @@ Server. Main reason we have adapters in Axolotl is that we can write same code
 for resolvers and there is very low migration effort if we want to change the
 server library. Moreover you can run different GraphQL Engines for different
 parts of your graph in future.
+
+
+## How to write our own adapter
+
+Every adapter eventually receives Record of Types with record of fields. What it
+does need to do is to transform from the raw http input or your framework input
+and provide a functions that consumes and/or runs the actual server.
+
+
+```ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { readFileSync } from 'fs';
+import { AxolotlAdapter } from '@aexol/axolotl-core';
+import { YogaInitialContext, createSchema, createYoga } from 'graphql-yoga';
+import { createServer } from 'http';
+import * as path from 'path';
+
+export const graphqlYogaAdapter = AxolotlAdapter<[any, any, YogaInitialContext]>()((resolvers) => {
+  const yogaResolvers = Object.fromEntries(
+    Object.entries(resolvers).map(([typeName, v]) => {
+      return [
+        typeName,
+        Object.fromEntries(
+          Object.entries(v).map(([fieldName, resolver]) => {
+            return [
+              fieldName,
+              (_: any, args: any, context: YogaInitialContext) => {
+                return resolver([_, args, context], args);
+              },
+            ];
+          }),
+        ),
+      ];
+    }),
+  );
+  const schemaFile = readFileSync(path.join(process.cwd(), './schema.graphql'), 'utf-8');
+  const yoga = createYoga({
+    schema: createSchema({
+      typeDefs: schemaFile,
+      resolvers: yogaResolvers,
+    }),
+  });
+  const server = createServer(yoga);
+  return server;
+});
+
+```
+
+As you may see in this yoga adapter is responsible for:
+- starting GraphQL serviers
+- merging the resolvers into yoga Object
+- reading the schema
