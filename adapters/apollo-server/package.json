@@ -1,0 +1,21 @@
+{
+  "name": "@aexol/axolotl-apollo-server",
+  "version": "0.0.8",
+  "private": false,
+  "main": "./lib/index.js",
+  "author": "Aexol, Artur Czemiel",
+  "type": "module",
+  "scripts": {
+    "build": "tspc",
+    "start": "tspc --watch",
+    "lint": "tspc && eslint \"./src/**/*.{ts,js}\" --quiet --fix"
+  },
+  "files": [
+    "lib"
+  ],
+  "dependencies": {
+    "@aexol/axolotl-core": "^0.0.8",
+    "@apollo/server": "^4.9.4",
+    "graphql": "^16.8.1"
+  }
+}

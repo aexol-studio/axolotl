@@ -41,8 +41,10 @@
         "packages/core",
         "adapters/stucco",
         "adapters/graphql-yoga",
+        "adapters/apollo-server",
         "packages/cli",
         "examples/beerpub",
-        "examples/beerpub-yoga"
+        "examples/beerpub-yoga",
+        "examples/beerpub-apollo-server"
     ]
 }
