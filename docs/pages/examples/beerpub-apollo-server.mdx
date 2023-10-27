@@ -1,0 +1,26 @@
+# GraphQL Yoga Example
+
+[Deployment Link](https://rabid-leg-production.up.railway.app/)
+
+This example is deployed to [Railway](https://railway.app). The commands used inside
+railway are.
+
+Railway generates Dockerfile using [Nixpacks](https://nixpacks.com)
+
+
+## build
+
+We need to build the dependencies as examples are part of npm monorepo
+
+```
+npm run build --ws --if-present
+```
+
+## start
+
+You can start the example with workspace flag. It will use the start command
+from the example folder.
+
+```
+npm run start -w beerpub-apollo-server
+```
