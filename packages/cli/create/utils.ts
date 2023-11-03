@@ -60,6 +60,28 @@ export const createAppAction = ({
   }
 };
 
+export const createDockerFile = () => {
+  const dockerfileCommands = [
+    'FROM node:20 as build',
+    'USER node',
+    'WORKDIR /home/node',
+    'COPY --chown=node:node . .',
+    'RUN npm i',
+    'RUN npm run build',
+    'ENV PORT=8080',
+    'CMD ["npm", "run", "start"]',
+  ];
+  fs.writeFileSync(
+    './Dockerfile',
+    dockerfileCommands.reduce((pv, cv) => (pv += cv + '\n'), ''),
+  );
+  const dockerignoreFiles = ['node_modules', 'Dockerfile', 'lib', '.git', '.gitignore', '.graphql-editor.json'];
+  fs.writeFileSync(
+    `./.dockerignore`,
+    dockerignoreFiles.reduce((pv, cv) => (pv += cv + '\n'), ''),
+  );
+};
+
 function runCommands(path: string, example: string): { error: string } | { success: boolean } {
   try {
     const system = checkSystem({ node: '16.20' });
