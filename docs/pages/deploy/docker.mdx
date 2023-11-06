@@ -1,0 +1,13 @@
+# Docker
+
+We will always point to the official docs, but also provide you with an example
+on how to do it faster with axolotl.
+
+[Link to Docker docs](https://docs.docker.com/)
+
+## Step by Step
+
+1. `npm i ts-patch typescript typescript-transform-paths @aexol/axolotl-graphql-yoga` - install required dependencies
+2. `axolotl create-dockerfile` - generate dockerfile & .dockerignore
+3. `docker build <your-image-name> .` - build docker image
+4. `docker run -dp 127.0.0.1:8080:8080 <your-image-name>` - run docker image

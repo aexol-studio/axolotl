@@ -2,9 +2,13 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 
 import { STARTER_DICT, STARTERS } from './consts.js';
-import { createAppAction } from './utils.js';
+import { createAppAction, createDockerFile } from './utils.js';
 
 export const createApp = (program: Command) => {
+  program
+    .command('create-dockerfile')
+    .description(`${chalk.magenta('Axolotl Starter')} - docker files creator`)
+    .action(createDockerFile);
   Object.entries(STARTER_DICT).forEach(([key, { description: _description, repo, example }]) => {
     const starter = key as STARTERS;
     const command = `create-${starter} [dir]`;
