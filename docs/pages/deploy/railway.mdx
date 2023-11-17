@@ -23,3 +23,24 @@ npm run build --ws --if-present
 ```
 
 or provide your own `Dockerfile`
+
+
+### Gitlab CI
+
+Just install the CLI and it will push the code
+
+```yml
+stages:
+  - deploy
+
+deploy-railway:
+  stage: deploy
+  image: ubuntu
+  only:
+    - pushes
+    - main
+  script:
+    - apt-get update && apt-get install -y curl
+    - curl -fsSL https://railway.app/install.sh | sh
+    - railway up --service=$RAILWAY_SERVICE_NAME -d
+```
