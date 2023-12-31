@@ -19,11 +19,6 @@
             "resolve": {
                 "name": "lib/index"
             }
-        },
-        "Query.[object Object]": {
-            "resolve": {
-                "name": "lib/index"
-            }
         }
     }
-}
+}}
