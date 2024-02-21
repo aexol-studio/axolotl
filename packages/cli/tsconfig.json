@@ -11,6 +11,7 @@
     "noUnusedLocals": true,
     "strictNullChecks": true,
     "skipLibCheck": true,
+    "resolveJsonModule": true,
     "strict": true,
     "outDir": "./lib",
     "lib": [

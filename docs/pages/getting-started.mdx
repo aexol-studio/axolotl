@@ -8,13 +8,14 @@ $ npm i @aexol/axolotl-core @aexol/axolotl-stucco @aexol/axolotl-graphql-yoga
 
 Now you need a `schema.graphql` file or a URL with settings to download the schema from upstream. Out of it Axolotl can generate simple type definitions needed for the library out of your GraphQL Schema.
 
-`models.js` are located where you specify when initiating Axolotl
+`models.ts` are located where you specify when initiating Axolotl
 
-First execute init command
+To use in existing project run
 
 ```sh
-$ npx @aexol/axolotl init
+$ npx @aexol/axolotl models
 ```
+This will generate type safe models for your Axolotl engine.
 
 Then write your index.ts file.
 
