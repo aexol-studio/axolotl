@@ -9,7 +9,6 @@ const { applyMiddleware, createResolvers } = Axolotl(graphqlYogaAdapter)<Models>
 });
 
 const Beer = BeerOrm();
-
 const resolvers = createResolvers({
   Query: {
     beers: () => Beer.list(),
@@ -26,7 +25,6 @@ const resolvers = createResolvers({
     },
   },
 });
-
 // This is yoga specific
 applyMiddleware(
   resolvers,

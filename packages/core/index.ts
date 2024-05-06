@@ -56,15 +56,21 @@ export const Axolotl =
     type Handler = CustomHandler<Inp>;
     type MiddlewareHandler = CustomMiddlewareHandler<Inp>;
 
-    const createResolvers = <Z>(k: Z | Resolvers) => k as Z;
+    const createResolvers = <Z extends Resolvers>(
+      k: Z & {
+        [P in keyof Z]: P extends keyof Resolvers ? Z[P] : never;
+      },
+    ) => k as Z;
 
     if (!production) {
       // We need to generate models for Axolotl to work this is called with CLI but also on every dev run to keep things in sync
       generateModels({ schemaPath, modelsPath });
     }
 
-    const applyMiddleware = <Z>(
-      r: Z | Resolvers,
+    const applyMiddleware = <Z extends Resolvers>(
+      r: Z & {
+        [P in keyof Z]: P extends keyof Resolvers ? Z[P] : never;
+      },
       middlewares: MiddlewareHandler[],
       k: {
         [P in keyof Z]?: {
