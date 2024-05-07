@@ -10,21 +10,24 @@ export interface UpdateBeer {
 export type Models = {
   ['Beer']: {
     name: {
-      args: never;
+      args: Record<string, never>;
     };
     price: {
-      args: never;
+      args: Record<string, never>;
     };
     _id: {
-      args: never;
+      args: Record<string, never>;
     };
     createdAt: {
-      args: never;
+      args: Record<string, never>;
+    };
+    info: {
+      args: Record<string, never>;
     };
   };
   ['Query']: {
     beers: {
-      args: never;
+      args: Record<string, never>;
     };
   };
   ['Mutation']: {

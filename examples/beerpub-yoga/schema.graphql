@@ -3,6 +3,7 @@ type Beer implements Node{
 	price: Int!
 	_id: String!
 	createdAt: String!
+	info:String
 }
 
 type Query{

@@ -46,14 +46,16 @@ export const resolveField = (f: ParserField): string => {
   return `${TAB(1)}${f.name}${isNullType(resolveFieldType(toTsType(getTypeName(f.type.fieldType)), f.type.fieldType))}`;
 };
 
+const NeverRecord = `Record<string, never>`;
+
 const buildArgs = (args: ParserField[]) => {
-  if (args.length === 0) return 'never;';
+  if (args.length === 0) return `${NeverRecord};`;
   const inputFields = args.map((a) => `${TAB(3)}${resolveField(a)};`);
   return `{\n${inputFields.join('\n')}\n${TAB(3)}};`;
 };
 
 const buildEnumArgs = (args: ParserField[]) => {
-  if (args.length === 0) return 'never';
+  if (args.length === 0) return NeverRecord;
   const inputFields = args.map((a) => `${TAB(1)}${a.name} = "${a.name}"`);
   return `{\n${inputFields.join(',\n')}\n}`;
 };
