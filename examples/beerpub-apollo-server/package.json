@@ -12,7 +12,7 @@
     "start": "node lib/index.js",
     "build": "tspc",
     "watch": "tspc --watch",
-    "update": "gecli codegen models && gecli schema && gecli codegen typings"
+    "dev": "nodemon"
   },
   "author": "GraphQL Editor Centaur Generator",
   "license": "ISC",
