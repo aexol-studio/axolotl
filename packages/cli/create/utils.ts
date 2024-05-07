@@ -100,12 +100,15 @@ function runCommands(path: string, example: string): { error: string } | { succe
     if (!checkout) return { error: "can't clone repository" };
 
     let copy;
+
     if (system.platform === 'win32') {
       copy = runCommand(`cd ${path} && xcopy /E /Y examples\\${example} . && rmdir /S /Q examples`);
-    } else copy = runCommand(`cd ${path} && cp -r examples/${example}/* . && rm -rf examples`);
+    } else copy = runCommand(`cd ${path} && cp -r examples/${example}/* examples/${example}/.* . && rm -rf examples`);
+
     if (!copy) return { error: "can't clone repository" };
 
     let cleanUpGit;
+
     if (system.platform === 'win32') {
       cleanUpGit = runCommand(`cd ${path} && rmdir /S /Q .git`);
     } else cleanUpGit = runCommand(`cd ${path} && rm -rf .git`);
