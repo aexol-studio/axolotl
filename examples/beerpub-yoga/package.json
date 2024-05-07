@@ -13,7 +13,7 @@
     "build": "tspc",
     "watch": "tspc --watch",
     "models": "axolotl build -m ./src/models.ts -s schema.graphql",
-    "dev": "nodemon lib/index.js"
+    "dev": "nodemon"
   },
   "author": "GraphQL Editor Centaur Generator",
   "license": "ISC",

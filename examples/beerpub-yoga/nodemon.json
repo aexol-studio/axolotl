@@ -1,10 +1,11 @@
 {
+  "exec":"axolotl build -m ./src/models.ts -s schema.graphql && tspc && node lib/index.js",
   "ignore": [
     ".git",
     "node_modules/**/node_modules"
   ],
   "watch":[
-    "lib/",
+    "src/",
     "schema.graphql",
     ".env*"
   ]
