@@ -1,14 +1,9 @@
-import { Axolotl } from '@aexol/axolotl-core';
-import { Models } from '@/src/models.js';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import { apolloServerAdapter } from '@aexol/axolotl-apollo-server';
 
 import { BeerOrm } from '@/src/ormBeersFile.js';
+import { createResolvers, applyMiddleware } from '@/src/axolotl.js';
 
-const { applyMiddleware, createResolvers } = Axolotl(apolloServerAdapter)<Models>({
-  modelsPath: './src/models.ts',
-  schemaPath: './schema.graphql',
-});
 
 const Beer = BeerOrm();
 

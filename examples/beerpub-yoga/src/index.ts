@@ -1,12 +1,6 @@
-import { Axolotl } from '@aexol/axolotl-core';
-import { Models } from '@/src/models.js';
 import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
 import { BeerOrm } from '@/src/ormBeersFile.js';
-
-const { applyMiddleware, createResolvers } = Axolotl(graphqlYogaAdapter)<Models>({
-  modelsPath: './src/models.ts',
-  schemaPath: './schema.graphql',
-});
+import { applyMiddleware, createResolvers } from '@/src/axolotl.js';
 
 const Beer = BeerOrm();
 const resolvers = createResolvers({

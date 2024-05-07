@@ -1,13 +1,8 @@
 import { FieldResolveInput } from 'stucco-js';
-import { Axolotl } from '@aexol/axolotl-core';
 import { stuccoAdapter } from '@aexol/axolotl-stucco';
-import { Models } from '@/src/models.js';
 import { BeerOrm } from '@/src/ormBeersFile.js';
+import { applyMiddleware, createResolvers } from '@/src/axolotl.js';
 
-const { applyMiddleware, createResolvers } = Axolotl(stuccoAdapter)<Models>({
-  modelsPath: './src/models.ts',
-  schemaPath: './schema.graphql',
-});
 
 const Beer = BeerOrm();
 
