@@ -1,5 +1,5 @@
 import { ResolversUnknown } from '@/types';
-import { Parser, TypeDefinition, compileType } from 'graphql-js-tree';
+import { Parser, ScalarTypes, TypeDefinition, compileType, getTypeName } from 'graphql-js-tree';
 import { readFileSync } from 'node:fs';
 import * as path from 'node:path';
 
@@ -12,8 +12,12 @@ export const inspectResolvers = async (resolversPath: string, schemaPath = './sc
     t.args
       .map((a) => {
         const i = resolvers[t.name]?.[a.name] as () => void | undefined;
+        const typeName = getTypeName(a.type.fieldType);
+        const isBuiltInScalar = (
+          [ScalarTypes.Boolean, ScalarTypes.Float, ScalarTypes.ID, ScalarTypes.Int, ScalarTypes.String] as string[]
+        ).includes(typeName);
         if (!i) {
-          return [t.name, a.name, compileType(a.type.fieldType)] as const;
+          return [t.name, a.name, compileType(a.type.fieldType), isBuiltInScalar] as const;
         }
         return;
       })
