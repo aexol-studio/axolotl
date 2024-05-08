@@ -8,7 +8,6 @@ export const inspectResolvers = async (resolversPath: string, schemaPath = './sc
   const fileContent = readFileSync(path.join(process.cwd(), schemaPath), 'utf8');
   const { nodes } = Parser.parse(fileContent);
   const types = nodes.filter((n) => n.data.type === TypeDefinition.ObjectTypeDefinition);
-  console.log({ resolvers });
   const unImplemented = types.flatMap((t) =>
     t.args
       .map((a) => {
