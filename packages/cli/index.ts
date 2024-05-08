@@ -63,12 +63,25 @@ export default resolvers
 `,
     './lib/resolvers.js',
   )
-  .action((options) => {
+  .action(async (options) => {
     const schemaPath = options.schema || './schema.graphql';
     const resolversPath = options.resolvers || './src/resolvers.ts';
-    const generationMessage = `finished checking resolvers`;
-    inspectResolvers(resolversPath, schemaPath);
-    console.log(chalk.greenBright(generationMessage));
+    const unImplemented = await inspectResolvers(resolversPath, schemaPath);
+    unImplemented.forEach(([type, field, compiled]) => {
+      console.log(
+        `${chalk.magenta(type)}.${chalk.blueBright(field)} of type: ${chalk.magentaBright(
+          compiled,
+        )} is not implemented inside axolotl resolvers.`,
+      );
+    });
+    console.log(
+      chalk.greenBright(
+        `\nFinished checking resolvers. ${chalk.yellow(
+          `${unImplemented.length} resolvers not implemented`,
+        )}. Remember that in GraphQL you don't need to implement resolver for every field.`,
+      ),
+    );
+    process.exit();
   });
 createApp(program);
 
