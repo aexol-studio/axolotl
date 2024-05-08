@@ -1,43 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { generateModels } from '@/gen.js';
-
-export interface CustomHandler<InputType, ArgumentsType = unknown> {
-  (input: InputType, args: ArgumentsType extends { args: infer R } ? R : never): any;
-}
-export interface CustomMiddlewareHandler<InputType> {
-  (input: InputType): InputType;
-}
-
-export type ResolversUnknown<InputType> = {
-  [x: string]: {
-    [x: string]: (input: InputType, args?: any) => any | undefined | Promise<any | undefined>;
-  };
-};
-
-type InferAdapterType<ADAPTER extends (passedResolvers: ResolversUnknown<any>, production?: boolean) => any> =
-  Parameters<ADAPTER>[0] extends {
-    [x: string]: {
-      [y: string]: infer R;
-    };
-  }
-    ? R extends (...args: any[]) => any
-      ? Parameters<R>[0]
-      : never
-    : never;
+import { ResolversUnknown, InferAdapterType, CustomHandler, CustomMiddlewareHandler } from '@/types';
 
 export const AxolotlAdapter =
   <Inp>() =>
   <T>(fn: (passedResolvers: ResolversUnknown<Inp>, production?: boolean) => T) =>
     fn;
 
-export { generateModels };
-
 export const Axolotl =
   <ADAPTER extends (passedResolvers: ResolversUnknown<any>, production?: boolean) => any>(adapter: ADAPTER) =>
   <Models>({
-    production,
     schemaPath,
     modelsPath,
   }: {
@@ -45,7 +18,6 @@ export const Axolotl =
     schemaPath: string;
     modelsPath: string;
     // Instead of controlling developer and production mode by some force envs we allow to control it however you want. Generators don't run on production
-    production?: boolean;
   }) => {
     type Inp = InferAdapterType<ADAPTER>;
     type Resolvers = {
@@ -61,11 +33,6 @@ export const Axolotl =
         [P in keyof Z]: P extends keyof Resolvers ? Z[P] : never;
       },
     ) => k as Z;
-
-    if (!production) {
-      // We need to generate models for Axolotl to work this is called with CLI but also on every dev run to keep things in sync
-      generateModels({ schemaPath, modelsPath });
-    }
 
     const applyMiddleware = <Z extends Resolvers>(
       r: Z & {
@@ -104,3 +71,7 @@ export const setSourceTypeFromResolver =
   (source: any) => {
     return source as R;
   };
+
+export * from '@/types.js';
+export * from '@/gen.js';
+export * from '@/inspect.js';

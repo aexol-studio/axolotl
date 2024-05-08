@@ -4,6 +4,7 @@
   "from-examples": "Start from Starter",
   "infer-source": "Infer Source",
   "adapters": "Adapters",
+  "inspect": "Inspect missing resolvers",
   "tests": "Tests",
   "deploy": "Deploy",
   "examples":"Examples",

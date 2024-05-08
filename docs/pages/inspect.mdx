@@ -1,0 +1,104 @@
+# inspect
+
+Axolotl inspect command is dedicated for inspecting implemented, to check which
+fields are left for implementation.
+
+```sh
+npx axolotl inspect -s ./schema.graphql -r ./lib/resolvers.js
+```
+
+Remember to build the project before running inspect. Also your resolvers file
+should contain default export.
+
+Here is the example file we can inspect:
+
+```ts filename="./src/resolvers.ts"
+import { BeerOrm } from '@/src/ormBeersFile.js';
+import { createResolvers } from '@/src/axolotl.js';
+
+const Beer = BeerOrm();
+const resolvers = createResolvers({
+  Query: {
+    beers: () => Beer.list(),
+  },
+  Mutation: {
+    addBeer: (input, args) => {
+      return Beer.create(args.beer);
+    },
+    deleteBeer: (input, args) => {
+      return Beer.remove(args);
+    },
+    updateBeer: (input, args) => {
+      return Beer.update(args._id, args.beer);
+    },
+  },
+});
+
+export default resolvers
+```
+
+And the schema used for inspect:
+
+```graphql filename="./schema.graphql"
+type Beer implements Node{
+	name: String!
+	price: Int!
+	_id: String!
+	createdAt: String!
+	info:String
+}
+
+type Query{
+	beers: [Beer!]
+}
+
+type Mutation{
+	addBeer(
+		beer: CreateBeer!
+	): String
+	deleteBeer(
+		_id: String!
+	): Boolean
+	updateBeer(
+		beer: UpdateBeer!
+		_id: String!
+	): Boolean
+}
+
+input CreateBeer{
+	name: String!
+	price: Int!
+}
+
+interface Node{
+	_id: String!
+	createdAt: String!
+}
+
+input UpdateBeer{
+	name: String
+	price: Int
+}
+
+schema{
+	query: Query
+	mutation: Mutation
+}
+```
+
+Then after running this command:
+
+```sh
+npx axolotl inspect -s ./schema.graphql -r ./lib/resolvers.js
+```
+
+The result should be the following:
+
+```sh
+Beer.name is not implemented in resolvers passed to Axolotl
+Beer.price is not implemented in resolvers passed to Axolotl
+Beer._id is not implemented in resolvers passed to Axolotl
+Beer.createdAt is not implemented in resolvers passed to Axolotl
+Beer.info is not implemented in resolvers passed to Axolotl
+```
+
