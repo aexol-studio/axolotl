@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
 import { applyMiddleware } from '@/src/axolotl.js';
 import resolvers from '@/src/resolvers.js';
 
-// This is yoga specific
+// This is yoga specifica
 applyMiddleware(
   resolvers,
   [

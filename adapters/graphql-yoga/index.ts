@@ -5,7 +5,13 @@ import { YogaInitialContext, createSchema, createYoga } from 'graphql-yoga';
 import { createServer } from 'http';
 import * as path from 'path';
 
-export const graphqlYogaAdapter = AxolotlAdapter<[any, any, YogaInitialContext]>()((resolvers) => {
+export const graphqlYogaAdapter = AxolotlAdapter<[any, any, YogaInitialContext]>()((
+  resolvers,
+  options?: {
+    yoga?: Parameters<typeof createYoga>[0];
+    schema?: Parameters<typeof createYoga>[0]['schema'];
+  },
+) => {
   const yogaResolvers = Object.fromEntries(
     Object.entries(resolvers).map(([typeName, v]) => {
       return [
@@ -25,7 +31,9 @@ export const graphqlYogaAdapter = AxolotlAdapter<[any, any, YogaInitialContext]>
   );
   const schemaFile = readFileSync(path.join(process.cwd(), './schema.graphql'), 'utf-8');
   const yoga = createYoga({
+    ...options?.yoga,
     schema: createSchema({
+      ...options?.schema,
       typeDefs: schemaFile,
       resolvers: yogaResolvers,
     }),

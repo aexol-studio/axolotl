@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { generateModels, inspectResolvers } from '@aexol/axolotl-core';
+import { chaos, generateModels, inspectResolvers } from '@aexol/axolotl-core';
 import { createApp } from './create/index.js';
 import { watch } from 'chokidar';
 import chalk from 'chalk';
@@ -96,6 +96,14 @@ export default resolvers
       ),
     );
     process.exit();
+  });
+program
+  .command('chaos')
+  .description('Perform chaos testing on GraphQL server')
+  .option('-s, --schema <path>', 'schema to compare', './schema.graphql')
+  .option('-u, --url <path>', 'url path to the server', 'http://localhost:4000/graphql')
+  .action((options) => {
+    chaos(options.url, options.schema);
   });
 createApp(program);
 

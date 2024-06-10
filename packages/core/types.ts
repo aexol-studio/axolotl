@@ -10,7 +10,7 @@ export interface CustomMiddlewareHandler<InputType> {
   (input: InputType): InputType;
 }
 
-export type InferAdapterType<ADAPTER extends (passedResolvers: ResolversUnknown<any>, production?: boolean) => any> =
+export type InferAdapterType<ADAPTER extends (passedResolvers: ResolversUnknown<any>) => any> =
   Parameters<ADAPTER>[0] extends {
     [x: string]: {
       [y: string]: infer R;

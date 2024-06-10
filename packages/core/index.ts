@@ -5,11 +5,11 @@ import { ResolversUnknown, InferAdapterType, CustomHandler, CustomMiddlewareHand
 
 export const AxolotlAdapter =
   <Inp>() =>
-  <T>(fn: (passedResolvers: ResolversUnknown<Inp>, production?: boolean) => T) =>
+  <T, Z>(fn: (passedResolvers: ResolversUnknown<Inp>, options?: Z) => T) =>
     fn;
 
 export const Axolotl =
-  <ADAPTER extends (passedResolvers: ResolversUnknown<any>, production?: boolean) => any>(adapter: ADAPTER) =>
+  <ADAPTER extends <Z>(passedResolvers: ResolversUnknown<any>) => any>(adapter: ADAPTER) =>
   <Models>({
     schemaPath,
     modelsPath,
@@ -73,5 +73,6 @@ export const setSourceTypeFromResolver =
   };
 
 export * from '@/types.js';
+export * from '@/chaos.js';
 export * from '@/gen.js';
 export * from '@/inspect.js';
