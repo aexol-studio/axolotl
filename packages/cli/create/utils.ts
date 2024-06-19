@@ -43,10 +43,15 @@ export const createAppAction = ({
         )} example created.`,
       },
       { message: `To run it, type:`, color: 'white' as const },
-      {
-        message: `cd ${chalk.magenta(`${path}`)} && ${chalk.magenta(`npm run start`)}`,
-        color: 'yellow' as const,
-      },
+      isDeno
+        ? {
+            message: `cd ${chalk.magenta(`${path}`)} && ${chalk.magenta(`deno task start`)}`,
+            color: 'yellow' as const,
+          }
+        : {
+            message: `cd ${chalk.magenta(`${path}`)} && ${chalk.magenta(`npm run start`)}`,
+            color: 'yellow' as const,
+          },
     ];
 
     log(successMessages);

@@ -3,6 +3,6 @@
     "exports": "./index.ts",
     "tasks": {
         "generate": "deno run --allow-env --allow-write --allow-read npm:@aexol/axolotl build -m ./models.ts -s schema.graphql",
-        "start":"deno run --allow-net index.ts"
+        "start":"deno run --allow-net --allow-read --allow-env index.ts"
     }
 }
