@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { readFileSync } from 'node:fs';
-import { AxolotlAdapter } from 'npm:@aexol/axolotl-core@^0.2.6';
+import { AxolotlAdapter } from 'npm:@aexol/axolotl-core@^0.2.7';
 import type { YogaInitialContext } from 'npm:graphql-yoga@^5.4.0';
 import { createSchema, createYoga } from 'npm:graphql-yoga@^5.4.0';
 import * as path from 'node:path';

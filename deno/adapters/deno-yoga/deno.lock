@@ -3,11 +3,20 @@
   "packages": {
     "specifiers": {
       "npm:@aexol/axolotl-core": "npm:@aexol/axolotl-core@0.2.6",
-      "npm:graphql-yoga": "npm:graphql-yoga@5.4.0_graphql@16.8.2"
+      "npm:@aexol/axolotl-core@^0.2.7": "npm:@aexol/axolotl-core@0.2.7",
+      "npm:@types/node": "npm:@types/node@18.16.19",
+      "npm:graphql-yoga": "npm:graphql-yoga@5.4.0_graphql@16.8.2",
+      "npm:graphql-yoga@^5.4.0": "npm:graphql-yoga@5.4.0_graphql@16.8.2"
     },
     "npm": {
       "@aexol/axolotl-core@0.2.6": {
         "integrity": "sha512-ge32p5g/XUiXnCdPvTlcTtI1QcfVHEOMfYEMoRaQUxErRkH1Ibzi67xGy4rIQUoLOGKuch+vJnz8O+A78f26OA==",
+        "dependencies": {
+          "graphql-js-tree": "graphql-js-tree@1.0.9"
+        }
+      },
+      "@aexol/axolotl-core@0.2.7": {
+        "integrity": "sha512-OoKKxiuhjK/SeCcSmKFCYh2+NkOpcI0uu5MICX/tHo7cKPxbVrxZeUCtAzrwrvwpo+3QJqjBQPSrdtDIUx6k0A==",
         "dependencies": {
           "graphql-js-tree": "graphql-js-tree@1.0.9"
         }
@@ -98,6 +107,10 @@
       },
       "@repeaterjs/repeater@3.0.6": {
         "integrity": "sha512-Javneu5lsuhwNCryN+pXH93VPQ8g0dBX7wItHFgYiwQmzE1sVdg5tWHiOgHywzL2W21XQopa7IwIEnNbmeUJYA==",
+        "dependencies": {}
+      },
+      "@types/node@18.16.19": {
+        "integrity": "sha512-IXl7o+R9iti9eBW4Wg2hx1xQDig183jj7YLn8F7udNceyfkbn1ZxmzZXuak20gR40D7pIkIY1kYGx5VIGbaHKA==",
         "dependencies": {}
       },
       "@whatwg-node/events@0.1.1": {
