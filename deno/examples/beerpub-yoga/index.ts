@@ -1,3 +1,4 @@
-import graphqlYogaDenoAdapter from 'jsr:@aexol/axolotl-deno-yoga';
+import { adapter } from './axolotl.ts';
+import resolvers from './resolvers.ts';
 
-graphqlYogaDenoAdapter;
+Deno.serve(adapter(resolvers));

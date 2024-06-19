@@ -3,9 +3,7 @@ import graphqlYogaDenoAdapter from 'jsr:@aexol/axolotl-deno-yoga';
 
 import { Models } from './models.ts';
 
-const { applyMiddleware, createResolvers } = Axolotl(graphqlYogaDenoAdapter)<Models>({
+export const { applyMiddleware, createResolvers, adapter } = Axolotl(graphqlYogaDenoAdapter)<Models>({
   modelsPath: './src/models.ts',
   schemaPath: './schema.graphql',
 });
-
-export { applyMiddleware, createResolvers };
