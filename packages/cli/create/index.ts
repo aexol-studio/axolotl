@@ -9,14 +9,14 @@ export const createApp = (program: Command) => {
     .command('create-dockerfile')
     .description(`${chalk.magenta('Axolotl Starter')} - docker files creator`)
     .action(createDockerFile);
-  Object.entries(STARTER_DICT).forEach(([key, { description: _description, repo, example }]) => {
+  Object.entries(STARTER_DICT).forEach(([key, { description: _description, repo, example, isDeno }]) => {
     const starter = key as STARTERS;
     const command = `create-${starter} [dir]`;
     const description = `${chalk.magenta('Axolotl Starter')} - ${_description}`;
     program
       .command(command)
       .description(description)
-      .action((destination) => createAppAction({ starter, repo, example, destination }))
+      .action((destination) => createAppAction({ starter, repo, example, destination, isDeno }))
       .on('--help', () => {
         console.log('');
         console.log(

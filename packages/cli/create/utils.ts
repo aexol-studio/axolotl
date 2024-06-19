@@ -11,10 +11,12 @@ export const createAppAction = ({
   starter,
   repo,
   example,
+  isDeno,
   destination: _destination,
 }: {
   starter: string;
   repo: string;
+  isDeno?: boolean;
   example: string;
   destination?: string;
 }) => {
@@ -32,7 +34,7 @@ export const createAppAction = ({
   ];
   log(installationMessages);
 
-  const trigger = runCommands(path, example);
+  const trigger = runCommands(path, example, isDeno);
   if ('success' in trigger) {
     const successMessages = [
       {
@@ -82,45 +84,46 @@ export const createDockerFile = () => {
   );
 };
 
-function runCommands(path: string, example: string): { error: string } | { success: boolean } {
+function runCommands(destination: string, example: string, isDeno?: boolean): { error: string } | { success: boolean } {
   try {
     const system = checkSystem({ node: '16.20' });
     if (system.error) return { error: system.error };
 
-    if (fs.existsSync(path)) return { error: 'folder already exists' };
-    if (!isPathValid(path)) return { error: 'invalid path' };
+    if (fs.existsSync(destination)) return { error: 'folder already exists' };
+    if (!isPathValid(destination)) return { error: 'invalid path' };
     if (!runCommand(`git --version`, false)) return { error: 'git is not installed' };
 
-    const clone = runCommand(`git clone -n --depth=1 --filter=tree:0 ${BASE_REPOSITORY} ${path}`);
+    const clone = runCommand(`git clone -n --depth=1 --filter=tree:0 ${BASE_REPOSITORY} ${destination}`);
     if (!clone) return { error: "can't clone repository" };
 
     const checkout = runCommand(
-      `cd ${path} && git config core.sparseCheckout true && git sparse-checkout set examples/${example} && git checkout && git config core.sparseCheckout false`,
+      `cd ${destination} && git config core.sparseCheckout true && git sparse-checkout set ${example} && git checkout && git config core.sparseCheckout false`,
     );
     if (!checkout) return { error: "can't clone repository" };
 
     let copy;
-
+    const firstDir = path.dirname(example).split('/')[0];
     if (system.platform === 'win32') {
-      copy = runCommand(`cd ${path} && xcopy /E /Y examples\\${example} . && rmdir /S /Q examples`);
-    } else copy = runCommand(`cd ${path} && cp -r examples/${example}/* examples/${example}/.* . && rm -rf examples`);
+      copy = runCommand(`cd ${destination} && xcopy /E /Y ${example.replace('/', '\\')} . && rmdir /S /Q ${firstDir}`);
+    } else copy = runCommand(`cd ${destination} && cp -r ${example}/* ${example}/.* . && rm -rf ${firstDir}`);
 
     if (!copy) return { error: "can't clone repository" };
 
     let cleanUpGit;
 
     if (system.platform === 'win32') {
-      cleanUpGit = runCommand(`cd ${path} && rmdir /S /Q .git`);
-    } else cleanUpGit = runCommand(`cd ${path} && rm -rf .git`);
+      cleanUpGit = runCommand(`cd ${destination} && rmdir /S /Q .git`);
+    } else cleanUpGit = runCommand(`cd ${destination} && rm -rf .git`);
     if (!cleanUpGit) return { error: "can't clone repository" };
 
     // init new git - if fails nothing happens we can continue
-    runCommand(`cd ${path} && git init --quiet`, false);
-    if (!runCommand(`cd ${path} && npm install`)) return { error: 'problem with installing dependencies' };
+    runCommand(`cd ${destination} && git init --quiet`, false);
+    if (isDeno) return { success: true };
+    if (!runCommand(`cd ${destination} && npm install`)) return { error: 'problem with installing dependencies' };
 
     return { success: true };
   } catch (error) {
-    return { error: 'command failed' };
+    return { error: 'command failed ' + (error instanceof Error ? error.message : '') };
   }
 }
 
