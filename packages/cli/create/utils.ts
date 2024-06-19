@@ -105,7 +105,7 @@ function runCommands(destination: string, example: string, isDeno?: boolean): { 
     const firstDir = path.dirname(example).split('/')[0];
     if (system.platform === 'win32') {
       copy = runCommand(`cd ${destination} && xcopy /E /Y ${example.replace('/', '\\')} . && rmdir /S /Q ${firstDir}`);
-    } else copy = runCommand(`cd ${destination} && cp -r ${example}/* ${example}/.* . && rm -rf ${firstDir}`);
+    } else copy = runCommand(`cd ${destination} && cp -r ${example}/. . && rm -rf ${firstDir}`);
 
     if (!copy) return { error: "can't clone repository" };
 

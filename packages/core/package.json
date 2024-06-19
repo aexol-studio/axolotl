@@ -1,6 +1,6 @@
 {
   "name": "@aexol/axolotl-core",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "private": false,
   "main": "./lib/index.js",
   "author": "Aexol, Artur Czemiel",
