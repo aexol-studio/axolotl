@@ -1,0 +1,40 @@
+# GraphQL Yoga with Deno
+
+You need a `schema.graphql` in the root of your repository. Then execute this command:
+
+```sh
+$ deno run --allow-env --allow-write --allow-read npm:@aexol/axolotl build -m ./models.ts -s schema.graphql
+```
+
+This command will generate `models.ts` file inside the root folder with GraphQL
+typings for resolvers structure and it's isArgumentsObject.
+
+Then write your `axolotl.ts` file.
+
+```ts filename="axolotl.ts"
+import { Axolotl } from 'npm:@aexol/axolotl-core@^0.2.7';
+import { graphqlYogaAdapter } from '@aexol/axolotl-deno-yoga@^0.1.1';
+import { Models } from './models.ts';
+
+export const { createResolvers, adapter } = Axolotl(graphqlYogaAdapter)<Models>({
+  modelsPath: './src/models.ts',
+  schemaPath: './schema.graphql',
+});
+```
+
+```ts filename="resolvers.ts"
+import { createResolvers } from './axolotl.ts';
+export default createResolvers({
+    // your type-safe resolvers here
+});
+```
+
+Then write your `index.ts` file.
+
+```ts filename="index.ts"
+import { adapter } from './axolotl.ts';
+import resolvers from './resolvers.ts';
+
+Deno.serve(adapter(resolvers));
+```
+

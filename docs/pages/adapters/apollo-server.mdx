@@ -18,20 +18,33 @@ $ npx @aexol/axolotl models
 
 Then write your `index.ts` file. The `apolloServerAdapter()` will return ApolloServer object, so to start a server in easiest way you may use standalone server from apollo.
 
-```ts filename="index.ts"
+```ts filename="axolotl.ts"
 import { Axolotl } from '@aexol/axolotl-core';
 import { apolloServerAdapter } from '@aexol/axolotl-apollo-server';
 import { Models } from '@/src/models.js';
 
-const { createResolvers } = Axolotl(apolloServerAdapter)<Models>({
+export const { createResolvers, adapter } = Axolotl(apolloServerAdapter)<Models>({
   modelsPath: './src/models.ts',
   schemaPath: './schema.graphql',
 });
 
-const resolvers = createResolvers({
+```
+
+```ts filename="resolvers.ts"
+import { createResolvers } from '@/src/axolotl.js';
+
+export default createResolvers({
     // your type-safe resolvers here
 });
+```
 
-const { url } = await startStandaloneServer(apolloServerAdapter(resolvers))
+```ts filename="index.ts"
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { adapter, applyMiddleware } from '@/src/axolotl.js';
+import resolvers from '@/src/resolvers.js';
+
+const {url } = await startStandaloneServer(adapter(resolvers))
 console.log(`Server ready at ${url}`);
 ```
+
+

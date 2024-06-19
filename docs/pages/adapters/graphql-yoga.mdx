@@ -16,23 +16,34 @@ First execute models command
 $ npx @aexol/axolotl models
 ```
 
-Then write your `index.ts` file.
+Then write your `axolotl.ts` file.
 
-```ts filename="index.ts"
+```ts filename="axolotl.ts"
 import { Axolotl } from '@aexol/axolotl-core';
 import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
-import { Models } from '@/src/models.js';
+import { Models } from './models.js';
 
-const { createResolvers } = Axolotl(graphqlYogaAdapter)<Models>({
+export const { createResolvers, adapter } = Axolotl(graphqlYogaAdapter)<Models>({
   modelsPath: './src/models.ts',
   schemaPath: './schema.graphql',
 });
+```
 
-const resolvers = createResolvers({
+```ts filename="resolvers.ts"
+import { createResolvers } from './axolotl.js';
+export default createResolvers({
     // your type-safe resolvers here
 });
+```
 
-graphqlYogaAdapter(resolvers).listen(4000, () => {
+Then write your `index.ts` file.
+
+```ts filename="index.ts"
+import { adapter } from './axolotl.js';
+import resolvers from './resolvers.js';
+
+adapter(resolvers).listen(4000, () => {
   console.log('LISTENING');
 });
 ```
+

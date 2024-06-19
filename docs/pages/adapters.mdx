@@ -6,6 +6,13 @@ for resolvers and there is very low migration effort if we want to change the
 server library. Moreover you can run different GraphQL Engines for different
 parts of your graph in future.
 
+## Currently implemented adapters
+
+- [GraphQL Yoga NodeJS](/adapters/graphql-yoga)
+- [GraphQL Yoga Deno](/adapters/deno-yoga)
+- [Apollo Server](/adapters/apollo-server)
+- [StuccoJS](/adapters/stucco)
+
 
 ## How to write our own adapter
 
@@ -57,3 +64,4 @@ As you may see in this yoga adapter is responsible for:
 - starting GraphQL serviers
 - merging the resolvers into yoga Object
 - reading the schema
+import { Server } from "http"

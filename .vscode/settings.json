@@ -7,5 +7,4 @@
     "deno.enablePaths": [
         "./deno",
     ],
-    "deno.enable": true
 }

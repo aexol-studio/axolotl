@@ -24,6 +24,7 @@ Axolotl is a framework overlord/wrapper to forget about type-casting and looking
 - 😂 easy to setup,start and integrate
 - 🫡 from GraphQL Editor and Aexol teams
 - 🪦 No RIP we will maintain forever
+- 🦕 Deno support from 0.2.7
 
 ## 🫠 How?
 
