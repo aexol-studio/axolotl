@@ -9,7 +9,7 @@ export const AxolotlAdapter =
     fn;
 
 export const Axolotl =
-  <ADAPTER extends <Z>(passedResolvers: ResolversUnknown<any>) => any>(adapter: ADAPTER) =>
+  <ADAPTER extends (passedResolvers: ResolversUnknown<any>) => any>(adapter: ADAPTER) =>
   <Models>({
     schemaPath,
     modelsPath,

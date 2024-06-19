@@ -1,0 +1,10 @@
+{
+    "name": "@aexol/axolotl-deno-yoga",
+    "version": "0.1.0",
+    "exports": "./index.ts",
+    "lint": {
+      "rules": {
+        "exclude": ["no-slow-types"]
+      }
+    }
+}

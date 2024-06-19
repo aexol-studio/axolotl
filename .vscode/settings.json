@@ -3,5 +3,8 @@
         "aexol",
         "axolotl"
     ],
-    "typescript.tsdk": "node_modules/typescript/lib"
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "deno.enablePaths": [
+        "./deno/adapters/deno-yoga"
+    ]
 }
