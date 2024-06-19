@@ -61,6 +61,7 @@ export const Axolotl =
     return {
       createResolvers,
       applyMiddleware,
+      adapter,
     };
   };
 

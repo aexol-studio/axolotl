@@ -2,7 +2,7 @@ import { BeerOrm } from '@/src/ormBeersFile.js';
 import { createResolvers } from '@/src/axolotl.js';
 
 const Beer = BeerOrm();
-const resolvers = createResolvers({
+export default createResolvers({
   Query: {
     beers: () => Beer.list(),
   },
@@ -18,5 +18,3 @@ const resolvers = createResolvers({
     },
   },
 });
-
-export default resolvers

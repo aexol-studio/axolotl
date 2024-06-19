@@ -5,6 +5,7 @@
     ],
     "typescript.tsdk": "node_modules/typescript/lib",
     "deno.enablePaths": [
-        "./deno/adapters/deno-yoga"
-    ]
+        "./deno",
+    ],
+    "deno.enable": true
 }

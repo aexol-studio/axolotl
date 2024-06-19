@@ -1,9 +1,6 @@
 import { FieldResolveInput } from 'stucco-js';
-import { stuccoAdapter } from '@aexol/axolotl-stucco';
-import { applyMiddleware } from '@/src/axolotl.js';
+import { applyMiddleware, adapter } from '@/src/axolotl.js';
 import resolvers from '@/src/resolvers.js';
-
-
 
 // This is stucco specific
 export default async (input: FieldResolveInput) => {
@@ -17,5 +14,5 @@ export default async (input: FieldResolveInput) => {
     ],
     { Query: { beers: true } },
   );
-  return stuccoAdapter(resolvers)(input);
+  return adapter(resolvers)(input);
 };

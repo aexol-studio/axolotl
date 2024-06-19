@@ -1,6 +1,6 @@
 {
   "name": "@aexol/axolotl-apollo-server",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "private": false,
   "main": "./lib/index.js",
   "author": "Aexol, Artur Czemiel",
@@ -14,7 +14,7 @@
     "lib"
   ],
   "dependencies": {
-    "@aexol/axolotl-core": "^0.2.6",
+    "@aexol/axolotl-core": "^0.2.7",
     "@apollo/server": "^4.9.4",
     "graphql": "^16.8.1"
   }

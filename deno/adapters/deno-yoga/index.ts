@@ -40,5 +40,5 @@ export default AxolotlAdapter<[any, any, YogaInitialContext]>()((
       resolvers: yogaResolvers,
     }),
   });
-  return Deno.serve(yoga);
+  return yoga
 });
