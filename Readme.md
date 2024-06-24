@@ -33,7 +33,7 @@ Axolotl provides type-safety and it is up to you to choose an adapter (or write 
 ### With stucco
 
 ```sh
-$ npm i @aexol/axolotl-core @aexol/axolotl-stucco
+$ npm i @aexol/axolotl-core @aexol/axolotl-graphql-yoga
 ```
 
 Now you need a `schema.graphql` file or a URL with settings to download the schema from upstream. Out of it Axolotl can generate simple type definitions needed for the library out of your GraphQL Schema.
@@ -56,10 +56,7 @@ import { Models } from '@/src/models.js';
 import { BeerOrm } from '@/src/ormBeersFile.js';
 
 // choose your adapter
-const { applyMiddleware, createResolvers } = Axolotl(stuccoAdapter)<Models>({
-  modelsPath: './src/models.ts',
-  schemaPath: './schema.graphql',
-});
+const { applyMiddleware, createResolvers } = Axolotl(stuccoAdapter)<Models>();
 
 const Beer = BeerOrm();
 
@@ -83,36 +80,13 @@ const resolvers = createResolvers({
 ```
 And choose an adapter. Base idea is that code should run with every GraphQL Server available in nodejs.
 
-### I choose stucco-js
-```ts
-
-// This is stucco specific
-export default async (input: FieldResolveInput) => {
-  applyMiddleware(
-    resolvers,
-    [
-      (input) => {
-        console.log('Hello from Middleware I run only on Query.beers');
-        return input;
-      },
-    ],
-    { Query: { beers: true } },
-  );
-  return stuccoAdapter(resolvers)(input);
-};
-
-```
-
 ### I choose graphql-yoga
 ```ts
 //This you should add on the top
 
 // And change the Axolotl import to yoga specific
 
-const { applyMiddleware, createResolvers } = Axolotl(graphqlYogaAdapter)<Models>({
-  modelsPath: './src/models.ts',
-  schemaPath: './schema.graphql',
-});
+const { applyMiddleware, createResolvers } = Axolotl(graphqlYogaAdapter)<Models>();
 
 // This is yoga specific
 applyMiddleware(
@@ -131,63 +105,6 @@ graphqlYogaAdapter(resolvers).listen(4000, () => {
 });
 ```
 
-### Simple Beer ORM
-I created simple beer orm to spin off examples without a DB.
-```ts
-import { readFileSync, writeFileSync } from 'fs';
-import path from 'path';
-
-type Beer = {
-  name: string;
-  price: number;
-  _id: string;
-  createdAt: string;
-};
-
-const beerFilePath = path.join(process.cwd(), 'beers.json');
-const beers: Array<Beer> = JSON.parse(readFileSync(beerFilePath, 'utf-8'));
-
-export const BeerOrm = () => {
-  const write = () => {
-    writeFileSync(beerFilePath, JSON.stringify(beers));
-  };
-  const create = (beer: Pick<Beer, 'name' | 'price'>) => {
-    const beerId = Math.random().toString(8);
-    beers.push({
-      _id: beerId,
-      createdAt: new Date().toISOString(),
-      ...beer,
-    });
-    write();
-    return beerId;
-  };
-  const remove = (beer: Pick<Beer, '_id'>) => {
-    const deletedIndex = beers.findIndex((b) => b._id === beer._id);
-    beers.splice(deletedIndex, 1);
-    write();
-    return true;
-  };
-  const update = (_id: string, beer: Partial<Pick<Beer, 'name' | 'price'>>) => {
-    const updatedIndex = beers.findIndex((b) => b._id === _id);
-    beers[updatedIndex] = {
-      ...beers[updatedIndex],
-      ...beer,
-    };
-    return true;
-  };
-  const list = () => {
-    return JSON.parse(readFileSync(beerFilePath, 'utf-8')) as Beer[];
-  };
-  return {
-    create,
-    update,
-    remove,
-    list,
-  };
-};
-
-```
-
 ## 🧌 Who?
 
 Me [aexol](https://github.com/aexol) is the author of the lib. I was in the type-safety rabbit hole while building [GraphQL Zeus](https://github.com/graphql-editor/graphql-zeus) a GraphQL Client downloaded almost Million of times. While maintaining zeus and developing together with all-the-time changing TypeScript is really hard. I discovered - I can write something simpler - much powerful, that community needs, that integrates with everything - using the same knowledge.
@@ -197,12 +114,6 @@ Me [aexol](https://github.com/aexol) is the author of the lib. I was in the type
 
 ### Adapters
 Place to develop adapters for popular nodejs frameworks.
-#### How to write adapter
-```ts
-import { AxolotlAdapter } from '@aexol/axolotl-core';
-```
-
-Just wrap your adapter in AxolotlAdapter function which receives resolvers without type specified
 
 ### Examples
 Place to experiments with axolotl and its packages
@@ -215,9 +126,10 @@ Packages to support integration between different schemas. It means that it shou
 
 ### To do
 - [x] try to implement graphql-yoga adapter as a presentation that listen based frameworks can work with axolotl too
-- [] write documentation
-- [] implement e2e testing functionality that takes, query, headers, result and runs the test
-- [] create command to use npx @aexol/axolotl https://github.com/facebook/create-react-app/blob/main/packages/create-react-app/createReactApp.js here is the good example
+- [x] write documentation
+- [ ] implement e2e testing functionality that takes, query, headers, result and runs the test
+- [x] create command to use npx @aexol/axolotl https://github.com/facebook/create-react-app/blob/main/packages/create-react-app/createReactApp.js here is the good example
+- [ ] add schema generation to ts file from URL 
 
 ## Development
 

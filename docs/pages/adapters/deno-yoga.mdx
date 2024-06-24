@@ -16,10 +16,7 @@ import { Axolotl } from 'npm:@aexol/axolotl-core@^0.2.7';
 import { graphqlYogaAdapter } from '@aexol/axolotl-deno-yoga@^0.1.1';
 import { Models } from './models.ts';
 
-export const { createResolvers, adapter } = Axolotl(graphqlYogaAdapter)<Models>({
-  modelsPath: './src/models.ts',
-  schemaPath: './schema.graphql',
-});
+export const { createResolvers, adapter } = Axolotl(graphqlYogaAdapter)<Models>();
 ```
 
 ```ts filename="resolvers.ts"

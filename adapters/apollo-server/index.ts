@@ -5,7 +5,14 @@ import { ApolloServer } from '@apollo/server';
 
 import * as path from 'path';
 
-export const apolloServerAdapter = AxolotlAdapter<[any, any, any, any]>()((resolvers) => {
+export const apolloServerAdapter = AxolotlAdapter<[any, any, any, any]>()((
+  resolvers,
+  options?: {
+    schema?: {
+      file?: { path: string } | { content: string };
+    };
+  },
+) => {
   const apolloResolvers = Object.fromEntries(
     Object.entries(resolvers).map(([typeName, v]) => {
       return [
@@ -24,9 +31,13 @@ export const apolloServerAdapter = AxolotlAdapter<[any, any, any, any]>()((resol
     }),
   );
 
-  const schemaFile = readFileSync(path.join(process.cwd(), './schema.graphql'), 'utf-8');
+  const file = options?.schema?.file;
+  const schema =
+    file && 'content' in file
+      ? file.content
+      : readFileSync(path.join(process.cwd(), file?.path || './schema.graphql'), 'utf-8');
   const apolloServer = new ApolloServer({
-    typeDefs: schemaFile,
+    typeDefs: schema,
     resolvers: apolloResolvers,
   });
 

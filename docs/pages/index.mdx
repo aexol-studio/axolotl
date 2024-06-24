@@ -23,10 +23,7 @@ Axolotl provides type-safety and it is up to you to choose an adapter (or write 
 
 ```ts filename="index.ts"
 // choose your adapter
-const { applyMiddleware, createResolvers } = Axolotl(yourAdapter)<Models>({
-  modelsPath: './src/models.ts',
-  schemaPath: './schema.graphql',
-});
+const { applyMiddleware, createResolvers } = Axolotl(yourAdapter)<Models>();
 
 const resolvers = createResolvers({
   Query: {

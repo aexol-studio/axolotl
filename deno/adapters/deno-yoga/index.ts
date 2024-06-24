@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AxolotlAdapter } from 'npm:@aexol/axolotl-core@^0.2.7';
+import { AxolotlAdapter } from 'npm:@aexol/axolotl-core@^0.3.1';
 import type { YogaInitialContext } from 'npm:graphql-yoga@^5.4.0';
 import { createSchema, createYoga } from 'npm:graphql-yoga@^5.4.0';
 import * as path from 'node:path';

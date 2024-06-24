@@ -7,10 +7,7 @@ here.
 In this example I split the content of our backend to multiple files
 
 ```ts filename="setup.ts"
-export const axolotl = Axolotl(yourAdapter)<Models>({
-  modelsPath: './src/models.ts',
-  schemaPath: './schema.graphql',
-});
+export const axolotl = Axolotl(yourAdapter)<Models>();
 ```
 
 ```ts filename="resolvers.ts"
