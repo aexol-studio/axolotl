@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { readFileSync } from 'fs';
 import { AxolotlAdapter } from '@aexol/axolotl-core';
-import {
-  ApolloServer
-} from '@apollo/server';
+import { ApolloServer } from '@apollo/server';
 
 import * as path from 'path';
 

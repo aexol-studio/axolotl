@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { readFileSync } from 'node:fs';
 import { AxolotlAdapter } from 'npm:@aexol/axolotl-core@^0.2.7';
 import type { YogaInitialContext } from 'npm:graphql-yoga@^5.4.0';
 import { createSchema, createYoga } from 'npm:graphql-yoga@^5.4.0';
@@ -10,7 +9,10 @@ export default AxolotlAdapter<[any, any, YogaInitialContext]>()((
   resolvers,
   options?: {
     yoga?: Parameters<typeof createYoga>[0];
-    schema?: Parameters<typeof createYoga>[0]['schema'];
+    schema?: {
+      options?: Parameters<typeof createYoga>[0]['schema'];
+      file?: { path: string } | { content: string };
+    };
   },
 ) => {
   const yogaResolvers = Object.fromEntries(
@@ -31,14 +33,20 @@ export default AxolotlAdapter<[any, any, YogaInitialContext]>()((
       ];
     }),
   );
-  const schemaFile = readFileSync(path.join(Deno.cwd(), './schema.graphql'), 'utf-8');
+
+  const file = options?.schema?.file;
+  const schema =
+    file && 'content' in file
+      ? file.content
+      : Deno.readTextFileSync(path.join(Deno.cwd(), file?.path || './schema.graphql'));
+
   const yoga = createYoga({
     ...options?.yoga,
     schema: createSchema({
-      ...options?.schema,
-      typeDefs: schemaFile,
+      ...options?.schema?.options,
+      typeDefs: schema,
       resolvers: yogaResolvers,
     }),
   });
-  return yoga
+  return yoga;
 });

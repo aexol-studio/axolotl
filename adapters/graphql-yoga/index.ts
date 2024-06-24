@@ -9,7 +9,10 @@ export const graphqlYogaAdapter = AxolotlAdapter<[any, any, YogaInitialContext]>
   resolvers,
   options?: {
     yoga?: Parameters<typeof createYoga>[0];
-    schema?: Parameters<typeof createYoga>[0]['schema'];
+    schema?: {
+      options?: Parameters<typeof createYoga>[0]['schema'];
+      file?: { path: string } | { content: string };
+    };
   },
 ) => {
   const yogaResolvers = Object.fromEntries(
@@ -29,12 +32,17 @@ export const graphqlYogaAdapter = AxolotlAdapter<[any, any, YogaInitialContext]>
       ];
     }),
   );
-  const schemaFile = readFileSync(path.join(process.cwd(), './schema.graphql'), 'utf-8');
+  const file = options?.schema?.file;
+  const schema =
+    file && 'content' in file
+      ? file.content
+      : readFileSync(path.join(process.cwd(), file?.path || './schema.graphql'), 'utf-8');
+
   const yoga = createYoga({
     ...options?.yoga,
     schema: createSchema({
-      ...options?.schema,
-      typeDefs: schemaFile,
+      ...options?.schema?.options,
+      typeDefs: schema,
       resolvers: yogaResolvers,
     }),
   });

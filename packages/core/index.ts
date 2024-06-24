@@ -10,15 +10,7 @@ export const AxolotlAdapter =
 
 export const Axolotl =
   <ADAPTER extends (passedResolvers: ResolversUnknown<any>) => any>(adapter: ADAPTER) =>
-  <Models>({
-    schemaPath,
-    modelsPath,
-  }: {
-    // input is only required for frameworks with external routing
-    schemaPath: string;
-    modelsPath: string;
-    // Instead of controlling developer and production mode by some force envs we allow to control it however you want. Generators don't run on production
-  }) => {
+  <Models>() => {
     type Inp = InferAdapterType<ADAPTER>;
     type Resolvers = {
       [P in keyof Models]?: {
@@ -57,7 +49,6 @@ export const Axolotl =
         });
       });
     };
-
     return {
       createResolvers,
       applyMiddleware,
