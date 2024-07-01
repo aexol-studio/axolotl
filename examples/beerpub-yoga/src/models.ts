@@ -49,3 +49,19 @@ export type Models = {
     };
   };
 };
+
+export interface Beer {
+  name: string;
+  price: number;
+  _id: string;
+  createdAt: string;
+  info?: string | undefined;
+}
+export interface Query {
+  beers?: Array<Beer> | undefined;
+}
+export interface Mutation {
+  addBeer?: string | undefined;
+  deleteBeer?: boolean | undefined;
+  updateBeer?: boolean | undefined;
+}

@@ -87,9 +87,16 @@ const generateModelsString = (fileContent: string) => {
     })
     .join('\n');
 
-  const typesFullString = `export type Models = {\n${typesString}\n};\n`;
+  const dbTypes = types
+    .map((t) => {
+      const tname = `export interface ${t.name} {\n${t.args.map((a) => `${resolveField(a)};`).join('\n')}\n}`;
+      return tname;
+    })
+    .join('\n');
 
-  return [scalarsString, enumsString, inputsString, typesFullString].filter(Boolean).join('\n\n');
+  const typesFullString = `export type Models = {\n${typesString}\n};`;
+
+  return [scalarsString, enumsString, inputsString, typesFullString, dbTypes].filter(Boolean).join('\n\n') + '\n';
 };
 
 export const generateModels = ({
