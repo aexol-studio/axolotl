@@ -5,9 +5,10 @@
   "infer-source": "Infer Source",
   "adapters": "Adapters",
   "inspect": "Inspect missing resolvers",
+  "building-models": "Building Models",
   "tests": "Tests",
   "deploy": "Deploy",
-  "examples":"Examples",
-  "development":"Development",
-  "roadmap":"Roadmap"
+  "examples": "Examples",
+  "development": "Development",
+  "roadmap": "Roadmap"
 }
