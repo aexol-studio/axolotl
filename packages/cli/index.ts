@@ -4,6 +4,7 @@ import { chaos, generateModels, inspectResolvers } from '@aexol/axolotl-core';
 import { createApp } from './create/index.js';
 import { watch } from 'chokidar';
 import chalk from 'chalk';
+import { ConfigMaker } from 'config-maker';
 const program = new Command();
 
 program
@@ -11,15 +12,39 @@ program
   .description('CLI for axolotl backend framework, type-safe, schema-first, development.')
   .version('0.1.1');
 
+type ProjectOptions = {
+  schema: string,
+  models: string
+  }
+
+const config = new ConfigMaker<ProjectOptions, {}>('configuration', {
+    decoders: {
+      schema:{
+        decode: (v: unknown) => v + '',
+        encode: (v: unknown) => v + '',
+      },
+      models:{
+        decode: (v: unknown) => v + '',
+        encode: (v: unknown) => v + '',
+      }
+    },
+    config:{
+      environment: {
+        schema: 'SCHEMA_PATH',
+        models: 'MODELS_PATH'
+      }
+    }
+  });
+
 program
   .command('build')
   .description('build axolotl models')
-  .option('-s, --schema <path>', 'watch schema changes and regenerate models', './schema.graphql')
-  .option('-m, --models <path>', 'path to generated models file', './models.ts')
+  .option('-s, --schema <path>', 'watch schema changes and regenerate models')
+  .option('-m, --models <path>', 'path to generated models file')
   .option('-w, --watch', 'watch schema changes and regenerate models')
-  .action((options) => {
-    const schemaPath = options.schema || './schema.graphql';
-    const modelsPath = options.models || './models.ts';
+  .action(async (options) => {
+    const schemaPath = await config.getValue("schema", {...('schema' in options && {commandLineProvidedOptions: options})}) ||  "./schema.graphql";
+    const modelsPath = await config.getValue("models", {...('models' in options && {commandLineProvidedOptions: options})}) || "./models.ts";
     generateModels({
       schemaPath,
       modelsPath,
