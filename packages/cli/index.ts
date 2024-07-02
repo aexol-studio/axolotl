@@ -43,8 +43,8 @@ program
   .option('-m, --models <path>', 'path to generated models file')
   .option('-w, --watch', 'watch schema changes and regenerate models')
   .action(async (options) => {
-    const schemaPath = await config.getValue("schema", {...('schema' in options && {commandLineProvidedOptions: options})}) ||  "./schema.graphql";
-    const modelsPath = await config.getValue("models", {...('models' in options && {commandLineProvidedOptions: options})}) || "./models.ts";
+    const schemaPath = await config.getValueOrThrow("schema", {...('schema' in options && {commandLineProvidedOptions: options})})
+    const modelsPath = await config.getValueOrThrow("models", {...('models' in options && {commandLineProvidedOptions: options})})
     generateModels({
       schemaPath,
       modelsPath,
