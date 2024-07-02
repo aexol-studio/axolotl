@@ -33,7 +33,7 @@ Axolotl provides type-safety and it is up to you to choose an adapter (or write 
 ### With stucco
 
 ```sh
-$ npm i @aexol/axolotl-core @aexol/axolotl-graphql-yoga
+ npm i @aexol/axolotl-core @aexol/axolotl-graphql-yoga
 ```
 
 Now you need a `schema.graphql` file or a URL with settings to download the schema from upstream. Out of it Axolotl can generate simple type definitions needed for the library out of your GraphQL Schema.
@@ -43,7 +43,7 @@ Now you need a `schema.graphql` file or a URL with settings to download the sche
 First execute init command
 
 ```sh
-$ npx @aexol/axolotl init
+ npx @aexol/axolotl init
 ```
 
 Then write your index.ts file.
@@ -137,9 +137,9 @@ To start developing you need to know few things:
 - this is npm workspaces monorepo
 - there is sequential build order for command:
 ```sh
-$ npm run build --ws --if-present
+ npm run build --ws --if-present
 ```
 - to run an example execute:
 ```sh
-$ npm run start -w beerpub
+ npm run start -w beerpub
 ```
