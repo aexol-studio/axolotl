@@ -5,6 +5,7 @@ import { createApp } from './create/index.js';
 import { watch } from 'chokidar';
 import chalk from 'chalk';
 import { ConfigMaker } from 'config-maker';
+import { createResolversConfig } from './codegen/index.js';
 const program = new Command();
 
 program
@@ -66,6 +67,9 @@ program
       });
     }
   });
+
+createResolversConfig(program);
+
 program
   .command('inspect')
   .description('inspect axolotl resolvers')

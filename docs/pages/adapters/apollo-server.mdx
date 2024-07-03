@@ -3,7 +3,7 @@
 Install adapter
 
 ```sh
-$ npm i @aexol/axolotl-core @aexol/axolotl-apollo-server
+npm i @aexol/axolotl-core @aexol/axolotl-apollo-server
 ```
 
 Now you need a `schema.graphql` file or a URL with settings to download the schema from upstream. Out of it Axolotl can generate simple type definitions needed for the library out of your GraphQL Schema.
@@ -13,7 +13,7 @@ Now you need a `schema.graphql` file or a URL with settings to download the sche
 First execut emodels command
 
 ```sh
-$ npx @aexol/axolotl models
+npx @aexol/axolotl models
 ```
 
 Then write your `index.ts` file. The `apolloServerAdapter()` will return ApolloServer object, so to start a server in easiest way you may use standalone server from apollo.
