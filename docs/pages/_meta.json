@@ -5,7 +5,7 @@
   "infer-source": "Infer Source",
   "adapters": "Adapters",
   "inspect": "Inspect missing resolvers",
-  "building-models": "Building Models",
+  "config": "Configuration",
   "tests": "Tests",
   "deploy": "Deploy",
   "examples": "Examples",

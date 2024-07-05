@@ -1,0 +1,22 @@
+# Config
+
+Most commands in axolotl are based on the available configuration in the project root folder. To generate the configuration file we can call the command
+
+```sh
+axolotl models
+```
+
+The arguments -m and -s are mandatory. If they are not provided as arguments, you can input them via standard input.
+
+Based on the [beerpub-yoga example](/examples/beerpub-yoga) run `axolotl models`:
+
+Axolotl will generate a configuration file named "configuration.json" which will contain the flags passed when building the models, an example configuration file may look like this
+
+```json
+{
+  "schema": "schema.graphql",
+  "models": "src/models.ts"
+}
+```
+
+This guide should help you understand your Axolotl configuration. More detailed examples can be found in the Examples section.
