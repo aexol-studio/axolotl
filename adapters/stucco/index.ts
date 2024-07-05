@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { FieldResolveInput } from 'stucco-js';
-import { writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import * as path from 'path';
 import { AxolotlAdapter } from '@aexol/axolotl-core';
 
@@ -9,7 +9,6 @@ export const stuccoAdapter = AxolotlAdapter<FieldResolveInput>()(
     const field = input.info.fieldName;
     const typeName = input.info.parentType;
     const type = typeName ? ('name' in typeName ? typeName.name : undefined) : undefined;
-
     if (!production) {
       updateStuccoJson(passedResolvers);
     }
@@ -31,6 +30,7 @@ export const stuccoAdapter = AxolotlAdapter<FieldResolveInput>()(
 );
 
 export const updateStuccoJson = (resolvers: Record<string, Record<string, unknown>>) => {
+  const stuccoPath = path.join(process.cwd(), 'stucco.json');
   let currentStucco: {
     resolvers?: {
       [x: string]: {
@@ -40,7 +40,11 @@ export const updateStuccoJson = (resolvers: Record<string, Record<string, unknow
       };
     };
   } = {};
+  if (existsSync(stuccoPath)) {
+    currentStucco = JSON.parse(readFileSync(stuccoPath, 'utf8'));
+  }
   Object.entries(resolvers).map(([k, v]) => {
+    currentStucco.resolvers = {};
     if (v && typeof v === 'object') {
       Object.entries(v).map(([key, fn]) => {
         if (fn) {
@@ -55,6 +59,5 @@ export const updateStuccoJson = (resolvers: Record<string, Record<string, unknow
       });
     }
   });
-
   writeFileSync(path.join(process.cwd(), 'stucco.json'), JSON.stringify(currentStucco, null, 4));
 };
