@@ -1,5 +1,13 @@
 import { readFileSync, writeFileSync } from 'node:fs';
-import { FieldType, Options, Parser, ParserField, TypeDefinition, getTypeName } from 'graphql-js-tree';
+import {
+  FieldType,
+  Options,
+  Parser,
+  ParserField,
+  TypeDefinition,
+  TypeSystemDefinition,
+  getTypeName,
+} from 'graphql-js-tree';
 
 const TAB = (n: number) =>
   new Array(n)
@@ -94,9 +102,20 @@ const generateModelsString = (fileContent: string) => {
     })
     .join('\n');
 
-  const typesFullString = `export type Models = {\n${typesString}\n};`;
+  const directives = nodes.filter((n) => n.data.type === TypeSystemDefinition.DirectiveDefinition);
+  const directivesString = directives
+    .map((a) => {
+      return `${TAB(2)}${a.name}: {\n${TAB(3)}args: ${buildArgs(a.args)}\n${TAB(2)}};`;
+    })
+    .join('\n');
 
-  return [scalarsString, enumsString, inputsString, typesFullString, dbTypes].filter(Boolean).join('\n\n') + '\n';
+  const typesFullString = `export type Models = {\n${typesString}\n};`;
+  const directivesFullString = directivesString ? `export type Directives = {\n${directivesString}\n};` : '';
+  return (
+    [scalarsString, enumsString, inputsString, typesFullString, directivesFullString, dbTypes]
+      .filter(Boolean)
+      .join('\n\n') + '\n'
+  );
 };
 
 export const generateModels = ({

@@ -1,21 +1,32 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { ResolversUnknown, InferAdapterType, CustomHandler, CustomMiddlewareHandler } from '@/types';
+import {
+  InferAdapterType,
+  CustomHandler,
+  CustomMiddlewareHandler,
+  ObjectsUnknown,
+  InferAdapterTypeDirectives,
+} from '@/types';
 
 export const AxolotlAdapter =
-  <Inp>() =>
-  <T, Z>(fn: (passedResolvers: ResolversUnknown<Inp>, options?: Z) => T) =>
+  <Inp, Dir>() =>
+  <T, Z>(fn: (objects: ObjectsUnknown<Inp, Dir>, options?: Z) => T) =>
     fn;
 
 export const Axolotl =
-  <ADAPTER extends (passedResolvers: ResolversUnknown<any>) => any>(adapter: ADAPTER) =>
-  <Models>() => {
+  <ADAPTER extends (objects: ObjectsUnknown<any, any>) => any>(adapter: ADAPTER) =>
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  <Models, DirectiveModels>() => {
     type Inp = InferAdapterType<ADAPTER>;
+    type Dir = InferAdapterTypeDirectives<ADAPTER>;
     type Resolvers = {
       [P in keyof Models]?: {
         [T in keyof Models[P]]?: CustomHandler<Inp, Models[P][T]>;
       };
+    };
+    type Directives = {
+      [P in keyof DirectiveModels]?: Dir;
     };
     type Handler = CustomHandler<Inp>;
     type MiddlewareHandler = CustomMiddlewareHandler<Inp>;
@@ -23,6 +34,12 @@ export const Axolotl =
     const createResolvers = <Z extends Resolvers>(
       k: Z & {
         [P in keyof Z]: P extends keyof Resolvers ? Z[P] : never;
+      },
+    ) => k as Z;
+
+    const createDirectives = <Z extends Directives>(
+      k: Z & {
+        [P in keyof Z]: Dir;
       },
     ) => k as Z;
 
@@ -51,6 +68,7 @@ export const Axolotl =
     };
     return {
       createResolvers,
+      createDirectives,
       applyMiddleware,
       adapter,
     };

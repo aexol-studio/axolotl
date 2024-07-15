@@ -5,7 +5,7 @@
     ],
     "typescript.tsdk": "node_modules/typescript/lib",
     "deno.enablePaths": [
-        "./deno/adapters/deno-yoga",
+        "./deno/adapters/",
         "./deno/examples/beerpub-yoga",
     ],
 }
