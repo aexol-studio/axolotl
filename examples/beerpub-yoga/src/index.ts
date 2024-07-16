@@ -14,6 +14,6 @@ applyMiddleware(
   { Query: { beers: true } },
 );
 
-adapter({ resolvers, directives }).listen(parseInt(process.env.PORT || '4000'), () => {
+adapter({ resolvers, directives }).server.listen(parseInt(process.env.PORT || '4000'), () => {
   console.log('LISTENING to ' + process.env.PORT || '4000');
 });

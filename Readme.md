@@ -100,7 +100,7 @@ applyMiddleware(
   { Query: { beers: true } },
 );
 
-graphqlYogaAdapter(resolvers).listen(4000, () => {
+graphqlYogaAdapter(resolvers).server.listen(4000, () => {
   console.log('LISTENING');
 });
 ```

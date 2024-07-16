@@ -63,5 +63,5 @@ export const graphqlYogaAdapter = AxolotlAdapter<[any, any, YogaInitialContext],
   });
 
   const server = createServer(yoga);
-  return server;
+  return { server, yoga };
 });

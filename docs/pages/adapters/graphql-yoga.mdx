@@ -39,8 +39,32 @@ Then write your `index.ts` file.
 import { adapter } from './axolotl.js';
 import resolvers from './resolvers.js';
 
-adapter(resolvers).listen(4000, () => {
+adapter(resolvers).server.listen(4000, () => {
   console.log('LISTENING');
 });
 ```
 
+You can also use this adapter with express. This is useful when dealing with
+webhooks. Take a look how to implement a simple webhook.
+
+```ts filename="index.ts"
+import { adapter } from './axolotl.js';
+import resolvers from './resolvers.js';
+import express from 'express'
+
+const app = express();
+
+const {yoga} = adapter(resolvers);
+
+app.use(yoga.graphqlEndpoint, yoga)
+
+app.get('/webhook', (req, res) => {
+  res.send('Show me the money!')
+})
+
+app.listen(4000, () => {
+  console.log('Running a GraphQL API server at http://localhost:4000/graphql')
+})
+```
+
+And you can implement anything you want in express now.
