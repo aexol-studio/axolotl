@@ -7,9 +7,10 @@
   "infer-source": "Infer Source",
   "adapters": "Adapters",
   "inspect": "Inspect missing resolvers",
+  "config": "Configuration",
   "tests": "Tests",
   "deploy": "Deploy",
-  "examples":"Examples",
-  "development":"Development",
-  "roadmap":"Roadmap"
+  "examples": "Examples",
+  "development": "Development",
+  "roadmap": "Roadmap"
 }
