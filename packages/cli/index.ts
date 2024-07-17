@@ -14,28 +14,29 @@ program
   .version('0.1.1');
 
 type ProjectOptions = {
-  schema: string,
-  models: string
-  }
+  schema: string;
+  models: string;
+};
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 const config = new ConfigMaker<ProjectOptions, {}>('configuration', {
-    decoders: {
-      schema:{
-        decode: (v: unknown) => v + '',
-        encode: (v: unknown) => v + '',
-      },
-      models:{
-        decode: (v: unknown) => v + '',
-        encode: (v: unknown) => v + '',
-      }
+  decoders: {
+    schema: {
+      decode: (v: unknown) => v + '',
+      encode: (v: unknown) => v + '',
     },
-    config:{
-      environment: {
-        schema: 'SCHEMA_PATH',
-        models: 'MODELS_PATH'
-      }
-    }
-  });
+    models: {
+      decode: (v: unknown) => v + '',
+      encode: (v: unknown) => v + '',
+    },
+  },
+  config: {
+    environment: {
+      schema: 'SCHEMA_PATH',
+      models: 'MODELS_PATH',
+    },
+  },
+});
 
 program
   .command('build')
@@ -44,8 +45,12 @@ program
   .option('-m, --models <path>', 'path to generated models file')
   .option('-w, --watch', 'watch schema changes and regenerate models')
   .action(async (options) => {
-    const schemaPath = await config.getValueOrThrow("schema", {...('schema' in options && {commandLineProvidedOptions: options})})
-    const modelsPath = await config.getValueOrThrow("models", {...('models' in options && {commandLineProvidedOptions: options})})
+    const schemaPath = await config.getValueOrThrow('schema', {
+      ...('schema' in options && { commandLineProvidedOptions: options }),
+    });
+    const modelsPath = await config.getValueOrThrow('models', {
+      ...('models' in options && { commandLineProvidedOptions: options }),
+    });
     generateModels({
       schemaPath,
       modelsPath,
@@ -57,6 +62,7 @@ program
       watch(schemaPath, {
         interval: 0, // No delay
         ignoreInitial: true,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       }).on('all', async (event, p) => {
         console.log(chalk.blueBright('Schema file changed. I will generate new models'));
         generateModels({
