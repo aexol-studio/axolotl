@@ -1,5 +1,6 @@
 import { adapter, applyMiddleware } from '@/src/axolotl.js';
 import resolvers from '@/src/resolvers.js';
+import directives from '@/src/directives.js';
 
 // This is yoga specific
 applyMiddleware(
@@ -13,6 +14,6 @@ applyMiddleware(
   { Query: { beers: true } },
 );
 
-adapter(resolvers).listen(parseInt(process.env.PORT || '4000'), () => {
+adapter({ resolvers, directives }).server.listen(parseInt(process.env.PORT || '4000'), () => {
   console.log('LISTENING to ' + process.env.PORT || '4000');
 });

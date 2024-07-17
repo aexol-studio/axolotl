@@ -2,11 +2,15 @@
 import { readFileSync } from 'fs';
 import { AxolotlAdapter } from '@aexol/axolotl-core';
 import { ApolloServer } from '@apollo/server';
-
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { getDirective as getDirectiveFn, mapSchema } from '@graphql-tools/utils';
 import * as path from 'path';
+import { GraphQLSchema } from 'graphql';
 
-export const apolloServerAdapter = AxolotlAdapter<[any, any, any, any]>()((
-  resolvers,
+type SchemaMapperInitial = Required<Parameters<typeof mapSchema>>[1];
+export type SchemaMapper = (schema: GraphQLSchema, getDirective: typeof getDirectiveFn) => SchemaMapperInitial;
+export const apolloServerAdapter = AxolotlAdapter<[any, any, any, any], SchemaMapper>()((
+  { resolvers, directives },
   options?: {
     schema?: {
       file?: { path: string } | { content: string };
@@ -36,10 +40,18 @@ export const apolloServerAdapter = AxolotlAdapter<[any, any, any, any]>()((
     file && 'content' in file
       ? file.content
       : readFileSync(path.join(process.cwd(), file?.path || './schema.graphql'), 'utf-8');
-  const apolloServer = new ApolloServer({
+
+  let apolloSchema = makeExecutableSchema({
     typeDefs: schema,
     resolvers: apolloResolvers,
   });
+
+  if (directives) {
+    Object.values(directives).forEach((b) => {
+      apolloSchema = mapSchema(apolloSchema, b(apolloSchema, getDirectiveFn));
+    });
+  }
+  const apolloServer = new ApolloServer({ schema: apolloSchema });
 
   return apolloServer;
 });

@@ -8,6 +8,7 @@ type Beer implements Node{
 
 type Query{
 	beers: [Beer!]
+	testAuth: String! @auth
 }
 
 type Mutation{
@@ -42,3 +43,5 @@ schema{
 	query: Query
 	mutation: Mutation
 }
+
+directive @auth on FIELD_DEFINITION

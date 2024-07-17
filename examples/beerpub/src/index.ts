@@ -14,5 +14,5 @@ export default async (input: FieldResolveInput) => {
     ],
     { Query: { beers: true } },
   );
-  return adapter(resolvers)(input);
+  return adapter({resolvers})(input);
 };

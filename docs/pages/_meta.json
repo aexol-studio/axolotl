@@ -1,6 +1,8 @@
 {
   "index": "Axolotl",
   "getting-started": "Getting Started",
+  "resolvers": "Resolvers",
+  "directives": "Directives",
   "from-examples": "Start from Starter",
   "infer-source": "Infer Source",
   "adapters": "Adapters",

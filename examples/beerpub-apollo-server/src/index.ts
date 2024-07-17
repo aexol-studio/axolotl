@@ -15,6 +15,6 @@ applyMiddleware(
   { Query: { beers: true } },
 );
 
-const {url } = await startStandaloneServer(adapter(resolvers))
+const {url } = await startStandaloneServer(adapter({resolvers}))
 console.log(`Server ready at ${url}`);
 

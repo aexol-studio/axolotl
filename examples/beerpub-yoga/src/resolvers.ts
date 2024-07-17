@@ -5,6 +5,7 @@ const Beer = BeerOrm();
 export default createResolvers({
   Query: {
     beers: () => Beer.list(),
+    testAuth: () => 'TOP SECRET',
   },
   Mutation: {
     addBeer: (input, args) => {

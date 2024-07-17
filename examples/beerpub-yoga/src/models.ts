@@ -29,6 +29,9 @@ export type Models = {
     beers: {
       args: Record<string, never>;
     };
+    testAuth: {
+      args: Record<string, never>;
+    };
   };
   ['Mutation']: {
     addBeer: {
@@ -50,6 +53,12 @@ export type Models = {
   };
 };
 
+export type Directives = {
+  auth: {
+    args: Record<string, never>;
+  };
+};
+
 export interface Beer {
   name: string;
   price: number;
@@ -59,6 +68,7 @@ export interface Beer {
 }
 export interface Query {
   beers?: Array<Beer> | undefined;
+  testAuth: string;
 }
 export interface Mutation {
   addBeer?: string | undefined;
