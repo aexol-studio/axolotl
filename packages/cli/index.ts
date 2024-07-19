@@ -19,7 +19,7 @@ type ProjectOptions = {
 };
 
 // eslint-disable-next-line @typescript-eslint/ban-types
-const config = new ConfigMaker<ProjectOptions, {}>('configuration', {
+const config = new ConfigMaker<ProjectOptions, {}>('axolotl', {
   decoders: {
     schema: {
       decode: (v: unknown) => v + '',

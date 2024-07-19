@@ -54,9 +54,9 @@ export type Models = {
 };
 
 export type Directives = {
-  auth: {
-    args: Record<string, never>;
-  };
+    auth: {
+      args: Record<string, never>;
+    };
 };
 
 export interface Beer {
