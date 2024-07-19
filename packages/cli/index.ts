@@ -47,9 +47,11 @@ program
   .action(async (options) => {
     const schemaPath = await config.getValueOrThrow('schema', {
       ...('schema' in options && { commandLineProvidedOptions: options }),
+      saveOnInput: true,
     });
     const modelsPath = await config.getValueOrThrow('models', {
       ...('models' in options && { commandLineProvidedOptions: options }),
+      saveOnInput: true,
     });
     generateModels({
       schemaPath,
