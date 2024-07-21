@@ -1,0 +1,17 @@
+{
+    "schema": "schema.graphql",
+    "models": "src/models.ts",
+    "axolotl": "src/axolotl.ts",
+    "federation":[
+        {
+            "schema":"./src/beers/schema.graphql",
+            "models":"./src/beers/models.ts",
+            "axolotl": "src/beers/axolotl.ts"
+        },
+        {
+            "schema":"./src/shop/schema.graphql",
+            "models":"./src/shop/models.ts",
+            "axolotl": "src/beers/axolotl.ts"
+        }
+    ]
+}

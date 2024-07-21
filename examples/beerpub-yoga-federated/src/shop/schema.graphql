@@ -1,0 +1,34 @@
+type Beer {
+	price: Int!
+	_id: String!
+}
+
+type Query{
+	beers: [Beer!]
+}
+
+type Mutation{
+	addBeer(
+		beer: CreateBeer!
+	): String
+	deleteBeer(
+		_id: String!
+	): Boolean
+	updateBeer(
+		beer: UpdateBeer!
+		_id: String!
+	): Boolean
+}
+
+input CreateBeer{
+	price: Int!
+}
+
+input UpdateBeer{
+	price: Int
+}
+
+schema{
+	query: Query
+	mutation: Mutation
+}
