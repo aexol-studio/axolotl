@@ -6,11 +6,6 @@ export interface UpdateBeer {
 }
 
 export type Models = {
-  ['Query']: {
-    beers: {
-      args: Record<string, never>;
-    };
-  };
   ['Beer']: {
     name: {
       args: Record<string, never>;
@@ -24,7 +19,9 @@ export type Models = {
     info: {
       args: Record<string, never>;
     };
-    price: {
+  };
+  ['Query']: {
+    beers: {
       args: Record<string, never>;
     };
   };
@@ -45,28 +42,20 @@ export type Models = {
         _id: string;
       };
     };
-    setBeerPrice: {
-      args: {
-        _id: string;
-        price?: number | undefined;
-      };
-    };
   };
 };
 
-export interface Query {
-  beers?: Array<Beer> | undefined;
-}
 export interface Beer {
   name: string;
   _id: string;
   createdAt: string;
   info?: string | undefined;
-  price?: number | undefined;
+}
+export interface Query {
+  beers?: Array<Beer> | undefined;
 }
 export interface Mutation {
   addBeer?: string | undefined;
   deleteBeer?: boolean | undefined;
   updateBeer?: boolean | undefined;
-  setBeerPrice?: boolean | undefined;
 }

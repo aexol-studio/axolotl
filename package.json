@@ -46,6 +46,7 @@
         "packages/cli",
         "examples/beerpub",
         "examples/beerpub-yoga",
+        "examples/beerpub-yoga-federated",
         "examples/beerpub-apollo-server"
     ]
 }

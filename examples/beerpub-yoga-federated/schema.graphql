@@ -1,14 +1,26 @@
-type Beer implements Node{
-	name: String!
-	price: Int!
-	_id: String!
-	createdAt: String!
-	info:String
-}
-
 type Query{
 	beers: [Beer!]
-	testAuth: String! @auth
+}
+
+input CreateBeer{
+	name: String!
+}
+
+input UpdateBeer{
+	name: String
+}
+
+schema{
+	query: Query
+	mutation: Mutation
+}
+
+type Beer{
+	name: String!
+	_id: String!
+	createdAt: String!
+	info: String
+	price: Int
 }
 
 type Mutation{
@@ -22,26 +34,8 @@ type Mutation{
 		beer: UpdateBeer!
 		_id: String!
 	): Boolean
+	setBeerPrice(
+		_id: String!
+		price: Float
+	): Boolean
 }
-
-input CreateBeer{
-	name: String!
-	price: Int!
-}
-
-interface Node{
-	_id: String!
-	createdAt: String!
-}
-
-input UpdateBeer{
-	name: String
-	price: Int
-}
-
-schema{
-	query: Query
-	mutation: Mutation
-}
-
-directive @auth on FIELD_DEFINITION

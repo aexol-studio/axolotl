@@ -1,7 +1,8 @@
 {
     "cSpell.words": [
         "aexol",
-        "axolotl"
+        "axolotl",
+        "Supergraph"
     ],
     "typescript.tsdk": "node_modules/typescript/lib",
     "deno.enablePaths": [

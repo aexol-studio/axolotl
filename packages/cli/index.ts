@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { chaos, generateModels, inspectResolvers } from '@aexol/axolotl-core';
+import { chaos, generateModels, inspectResolvers, createSuperGraph } from '@aexol/axolotl-core';
 import { createApp } from './create/index.js';
 import { watch } from 'chokidar';
 import chalk from 'chalk';
 import { ConfigMaker } from 'config-maker';
 import { createResolversConfig } from './codegen/index.js';
+import { readFileSync, writeFileSync } from 'node:fs';
+
 const program = new Command();
 
 program
@@ -16,20 +18,15 @@ program
 type ProjectOptions = {
   schema: string;
   models: string;
+  federation?: Array<{
+    schema: string;
+    models: string;
+  }>;
 };
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 const config = new ConfigMaker<ProjectOptions, {}>('axolotl', {
-  decoders: {
-    schema: {
-      decode: (v: unknown) => v + '',
-      encode: (v: unknown) => v + '',
-    },
-    models: {
-      decode: (v: unknown) => v + '',
-      encode: (v: unknown) => v + '',
-    },
-  },
+  decoders: {},
   config: {
     environment: {
       schema: 'SCHEMA_PATH',
@@ -38,6 +35,29 @@ const config = new ConfigMaker<ProjectOptions, {}>('axolotl', {
   },
 });
 
+const generateFiles = (options: ProjectOptions) => {
+  if (options.federation?.length) {
+    options.federation.forEach((f) => {
+      generateModels({
+        schemaPath: f.schema,
+        modelsPath: f.models,
+      });
+      const generationMessage = `Federation ${f.schema}. Models in path "${f.models}" have been generated.`;
+      console.log(chalk.greenBright(generationMessage));
+    });
+    const federatedSchemas = options.federation.map((f) => readFileSync(f.schema, 'utf-8'));
+    const superGraphSchema = createSuperGraph(...federatedSchemas);
+    writeFileSync(options.schema, superGraphSchema);
+    console.log(chalk.greenBright(`Supergraph schema saved in ${options.schema}`));
+  }
+  generateModels({
+    schemaPath: options.schema,
+    modelsPath: options.models,
+  });
+  const generationMessage = `Models in path "${options.models}" have been generated.`;
+  console.log(chalk.greenBright(generationMessage));
+};
+
 program
   .command('build')
   .description('build axolotl models')
@@ -45,6 +65,7 @@ program
   .option('-m, --models <path>', 'path to generated models file')
   .option('-w, --watch', 'watch schema changes and regenerate models')
   .action(async (options) => {
+    const isFederated = await config.getValue('federation');
     const schemaPath = await config.getValueOrThrow('schema', {
       ...('schema' in options && { commandLineProvidedOptions: options }),
       saveOnInput: true,
@@ -53,12 +74,11 @@ program
       ...('models' in options && { commandLineProvidedOptions: options }),
       saveOnInput: true,
     });
-    generateModels({
-      schemaPath,
-      modelsPath,
+    generateFiles({
+      schema: schemaPath,
+      models: modelsPath,
+      federation: isFederated,
     });
-    const generationMessage = `Models in path "${modelsPath}" have been generated.`;
-    console.log(chalk.greenBright(generationMessage));
     if (options.watch) {
       console.log(chalk.yellowBright(`Watching for "${schemaPath}" file changes to regenerate models`));
       watch(schemaPath, {
@@ -67,11 +87,11 @@ program
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       }).on('all', async (event, p) => {
         console.log(chalk.blueBright('Schema file changed. I will generate new models'));
-        generateModels({
-          schemaPath,
-          modelsPath,
+        generateFiles({
+          schema: schemaPath,
+          models: modelsPath,
+          federation: isFederated,
         });
-        console.log(chalk.greenBright(generationMessage));
       });
     }
   });

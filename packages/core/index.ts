@@ -86,3 +86,4 @@ export * from '@/types.js';
 export * from '@/chaos.js';
 export * from '@/gen.js';
 export * from '@/inspect.js';
+export * from '@/federation.js';

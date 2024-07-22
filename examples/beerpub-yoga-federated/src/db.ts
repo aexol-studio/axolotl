@@ -1,17 +1,11 @@
+import { Beer } from '@/src/models.js';
 import { readFileSync, writeFileSync } from 'fs';
 import path from 'path';
-
-type Beer = {
-  name: string;
-  price: number;
-  _id: string;
-  createdAt: string;
-};
 
 const beerFilePath = path.join(process.cwd(), 'beers.json');
 const beers: Array<Beer> = JSON.parse(readFileSync(beerFilePath, 'utf-8'));
 
-export const BeerOrm = () => {
+const BeerOrm = () => {
   const write = () => {
     writeFileSync(beerFilePath, JSON.stringify(beers));
   };
@@ -37,6 +31,7 @@ export const BeerOrm = () => {
       ...beers[updatedIndex],
       ...beer,
     };
+    write();
     return true;
   };
   const list = () => {
@@ -49,3 +44,5 @@ export const BeerOrm = () => {
     list,
   };
 };
+
+export const db = BeerOrm();
