@@ -67,7 +67,7 @@ export default async (input: FieldResolveInput) => {
     ],
     { Query: { beers: true } },
   );
-  return stuccoAdapter(resolvers)(input);
+  return stuccoadapter({resolvers})(input);
 };
 
 ```
@@ -92,7 +92,7 @@ applyMiddleware(
   { Query: { beers: true } },
 );
 
-graphqlYogaAdapter(resolvers).server.listen(4000, () => {
+graphqlYogaadapter({resolvers}).server.listen(4000, () => {
   console.log('LISTENING');
 });
 ```

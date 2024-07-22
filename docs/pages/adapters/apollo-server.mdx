@@ -40,7 +40,7 @@ import { startStandaloneServer } from '@apollo/server/standalone';
 import { adapter, applyMiddleware } from '@/src/axolotl.js';
 import resolvers from '@/src/resolvers.js';
 
-const {url } = await startStandaloneServer(adapter(resolvers))
+const {url } = await startStandaloneServer(adapter({resolvers}))
 console.log(`Server ready at ${url}`);
 ```
 

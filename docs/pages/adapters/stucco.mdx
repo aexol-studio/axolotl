@@ -31,6 +31,6 @@ import resolvers from '@/src/resolvers.js';
 
 
 export default async (input: FieldResolveInput) => {
-  return adapter(resolvers)(input);
+  return adapter({resolvers})(input);
 };
 ```

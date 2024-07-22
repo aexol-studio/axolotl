@@ -39,7 +39,7 @@ Then write your `index.ts` file.
 import { adapter } from './axolotl.js';
 import resolvers from './resolvers.js';
 
-adapter(resolvers).server.listen(4000, () => {
+adapter({resolvers}).server.listen(4000, () => {
   console.log('LISTENING');
 });
 ```
@@ -54,7 +54,7 @@ import express from 'express'
 
 const app = express();
 
-const {yoga} = adapter(resolvers);
+const {yoga} = adapter({ resolvers });
 
 app.use(yoga.graphqlEndpoint, yoga)
 

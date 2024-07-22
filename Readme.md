@@ -100,7 +100,7 @@ applyMiddleware(
   { Query: { beers: true } },
 );
 
-graphqlYogaAdapter(resolvers).server.listen(4000, () => {
+graphqlYogaadapter({resolvers}).server.listen(4000, () => {
   console.log('LISTENING');
 });
 ```
@@ -121,8 +121,29 @@ Place to experiments with axolotl and its packages
 ### Local
 Packages to support super fast local development
 
-### Federation
-Packages to support integration between different schemas. It means that it should be easy set up multiple schemas and runtime for one backend
+### Micro Federation
+You can use micro federation feature in axolotl. Micro federation means all the modules are located within one project or one monorepo or are distributed as npm packages. Those axolotl projects are merged to the supergraph later. 
+
+To use micro federation you need to create config for your project containing this kind of content:
+```json
+{
+    "schema": "schema.graphql",
+    "models": "src/models.ts",
+    "federation":[
+        {
+            "schema":"src/beers/schema.graphql",
+            "models":"src/beers/models.ts",
+        },
+        {
+            "schema":"src/shop/schema.graphql",
+            "models":"src/shop/models.ts",
+        }
+    ]
+}
+```
+
+
+
 
 ### To do
 - [x] try to implement graphql-yoga adapter as a presentation that listen based frameworks can work with axolotl too

@@ -8,9 +8,9 @@
   "adapters": "Adapters",
   "inspect": "Inspect missing resolvers",
   "config": "Configuration",
+  "micro-federation": "Micro federation",
   "tests": "Tests",
   "deploy": "Deploy",
-  "examples": "Examples",
   "development": "Development",
   "roadmap": "Roadmap"
 }
