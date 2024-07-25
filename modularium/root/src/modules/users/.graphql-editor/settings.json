@@ -1,0 +1,22 @@
+{
+    "schemaPath": "schema.graphql",
+    "ui": {
+        "currentEndpoint": 0
+    },
+    "hosts": {
+        "endpoints": [
+            {
+                "headers": [
+                    [
+                        "Authorization",
+                        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NjlmOWEyMGU0ZTIyZjcxNGRhZWNlOWYiLCJpYXQiOjE3MjE3NDY2OTcsImV4cCI6MTcyMTgzMzA5N30.GmsprlOmXn3JBbP82BSksvhx-RSvSkyedQaTYFwEXDk"
+                    ]
+                ],
+                "name": "LocalAuth",
+                "url": "http://localhost:4001/graphql",
+                "variables": [],
+                "disableProxy": true
+            }
+        ]
+    }
+}

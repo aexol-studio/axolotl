@@ -1,0 +1,299 @@
+type UsersQuery{
+	publicUsers: PublicUsersQuery
+	user: AuthorizedUserQuery
+}
+
+type UsersMutation{
+	publicUsers: PublicUsersMutation
+	user: AuthorizedUserMutation
+}
+
+type Query{
+	users: UsersQuery
+}
+
+type Mutation{
+	users: UsersMutation
+}
+
+"""
+operations for logged in user, extend this query to perform user actions
+"""
+type AuthorizedUserQuery{
+	me: User
+}
+
+"""
+operations for logged in user, extend this query to perform user actions
+"""
+type AuthorizedUserMutation{
+	changePasswordWhenLogged(
+		changePasswordData: ChangePasswordWhenLoggedInput!
+	): ChangePasswordWhenLoggedResponse!
+	editUser(
+		updatedUser: UpdateUserInput!
+	): EditUserResponse!
+		integrateSocialAccount(
+		userData: SimpleUserInput!
+	): IntegrateSocialAccountResponse!
+}
+
+type PublicUsersQuery{
+	login: LoginQuery!
+	getGoogleOAuthLink(
+		setup: GetOAuthInput!
+	): String!
+	getMicrosoftOAuthLink(
+		setup: GetOAuthInput!
+	): String!
+	getGithubOAuthLink(
+		setup: GetOAuthInput!
+	): String!
+	getAppleOAuthLink(
+		setup: GetOAuthInput!
+	): String!
+	requestForForgotPassword(
+		username: String!
+	): Boolean!
+}
+
+input GetOAuthInput{
+	scopes: [String!]
+	state: String
+	redirectUri: String
+}
+
+type PublicUsersMutation{
+	register(
+		user: RegisterInput!
+	): RegisterResponse!
+	verifyEmail(
+		verifyData: VerifyEmailInput!
+	): VerifyEmailResponse!
+	changePasswordWithToken(
+		token: ChangePasswordWithTokenInput!
+	): ChangePasswordWithTokenResponse!
+
+	generateOAuthToken(
+		tokenData: GenerateOAuthTokenInput!
+	): GenerateOAuthTokenResponse!
+}
+
+enum EditUserError{
+	USERNAME_ALREADY_TAKEN
+	FAILED_MONGO_UPDATE
+	USER_DOES_NOT_EXIST
+}
+
+type EditUserResponse{
+	result: Boolean
+	hasError: EditUserError
+}
+
+enum VerifyEmailError{
+	TOKEN_CANNOT_BE_FOUND
+}
+
+type VerifyEmailResponse{
+	result: Boolean
+	hasError: VerifyEmailError
+}
+
+enum ChangePasswordWhenLoggedError{
+	CANNOT_CHANGE_PASSWORD_FOR_USER_REGISTERED_VIA_SOCIAL
+	OLD_PASSWORD_IS_INVALID
+	PASSWORD_WEAK
+}
+
+type ChangePasswordWhenLoggedResponse{
+	result: Boolean
+	hasError: ChangePasswordWhenLoggedError
+}
+
+enum ChangePasswordWithTokenError{
+	CANNOT_CHANGE_PASSWORD_FOR_USER_REGISTERED_VIA_SOCIAL
+	TOKEN_IS_INVALID
+	PASSWORD_IS_TOO_WEAK
+}
+
+type ChangePasswordWithTokenResponse{
+	result: Boolean
+	hasError: ChangePasswordWithTokenError
+}
+
+enum SquashAccountsError{
+	YOU_HAVE_ONLY_ONE_ACCOUNT
+	YOUR_ACCOUNTS_DO_NOT_HAVE_CONFIRMED_EMAIL
+	INCORRECT_PASSWORD
+}
+
+enum IntegrateSocialAccountError{
+	YOU_HAVE_ONLY_ONE_ACCOUNT
+	YOUR_ACCOUNT_DOES_NOT_HANDLE_CHANGE_PASSWORD_MODE
+	INCORRECT_PASSWORD
+	CANNOT_FIND_USER
+	YOUR_ACCOUNT_DOES_NOT_HAVE_CONFIRMED_EMAIL
+}
+
+type IntegrateSocialAccountResponse{
+	result: Boolean
+	hasError: IntegrateSocialAccountError
+}
+
+enum GenerateOAuthTokenError{
+	TOKEN_NOT_GENERATED
+	CANNOT_RETRIEVE_USER_INFORMATION_FROM_APPLE
+}
+
+type GenerateOAuthTokenResponse{
+	result: String
+	hasError: GenerateOAuthTokenError
+}
+
+input UpdateUserInput{
+	username: String
+	fullName: String
+	avatarUrl: String
+}
+
+input GenerateOAuthTokenInput{
+	social: SocialKind!
+	code: String!
+}
+
+input SimpleUserInput{
+	username: String!
+	password: String!
+}
+
+input LoginInput{
+	username: String!
+	password: String!
+}
+
+input VerifyEmailInput{
+	token: String!
+}
+
+input ChangePasswordWithTokenInput{
+	username: String!
+	forgotToken: String!
+	newPassword: String!
+}
+
+input ChangePasswordWhenLoggedInput{
+	oldPassword: String!
+	newPassword: String!
+}
+
+input RegisterInput{
+	username: String!
+	password: String!
+	fullName: String
+	invitationToken: String
+}
+
+type User{
+	username: String!
+	emailConfirmed: Boolean!
+	createdAt: String
+	fullName: String
+	avatarUrl: String
+	_id: String!
+}
+
+enum SocialKind{
+	Google
+	Github
+	Apple
+	Microsoft
+}
+
+type LoginQuery{
+	password(
+		user: LoginInput!
+	): LoginResponse!
+	provider(
+		params: ProviderLoginInput!
+	): ProviderLoginQuery!
+	"""
+	endpoint for refreshing accessToken based on refreshToken
+	"""
+	refreshToken(
+		refreshToken: String!
+	): String!
+}
+
+input ProviderLoginInput{
+	code: String!
+	redirectUri: String!
+}
+
+type ProviderLoginQuery{
+	apple: ProviderResponse
+	google: ProviderResponse
+	github: ProviderResponse
+	microsoft: ProviderResponse
+}
+
+enum RegisterErrors{
+	USERNAME_EXISTS
+	PASSWORD_WEAK
+	INVITE_DOMAIN_INCORRECT
+	LINK_EXPIRED
+	USERNAME_INVALID
+}
+
+enum LoginErrors{
+	CONFIRM_EMAIL_BEFOR_LOGIN
+	INVALID_LOGIN_OR_PASSWORD
+	CANNOT_FIND_CONNECTED_USER
+	YOU_PROVIDED_OTHER_METHOD_OF_LOGIN_ON_THIS_EMAIL
+	UNEXPECTED_ERROR
+}
+
+enum ProviderErrors{
+	CANNOT_RETRIVE_PROFILE_FROM_GOOGLE_TRY_REFRESH_TOKEN
+	CANNOT_FIND_EMAIL_FOR_THIS_PROFIL
+	CANNOT_RETRIVE_USER_INFORMATION_FROM_APPLE
+	CODE_IS_NOT_EXIST_IN_ARGS
+	CANNOT_RETRIVE_SUB_FIELD_FROM_JWT_TOKEN
+	CANNOT_RETRIVE_TOKEN_FROM_MICROSOFT
+}
+
+type RegisterResponse{
+	registered: Boolean
+	hasError: RegisterErrors
+}
+
+type LoginResponse{
+	"""
+	same value as accessToken, for delete in future, 
+	improvise, adapt, overcome, frontend!
+	"""
+	login: String
+	accessToken: String
+	refreshToken: String
+	hasError: LoginErrors
+}
+
+type ProviderResponse{
+	"""
+	same value as accessToken, for delete in future, 
+	improvise, adapt, overcome, frontend!
+	"""
+	jwt: String
+	accessToken: String
+	refreshToken: String
+	providerAccessToken: String
+	"""
+	field describes whether this is first login attempt for this username
+	"""
+	register: Boolean
+	hasError: ProviderErrors
+}
+
+schema{
+	query: Query
+	mutation: Mutation
+}

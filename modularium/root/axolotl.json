@@ -1,0 +1,10 @@
+{
+    "schema": "schema.graphql",
+    "models": "src/models.ts",
+    "federation":[
+        {
+            "schema":"src/modules/users/schema.graphql",
+            "models":"src/modules/users/models.ts"
+        }
+    ]
+}
