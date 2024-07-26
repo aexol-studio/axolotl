@@ -69,8 +69,8 @@ const runCommands = async (source: string, destination: string) => {
     if (!checkout) return { error: "can't checkout repository" };
     let move;
     if (system.platform === 'win32') {
-      move = runCommand(`cd .. && move ${TEMP_REPO_NAME}/${source} ${destination} && del ${TEMP_REPO_NAME}`);
-    } else move = runCommand(`cd .. && mv ${TEMP_REPO_NAME}/${source} ${destination} && rm -rf ${TEMP_REPO_NAME}`);
+      move = runCommand(`move ${TEMP_REPO_NAME}/${source} ${destination} && del ${TEMP_REPO_NAME}`);
+    } else move = runCommand(`mv ${TEMP_REPO_NAME}/${source} ${destination} && rm -rf ${TEMP_REPO_NAME}`);
     if (!move) return { error: "can't move repository" };
     // deps should be installed from docs. Later one we can install deps here somehow
     return { success: true };
