@@ -10,7 +10,6 @@
     "removeComments": true,
     "noUnusedLocals": true,
     "strictNullChecks": true,
-    "esModuleInterop": true,
     "skipLibCheck": true,
     "strict": true,
     "outDir": "./lib",
@@ -19,7 +18,7 @@
       "DOM",
       "DOM.Iterable"
     ],
-    "rootDir": "./src",
+    "rootDir": "./",
     "baseUrl": "./",
     "composite": true,
     "paths": {
@@ -40,6 +39,6 @@
   "exclude": [
     "lib",
     "node_modules",
-    "jest.config.js"
+    "jest.config.js",
   ]
 }

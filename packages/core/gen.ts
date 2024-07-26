@@ -110,7 +110,9 @@ const generateModelsString = (fileContent: string) => {
     .join('\n');
 
   const typesFullString = `export type Models = {\n${typesString}\n};`;
-  const directivesFullString = directivesString ? `export type Directives = {\n${directivesString}\n};` : '';
+  const directivesFullString = directivesString
+    ? `export type Directives = {\n${directivesString}\n};`
+    : 'export type Directives = {}';
   return (
     [scalarsString, enumsString, inputsString, typesFullString, directivesFullString, dbTypes]
       .filter(Boolean)

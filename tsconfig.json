@@ -14,10 +14,19 @@
             "path": "./adapters/graphql-yoga"
         },
         {
-            "path": "./examples/beerpub"
-        },
-        {
             "path": "./examples/beerpub-yoga"
         },
+        {
+            "path": "./examples/beerpub-apollo-server"
+        },
+        {
+            "path": "./examples/beerpub-yoga-federated"
+        },
+        {
+            "path": "./modularium/root",
+        },
+        {
+            "path": "./modularium/cli"
+        }
     ]
 }

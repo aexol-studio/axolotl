@@ -1,156 +1,251 @@
 # 🚀 Getting Started
 
-Install dependencies. Install stucco adapter or yoga one.
+If you want to create a new project - just go ahead and [start from starter
+🚀](/from-examples)
+
+However it is good to know how `axolotl` work under the hood and read this:
+
+## Installation
+
+Install dependencies. Install yoga adapter.
 
 ```sh
-npm i @aexol/axolotl-core @aexol/axolotl-stucco @aexol/axolotl-graphql-yoga
+npm i @aexol/axolotl-core @aexol/axolotl-graphql-yoga
 ```
 
-Now you need a `schema.graphql` file or a URL with settings to download the schema from upstream. Out of it Axolotl can generate simple type definitions needed for the library out of your GraphQL Schema.
+Now you need a `schema.graphql` file or a URL with settings to download the
+schema from upstream. Out of it Axolotl can generate simple type definitions
+needed for the library out of your GraphQL Schema.
 
-`models.ts` are located where you specify when initiating Axolotl
+Take a look at the following schema
+```graphql filename="schema.graphql"
+type Beer implements Node{
+	name: String!
+	price: Int!
+	_id: String!
+}
 
-To use in existing project run
+type Query{
+	beers: [Beer!]
+	testAuth: String! @auth
+}
+
+type Mutation{
+	addBeer(
+		beer: CreateBeer!
+	): String
+	deleteBeer(
+		_id: String!
+	): Boolean
+	updateBeer(
+		beer: UpdateBeer!
+		_id: String!
+	): Boolean
+}
+
+input CreateBeer{
+	name: String!
+	price: Int!
+}
+
+interface Node{
+	_id: String!
+	createdAt: String!
+}
+
+input UpdateBeer{
+	name: String
+	price: Int
+}
+
+schema{
+	query: Query
+	mutation: Mutation
+}
+s
+directive @auth on FIELD_DEFINITION
+```
+This is a simple schema and we will generate `models.ts` for it.
+`models.ts` are located where you specify when initiating Axolotl To use in existing project run
 
 ```sh
-npx @aexol/axolotl models
+npx @aexol/axolotl build
 ```
-This will generate type safe models for your Axolotl engine.
+This will generate type safe models for your Axolotl engine. For the following schema:
 
-Then write your index.ts file.
 
-```ts filename="index.ts"
-import { FieldResolveInput } from 'stucco-js';
-import { Axolotl } from '@aexol/axolotl-core';
-import { stuccoAdapter } from '@aexol/axolotl-stucco';
-import { Models } from '@/src/models.js';
-import { BeerOrm } from '@/src/ormBeersFile.js';
 
-// choose your adapter
-const { applyMiddleware, createResolvers } = Axolotl(stuccoAdapter)<Models>();
+For the following schema the models command will generate the following models:
+```ts filename="src/models.ts"
+export interface CreateBeer {
+  name: string;
+  price: number;
+}
+export interface UpdateBeer {
+  name?: string | undefined;
+  price?: number | undefined;
+}
 
-const Beer = BeerOrm();
-
-const resolvers = createResolvers({
-  Query: {
-    beers: () => Beer.list(),
-  },
-  Mutation: {
-    addBeer: (input, args) => {
-      return Beer.create(args.beer);
-    },
-    deleteBeer: (input, args) => {
-      return Beer.remove(args);
-    },
-    updateBeer: (input, args) => {
-      return Beer.update(args._id, args.beer);
-    },
-  },
-});
-// scroll down for the second part of the file
-```
-And choose an adapter. Base idea is that code should run with every GraphQL Server available in nodejs.
-
-## I choose stucco-js
-```ts filename="index.ts"
-
-// This is stucco specific
-export default async (input: FieldResolveInput) => {
-  // applying middlewares to chosen resolvers
-  applyMiddleware(
-    resolvers,
-    [
-      (input) => {
-        console.log('Hello from Middleware I run only on Query.beers');
-        return input;
-      },
-    ],
-    { Query: { beers: true } },
-  );
-  return stuccoadapter({resolvers})(input);
+export type Models = {
+  ['Beer']: {
+    name: {
+      args: Record<string, never>;
+    };
+    price: {
+      args: Record<string, never>;
+    };
+    _id: {
+      args: Record<string, never>;
+    };
+  };
+  ['Query']: {
+    beers: {
+      args: Record<string, never>;
+    };
+    testAuth: {
+      args: Record<string, never>;
+    };
+  };
+  ['Mutation']: {
+    addBeer: {
+      args: {
+        beer: CreateBeer;
+      };
+    };
+    deleteBeer: {
+      args: {
+        _id: string;
+      };
+    };
+    updateBeer: {
+      args: {
+        beer: UpdateBeer;
+        _id: string;
+      };
+    };
+  };
 };
 
-```
+export type Directives = {
+    auth: {
+      args: Record<string, never>;
+    };
+};
 
-## I choose graphql-yoga
-```ts filename="index.ts"
-//This you should add on the top
-
-// And change the Axolotl import to yoga specific
-
-const { applyMiddleware, createResolvers } = Axolotl(graphqlYogaAdapter)<Models>();
-
-// This is yoga specific
-applyMiddleware(
-  resolvers,
-  [
-    (input) => {
-      console.log('Hello from Middleware I run only on Query.beers');
-      return input;
-    },
-  ],
-  { Query: { beers: true } },
-);
-
-graphqlYogaadapter({resolvers}).server.listen(4000, () => {
-  console.log('LISTENING');
-});
-```
-
-### Simple Beer ORM
-I created simple beer orm to spin off examples without a DB.
-```ts filename="ormBeersFile.ts"
-import { readFileSync, writeFileSync } from 'fs';
-import path from 'path';
-
-type Beer = {
+export interface Beer {
   name: string;
   price: number;
   _id: string;
-  createdAt: string;
-};
-
-const beerFilePath = path.join(process.cwd(), 'beers.json');
-const beers: Array<Beer> = JSON.parse(readFileSync(beerFilePath, 'utf-8'));
-
-export const BeerOrm = () => {
-  const write = () => {
-    writeFileSync(beerFilePath, JSON.stringify(beers));
-  };
-  const create = (beer: Pick<Beer, 'name' | 'price'>) => {
-    const beerId = Math.random().toString(8);
-    beers.push({
-      _id: beerId,
-      createdAt: new Date().toISOString(),
-      ...beer,
-    });
-    write();
-    return beerId;
-  };
-  const remove = (beer: Pick<Beer, '_id'>) => {
-    const deletedIndex = beers.findIndex((b) => b._id === beer._id);
-    beers.splice(deletedIndex, 1);
-    write();
-    return true;
-  };
-  const update = (_id: string, beer: Partial<Pick<Beer, 'name' | 'price'>>) => {
-    const updatedIndex = beers.findIndex((b) => b._id === _id);
-    beers[updatedIndex] = {
-      ...beers[updatedIndex],
-      ...beer,
-    };
-    return true;
-  };
-  const list = () => {
-    return JSON.parse(readFileSync(beerFilePath, 'utf-8')) as Beer[];
-  };
-  return {
-    create,
-    update,
-    remove,
-    list,
-  };
-};
-
+}
+export interface Query {
+  beers?: Array<Beer> | undefined;
+  testAuth: string;
+}
+export interface Mutation {
+  addBeer?: string | undefined;
+  deleteBeer?: boolean | undefined;
+  updateBeer?: boolean | undefined;
+}
 ```
 
+`Models` and `Directives` types will be consumed by Axolotl engine. Below there
+types that you can use to check if the response is valid using TypeScript
+`satisfies` keyword.
+
+
+Then you need to create the `axolotl.ts` file with the following content:
+
+```ts filename="axolotl.ts"
+import { Directives, Models } from '@/src/models.js';
+import { Axolotl } from '@aexol/axolotl-core';
+import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
+
+// if you want to use apollo server, import apollo server adapter
+export const { applyMiddleware, createResolvers, createDirectives, adapter } = Axolotl(graphqlYogaAdapter)<
+  Models,
+  Directives
+>();
+```
+
+When you have this file you can create actual resolvers implementation inside
+`resolvers.ts` file:
+
+```ts filename="resolvers.ts"
+import { createResolvers } from '@/src/axolotl.js';
+import { Beer } from '@/src/models.js';
+
+const Beers: Beer[] = [
+  {
+    _id: '0',
+    createdAt: '2023-10-10T15:21:43.038Z',
+    name: 'Kumple',
+    price: 10,
+    info: 'Dobre piwko',
+  },
+  {
+    _id: '1',
+    createdAt: '2023-10-11T14:51:09.029Z',
+    name: 'Zubr',
+    price: 100,
+  },
+];
+
+export default createResolvers({
+  Query: {
+    beers: () => Beers,
+    testAuth: () => 'TOP SECRET',
+  },
+  Mutation: {
+    addBeer: (input, args) => {
+      return Beers.push({ ...args.beer, _id: Beers.length + 1 + '', createdAt: new Date().toISOString() });
+    },
+    deleteBeer: (input, args) => {
+      return Beers.splice(Beers.findIndex((b) => b._id === args._id));
+    },
+    updateBeer: (input, args) => {
+      const oldElement = Beers.find((b) => b._id);
+      if (!oldElement) return false;
+      return Beers.splice(
+        Beers.findIndex((b) => b._id === args._id),
+        1,
+        {
+          ...oldElement,
+          ...args.beer,
+        },
+      );
+    },
+  },
+});
+```
+
+Here you can have every type safe resolver implementation.
+
+Now we need to run the resolvers using prepared adapter. Write your `index.ts` file.
+
+```ts filename="index.ts"
+import { adapter } from '@/src/axolotl.js';
+import resolvers from '@/src/resolvers.js';
+
+adapter({ resolvers }).server.listen(parseInt(process.env.PORT || '4000'), () => {
+  console.log('LISTENING to ' + process.env.PORT || '4000');
+});
+```
+
+Now if we build it and run the index.js using `node` command - we have the
+running server.
+
+Your file tree should look like this:
+
+import { FileTree } from 'nextra/components'
+ 
+<FileTree>
+  <FileTree.Folder name="src" defaultOpen>
+    <FileTree.File name="axolotl.ts" />
+    <FileTree.File name="index.ts" />
+    <FileTree.File name="models.ts" />
+    <FileTree.File name="resolvers.ts" />
+  </FileTree.Folder>
+  <FileTree.File name="package.json" />
+  <FileTree.File name="schema.graphql" />
+  <FileTree.File name="tsconfig.json" />
+</FileTree>

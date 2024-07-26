@@ -6,8 +6,8 @@ We offer carefully crafted starter templates with all the necessary configuratio
 
 | Prefix        | Default directory | Documentation                                              |
 | ------------- | ----------------- | ---------------------------------------------------------- |
-| create-stucco | beerpub           | [stucco.js](https://github.com/graphql-editor/stucco-js)   |
 | create-yoga   | beerpub-yoga      | [Yoga GraphQL](https://github.com/dotansimha/graphql-yoga) |
+| create-apollo-server   | beerpub-apollo-server      | [Apollo Server](https://github.com/apollographql/apollo-server) |
 | create-deno-yoga   | /deno/examples/beerpub-yoga      | [Yoga GraphQL](https://github.com/dotansimha/graphql-yoga) [Deno][https://docs.deno.com] |
 
 ## 🛫 Installation
@@ -20,13 +20,14 @@ The `dir` argument is optional and represents the directory where the project wi
 npx @aexol/axolotl [prefix] [dir]
 ```
 
-⭐ CLI already installed?
-
-If you have already installed the CLI, you can use the `axolotl` command.
+For example 
 
 ```sh
-axolotl [prefix] [dir]
+npx @aexol/axolotl create-yoga my-project
 ```
+
+Will create the axolotl project using `graphql-yoga` engine inside `my-project`
+directory - **simple**!
 
 ### 🦕 Deno
 This is just a scaffold command but you can run it with deno to :D

@@ -4,9 +4,9 @@ import { chaos, generateModels, inspectResolvers, createSuperGraph } from '@aexo
 import { createApp } from './create/index.js';
 import { watch } from 'chokidar';
 import chalk from 'chalk';
-import { ConfigMaker } from 'config-maker';
 import { createResolversConfig } from './codegen/index.js';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { config, ProjectOptions } from '@aexol/axolotl-config';
 
 const program = new Command();
 
@@ -14,26 +14,6 @@ program
   .name('axolotl')
   .description('CLI for axolotl backend framework, type-safe, schema-first, development.')
   .version('0.1.1');
-
-type ProjectOptions = {
-  schema: string;
-  models: string;
-  federation?: Array<{
-    schema: string;
-    models: string;
-  }>;
-};
-
-// eslint-disable-next-line @typescript-eslint/ban-types
-const config = new ConfigMaker<ProjectOptions, {}>('axolotl', {
-  decoders: {},
-  config: {
-    environment: {
-      schema: 'SCHEMA_PATH',
-      models: 'MODELS_PATH',
-    },
-  },
-});
 
 const generateFiles = (options: ProjectOptions) => {
   if (options.federation?.length) {
@@ -65,7 +45,7 @@ program
   .option('-m, --models <path>', 'path to generated models file')
   .option('-w, --watch', 'watch schema changes and regenerate models')
   .action(async (options) => {
-    const isFederated = await config.getValue('federation');
+    const isFederated = await config.get().federation;
     const schemaPath = await config.getValueOrThrow('schema', {
       ...('schema' in options && { commandLineProvidedOptions: options }),
       saveOnInput: true,

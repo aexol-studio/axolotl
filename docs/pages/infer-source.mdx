@@ -22,12 +22,7 @@ So imagine you create resolvers this way:
 export default createResolvers({
   Query:{
     onlyUserCanPass: async (input,args) =>{
-      const user = await getUser(input)
-      if(!user){
-        throw new Error("You shall not pass!!!");
-      }
       return {
-        userId: user.id,
         username: "Gandalf"
       }
     }

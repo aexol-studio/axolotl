@@ -8,11 +8,11 @@ axolotl models
 
 The arguments -m and -s are mandatory. If they are not provided as arguments, you can input them via standard input.
 
-Based on the [beerpub-yoga example](/examples/beerpub-yoga) run `axolotl models`:
+Based on the [beerpub-yoga example](/examples/beerpub-yoga) run `axolotl build`:
 
 Axolotl will generate a configuration file named "configuration.json" which will contain the flags passed when building the models, an example configuration file may look like this
 
-```json
+```json filename="axolotl.json"
 {
   "schema": "schema.graphql",
   "models": "src/models.ts"
@@ -20,3 +20,26 @@ Axolotl will generate a configuration file named "configuration.json" which will
 ```
 
 This guide should help you understand your Axolotl configuration. More detailed examples can be found in the Examples section.
+
+## Micro federation
+
+Config supports GraphQL Federation baked into axolotl. The main schema file is
+generated then and becomes `supergraph`. The example how federation works in
+Axolotl is used in [beerpub-yoga-federated example](/examples/beerpub-yoga-federated)
+
+```json filename="axolotl.json"
+{
+    "schema": "schema.graphql",
+    "models": "src/models.ts",
+    "federation":[
+        {
+            "schema":"src/beers/schema.graphql",
+            "models":"src/beers/models.ts"
+        },
+        {
+            "schema":"src/shop/schema.graphql",
+            "models":"src/shop/models.ts"
+        }
+    ]
+}
+```

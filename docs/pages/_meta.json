@@ -1,16 +1,16 @@
 {
   "index": "Axolotl",
   "getting-started": "Getting Started",
+  "from-examples": "Start from Starter",
+  "config": "Configuration",
   "resolvers": "Resolvers",
   "directives": "Directives",
-  "from-examples": "Start from Starter",
+  "micro-federation": "Micro federation",
+  "inspect": "Inspect missing resolvers",
   "infer-source": "Infer Source",
   "adapters": "Adapters",
-  "inspect": "Inspect missing resolvers",
-  "config": "Configuration",
-  "micro-federation": "Micro federation",
-  "tests": "Tests",
   "deploy": "Deploy",
   "development": "Development",
+  "tests": "Tests",
   "roadmap": "Roadmap"
 }

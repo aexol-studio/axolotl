@@ -39,15 +39,16 @@
         "url": "https://github.com/aexol-studio/axolotl"
     },
     "workspaces": [
+        "packages/config",
         "packages/core",
         "adapters/stucco",
         "adapters/graphql-yoga",
         "adapters/apollo-server",
         "packages/cli",
-        "examples/beerpub",
+        "modularium/root",
+        "modularium/cli",
         "examples/beerpub-yoga",
         "examples/beerpub-yoga-federated",
-        "examples/beerpub-apollo-server",
-        "modularium/root"
+        "examples/beerpub-apollo-server"
     ]
 }

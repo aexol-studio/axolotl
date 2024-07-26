@@ -10,9 +10,6 @@ This is super alpha version of universal backend( or frontend if you want to cre
 Writing GraphQL for backend developers is still complicated when you want to go schema-first instead of code-first. Moreover I felt like we need an **evolutionary** framework. 
 
 For example using `apollo-server` but want to switch to `graphql-yoga` ? No problem just change an adapter. 
-
-Want to experiment with `stucco-js` with Go lang core? No problem change the adapter. 
-
 Want to set up every part of your system in different graphql server with microservices?. No problem.
 
 ## 😮 What?
@@ -24,86 +21,12 @@ Axolotl is a framework overlord/wrapper to forget about type-casting and looking
 - 😂 easy to setup,start and integrate
 - 🫡 from GraphQL Editor and Aexol teams
 - 🪦 No RIP we will maintain forever
+- 🐙 Micro federation!
 - 🦕 Deno support from 0.2.7
 
 ## 🫠 How?
 
 Axolotl provides type-safety and it is up to you to choose an adapter (or write your own). And develop your GraphQL thing super-fast. How it runs it depends what framework you choose under the hood. 
-
-### With stucco
-
-```sh
- npm i @aexol/axolotl-core @aexol/axolotl-graphql-yoga
-```
-
-Now you need a `schema.graphql` file or a URL with settings to download the schema from upstream. Out of it Axolotl can generate simple type definitions needed for the library out of your GraphQL Schema.
-
-`models.js` are located where you specify when initiating Axolotl
-
-First execute init command
-
-```sh
- npx @aexol/axolotl init
-```
-
-Then write your index.ts file.
-
-```ts
-import { FieldResolveInput } from 'stucco-js';
-import { Axolotl } from '@aexol/axolotl-core';
-import { stuccoAdapter } from '@aexol/axolotl-stucco';
-import { Models } from '@/src/models.js';
-import { BeerOrm } from '@/src/ormBeersFile.js';
-
-// choose your adapter
-const { applyMiddleware, createResolvers } = Axolotl(stuccoAdapter)<Models>();
-
-const Beer = BeerOrm();
-
-const resolvers = createResolvers({
-  Query: {
-    beers: () => Beer.list(),
-  },
-  Mutation: {
-    addBeer: (input, args) => {
-      return Beer.create(args.beer);
-    },
-    deleteBeer: (input, args) => {
-      return Beer.remove(args);
-    },
-    updateBeer: (input, args) => {
-      return Beer.update(args._id, args.beer);
-    },
-  },
-});
-// scroll down for the second part of the file
-```
-And choose an adapter. Base idea is that code should run with every GraphQL Server available in nodejs.
-
-### I choose graphql-yoga
-```ts
-//This you should add on the top
-
-// And change the Axolotl import to yoga specific
-
-const { applyMiddleware, createResolvers } = Axolotl(graphqlYogaAdapter)<Models>();
-
-// This is yoga specific
-applyMiddleware(
-  resolvers,
-  [
-    (input) => {
-      console.log('Hello from Middleware I run only on Query.beers');
-      return input;
-    },
-  ],
-  { Query: { beers: true } },
-);
-
-graphqlYogaadapter({resolvers}).server.listen(4000, () => {
-  console.log('LISTENING');
-});
-```
 
 ## 🧌 Who?
 
@@ -123,34 +46,6 @@ Packages to support super fast local development
 
 ### Micro Federation
 You can use micro federation feature in axolotl. Micro federation means all the modules are located within one project or one monorepo or are distributed as npm packages. Those axolotl projects are merged to the supergraph later. 
-
-To use micro federation you need to create config for your project containing this kind of content:
-```json
-{
-    "schema": "schema.graphql",
-    "models": "src/models.ts",
-    "federation":[
-        {
-            "schema":"src/beers/schema.graphql",
-            "models":"src/beers/models.ts",
-        },
-        {
-            "schema":"src/shop/schema.graphql",
-            "models":"src/shop/models.ts",
-        }
-    ]
-}
-```
-
-
-
-
-### To do
-- [x] try to implement graphql-yoga adapter as a presentation that listen based frameworks can work with axolotl too
-- [x] write documentation
-- [ ] implement e2e testing functionality that takes, query, headers, result and runs the test
-- [x] create command to use npx @aexol/axolotl https://github.com/facebook/create-react-app/blob/main/packages/create-react-app/createReactApp.js here is the good example
-- [ ] add schema generation to ts file from URL 
 
 ## Development
 

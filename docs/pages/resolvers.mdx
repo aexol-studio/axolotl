@@ -5,22 +5,17 @@ type-safe. To make type-safe responses please use `satisfies` and import
 generated response types from `models.js`
 
 ```ts filename="resolvers.ts"
-import { FieldResolveInput } from 'stucco-js';
-import { Axolotl } from '@aexol/axolotl-core';
-import { stuccoAdapter } from '@aexol/axolotl-stucco';
-import { Models } from '@/src/models.js';
 import { BeerOrm } from '@/src/ormBeersFile.js';
-
-// choose your adapter
-const { applyMiddleware, createResolvers } = Axolotl(stuccoAdapter)<Models>();
+import { createResolvers } from '@/src/axolotl.js'
 
 const Beer = BeerOrm();
 
-const resolvers = createResolvers({
+export default createResolvers({
   Query: {
     beers: () => Beer.list(),
   },
   Mutation: {
+    // the type of input and args is inferred 🥳 from createResolvers function
     addBeer: (input, args) => {
       return Beer.create(args.beer);
     },
@@ -32,5 +27,4 @@ const resolvers = createResolvers({
     },
   },
 });
-// scroll down for the second part of the file
 ```
