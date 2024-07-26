@@ -45,6 +45,8 @@ export const addModuleAction = async ({ moduleKey }: { moduleKey: string }) => {
   }
 };
 
+const TEMP_REPO_NAME = 'repo1234';
+
 const runCommands = async (source: string, destination: string) => {
   try {
     const system = checkSystem({ node: '16.20' });
@@ -58,19 +60,18 @@ const runCommands = async (source: string, destination: string) => {
       },
     ]);
     fs.mkdirSync(destination, { recursive: true });
-    runCommand(`cd ${destination}`);
-    const clone = runCommand(`git clone -n --depth=1 --filter=tree:0 ${BASE_REPOSITORY} repo`);
+    const clone = runCommand(`git clone -n --depth=1 --filter=tree:0 ${BASE_REPOSITORY} ${TEMP_REPO_NAME}`);
     if (!clone) return { error: "can't clone repository" };
 
     const checkout = runCommand(
-      `cd repo && git config core.sparseCheckout true && git sparse-checkout set ${source} && git checkout && git config core.sparseCheckout false`,
+      `cd ${TEMP_REPO_NAME} && git config core.sparseCheckout true && git sparse-checkout set ${source} && git checkout && git config core.sparseCheckout false`,
     );
-    if (!checkout) return { error: "can't clone repository" };
+    if (!checkout) return { error: "can't checkout repository" };
     let move;
     if (system.platform === 'win32') {
-      move = runCommand(`cd .. && move repo/${source} ./ && del repo`);
-    } else move = runCommand(`cd .. && mv repo/${source} ./ && rm -rf repo`);
-    if (!move) return { error: "can't clone repository" };
+      move = runCommand(`cd .. && move ${TEMP_REPO_NAME}/${source} ${destination} && del ${TEMP_REPO_NAME}`);
+    } else move = runCommand(`cd .. && mv ${TEMP_REPO_NAME}/${source} ${destination} && rm -rf ${TEMP_REPO_NAME}`);
+    if (!move) return { error: "can't move repository" };
     // deps should be installed from docs. Later one we can install deps here somehow
     return { success: true };
   } catch (error) {
