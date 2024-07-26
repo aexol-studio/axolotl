@@ -1,0 +1,19 @@
+{
+  "name": "@aexol/modularium-playground",
+  "version": "0.4.1",
+  "description": "Axolotl modularium",
+  "main": "lib/index.js",
+  "type": "module",
+  "private": true,
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "scripts": {
+    "start": "modularium add users"
+  },
+  "author": "GraphQL Editor Centaur Generator",
+  "license": "ISC",
+  "devDependencies": {
+    "@aexol/modularium": "^0.4.1"
+  }
+}

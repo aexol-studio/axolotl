@@ -59,18 +59,28 @@ const runCommands = async (source: string, destination: string) => {
         schema: `${destination}/schema.graphql`,
       },
     ]);
+    const modulesFolderPaths = destination.split('/');
+    const modulesFolder = modulesFolderPaths.slice(0, -1).join('/');
     fs.mkdirSync(destination, { recursive: true });
     const clone = runCommand(`git clone -n --depth=1 --filter=tree:0 ${BASE_REPOSITORY} ${TEMP_REPO_NAME}`);
     if (!clone) return { error: "can't clone repository" };
 
-    const checkout = runCommand(
-      `cd ${TEMP_REPO_NAME} && git config core.sparseCheckout true && git sparse-checkout set ${source} && git checkout && git config core.sparseCheckout false`,
-    );
-    if (!checkout) return { error: "can't checkout repository" };
     let move;
     if (system.platform === 'win32') {
-      move = runCommand(`move ${TEMP_REPO_NAME}/${source} ${destination} && del ${TEMP_REPO_NAME}`);
-    } else move = runCommand(`mv ${TEMP_REPO_NAME}/${source} ${destination} && rm -rf ${TEMP_REPO_NAME}`);
+      move = runCommand(
+        `cd ${TEMP_REPO_NAME} && git config core.sparseCheckout true && git sparse-checkout set ${source} && git checkout && git config core.sparseCheckout false && cd .. && move ${TEMP_REPO_NAME}/${source} ${modulesFolder} && del ${TEMP_REPO_NAME}`,
+      );
+    } else
+      move = runCommand(
+        `cd ${TEMP_REPO_NAME} && \
+        git config core.sparseCheckout true && \
+        git sparse-checkout set ${source} && \
+        git checkout && \
+        git config core.sparseCheckout false && \
+        cd .. && \
+        mv ${TEMP_REPO_NAME}/${source} ${modulesFolder} && \
+        rm -rf ${TEMP_REPO_NAME}`,
+      );
     if (!move) return { error: "can't move repository" };
     // deps should be installed from docs. Later one we can install deps here somehow
     return { success: true };

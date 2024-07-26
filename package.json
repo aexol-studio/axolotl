@@ -47,6 +47,7 @@
         "packages/cli",
         "modularium/root",
         "modularium/cli",
+        "modularium/playground",
         "examples/beerpub-yoga",
         "examples/beerpub-yoga-federated",
         "examples/beerpub-apollo-server"
