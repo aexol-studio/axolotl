@@ -6,7 +6,7 @@ import { createServer } from 'http';
 import * as path from 'path';
 import { getDirective as getDirectiveFn, mapSchema } from '@graphql-tools/utils';
 
-type SchemaMapperInitial = Required<Parameters<typeof mapSchema>>[1];
+export type SchemaMapperInitial = Required<Parameters<typeof mapSchema>>[1];
 export type SchemaMapper = (
   schema: GraphQLSchemaWithContext<YogaInitialContext>,
   getDirective: typeof getDirectiveFn,
