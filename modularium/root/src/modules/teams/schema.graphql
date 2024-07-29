@@ -1,0 +1,218 @@
+enum GenerateInviteTokenError{
+	YOU_ARE_NOT_THE_OWNER_OF_A_TEAM_OR_TEAM_DOES_NOT_EXIST
+}
+
+type GenerateInviteTokenResponse{
+	result: String
+	hasError: GenerateInviteTokenError
+}
+
+enum RemoveUserFromTeamError{
+	YOU_ARE_NOT_THE_OWNER_OF_A_TEAM_OR_TEAM_DOES_NOT_EXIST
+	YOU_CANNOT_KICK_YOURSELF_FROM_THE_TEAM
+	USER_NOT_FOUND
+}
+
+type RemoveUserFromTeamResponse{
+	result: Boolean
+	hasError: RemoveUserFromTeamError
+}
+
+enum JoinToTeamError{
+	TEAM_INVITATION_DOES_NOT_EXIST_OR_CAPTURED
+	MEMBER_ALREADY_EXISTS_IN_THE_TEAM
+}
+
+type JoinToTeamResponse{
+	result: Boolean
+	hasError: JoinToTeamError
+}
+
+enum CreateTeamError{
+	TEAM_NOT_CREATED
+}
+
+type CreateTeamResponse{
+	result: String
+	hasError: CreateTeamError
+}
+
+enum JoinToTeamWithInvitationTokenError{
+	INVITATION_TOKEN_NOT_FOUND
+	TEAM_IN_INVITATION_TOKEN_NOT_SPECIFIED
+	MEMBER_ALREADY_EXISTS_IN_THE_TEAM
+	INVITATION_TOKEN_EXPIRED
+}
+
+type JoinToTeamWithInvitationTokenResponse{
+	result: Boolean
+	hasError: JoinToTeamWithInvitationTokenError
+}
+
+input RemoveUserFromTeamInput{
+	userId: String!
+}
+
+type InvitationTeamToken {
+	teamId: String!
+	recipient: String!
+	status: InvitationTeamStatus!
+	_id: String!
+	teamName: String!
+}
+
+enum InvitationTeamStatus{
+	Waiting
+	Taken
+}
+
+
+"""
+For PoC, let's make it:
+
+## Header
+`Authorization: admin-123456789-key`
+"""
+type User{
+	_id: String!
+}
+
+type Team{
+	_id: String!
+	name: String!
+	owner: User!
+	members: [TeamMember!]!
+	createdAt: String!
+}
+
+type TeamMember{
+	_id: String!
+	username: String!
+	createdAt: String!
+	user: User!
+	team: Team!
+}
+
+"""
+Represents user-related queries.
+"""
+type AuthorizedUserQuery{
+	"""
+	Retrieves team invitation tokens based on the specified status.
+	"""
+	showTeamInvitations(
+		"""
+		The status of the team invitations.
+		"""
+		status: InvitationTeamStatus!
+	): [InvitationTeamToken!]!
+	teams: [Team!]
+	teamMember(
+		_id: String!
+	): TeamMemberQuery
+}
+
+type TeamMemberQuery{
+	"""
+	Retrieves team invitation tokens based on the specified parameters.
+	"""
+	showTeamInvitations(
+		"""
+		Determines whether the invitations are sent from the user's team.
+		"""
+		sentFromMyTeam: Boolean
+		"""
+		The status of the team invitations.
+		"""
+		status: InvitationTeamStatus
+	): [InvitationTeamToken!]!
+	"""
+	Retrieves invite tokens.
+	"""
+	showInviteTokens: [InviteToken!]!
+	team: Team!
+}
+
+"""
+Represents user-related mutations.
+"""
+type AuthorizedUserMutation{
+	"""
+	Joins a user to a team.
+	"""
+	joinToTeam(
+		"""
+		The ID of the team.
+		"""
+		teamId: String!
+	): JoinToTeamResponse!
+	"""
+	Joins a user to a team using an invitation token.
+	"""
+	joinToTeamWithInvitationToken(
+		"""
+		The invitation token.
+		"""
+		token: String!
+	): JoinToTeamWithInvitationTokenResponse!
+	"""
+	Creates a team.
+	"""
+	createTeam(
+		"""
+		The name of the team.
+		"""
+		teamName: String!
+	): CreateTeamResponse!
+	teamMember(
+		_id: String!
+	): TeamMemberMutation
+}
+
+input InviteTokenInput{
+	expires: String
+	domain: String
+	name: String
+}
+
+"""
+Represents admin member-related mutations.
+"""
+type TeamMemberMutation{
+	"""
+	Generates an invite token.
+	"""
+	generateInviteToken(
+		"""
+		The token options object.
+		"""
+		tokenOptions: InviteTokenInput!
+	): GenerateInviteTokenResponse!
+	"""
+	Removes a user from a team.
+	"""
+	removeUserFromTeam(
+		"""
+		The remove user from team input object.
+		"""
+		data: RemoveUserFromTeamInput!
+	): RemoveUserFromTeamResponse!
+	"""
+	Deletes an invite token.
+	"""
+	deleteInviteToken(
+		"""
+		The ID of the invite token.
+		"""
+		id: String!
+	): Boolean!
+}
+
+type InviteToken{
+	token: String!
+	expires: String!
+	domain: String!
+	teamId: String
+	_id: String!
+	name: String
+}

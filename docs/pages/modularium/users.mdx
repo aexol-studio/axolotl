@@ -1,0 +1,89 @@
+# Users
+
+Base module for Authentication and Authorization for your GraphQL backends.
+
+## Instalation
+
+```sh
+npx @aexol/modularium@latest add users
+```
+
+## Environment variables
+
+### Required
+- **MONGO_URL** - url of your mongodb database
+- **JWT_SECRET** - url of your mongodb database
+
+### Optional 
+Social providers env variables are only needed when you use those social
+providers in your backend. Available social providers
+
+### Google
+
+- **GOOGLE_CLIENT_ID** - Google client id
+- **GOOGLE_SECRET_KEY** - Google secret key
+- GOOGLE_REDIRECT_URI - optional redirect URI
+
+### Github
+
+- **GITHUB_APPLICATION_CLIENT_ID** - Github client id
+- **GITHUB_APPLICATION_CLIENT_SECRET** - Github secret key
+- GITHUB_REDIRECT_URI - optional redirect URI
+
+### Microsoft
+
+- **MICROSOFT_APPLICATION_CLIENT_ID** - Microsoft client id
+- **MICROSOFT_APPLICATION_CLIENT_SECRET** - Microsoft secret key
+- MICROSOFT_REDIRECT_URI - optional redirect URI
+
+### Apple
+
+- **APPLE_CLIENT_ID** - Apple client id
+- **APPLE_SECRET_KEY** - Apple secret key
+- APPLE_REDIRECT_URI - optional redirect URI
+
+
+## Module
+
+Out of the box it gives you password salt/hash based registration and login with
+email validation. 
+
+## Authorization
+
+Authorization won't pass users if they not send the `Authorization` header with
+JWT token received from `login`
+
+In your main schema if you want to add some resolvers that are valid only for
+Authorized users you need to create `AuthorizedUserQuery` or `AuthorizedUserMutation`
+type. For example if your main schema is used to post blogs then it would be:
+
+```graphql
+type User{
+    _id: String!
+}
+type AuthorizedUserQuery{
+    posts: [Post]
+}
+
+type AuthorizedUserMutation{
+    post(content:string): Post!
+}
+```
+
+And in the main resolver code:
+
+```ts
+export default createResolvers({
+    AuthorizedUserQuery:{
+        posts: async ([source]) => {
+            const src = source as { _id: string }
+            return MongoOrb("Post").collection.find({
+                author: src._id
+            })
+        }
+    }
+})
+```
+
+So the AuthorizedUserQuery is already coded and returned in `users` module and
+you will receive an authorized user object in `source` parameter.
