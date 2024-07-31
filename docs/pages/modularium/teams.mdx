@@ -1,0 +1,56 @@
+# Teams
+
+Base module teams management
+
+## Instalation
+
+```sh
+npx @aexol/modularium@latest add teams
+```
+
+## Environment variables
+
+### Required
+- **MONGO_URL** - url of your mongodb databased
+- **INVITE_TOKEN_EXPIRES_DAYS** - default expiration of invite token
+
+## Module
+
+This module gives you the following features:
+- generation of invite tokens
+- team management
+- authorized team member query and mutation
+- listing team members
+
+## Authorized Team member
+
+This query and mutation will only let in authorized team members:
+
+```graphql
+type Team{
+    _id: String!
+}
+type TeamMemberQuery{
+    posts: [Post]
+}
+
+type TeamMemberMutation{
+    post(content:string): Post!
+}
+```
+
+And in the main resolver code:
+
+```ts
+export default createResolvers({
+    TeamMemberQuery:{
+        posts: async ([source]) => {
+            const src = source as { _id: string }
+            return MongoOrb("Post").collection.find({
+                team: src._id
+            })
+        }
+    }
+})
+```
+
