@@ -10,7 +10,7 @@ export type ProjectOptions = {
 };
 
 // eslint-disable-next-line @typescript-eslint/ban-types
-export const config = new ConfigMaker<ProjectOptions, {}>('axolotl', {
+export const config = new ConfigMaker<ProjectOptions>('axolotl', {
   decoders: {},
   config: {
     environment: {
