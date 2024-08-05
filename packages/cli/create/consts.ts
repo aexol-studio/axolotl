@@ -10,14 +10,9 @@ type T = {
   };
 };
 
-export type STARTERS = 'stucco' | 'yoga' | 'apollo' | 'deno-yoga';
+export type STARTERS = 'yoga' | 'apollo' | 'deno-yoga';
 
 export const STARTER_DICT: T = {
-  stucco: {
-    example: 'examples/beerpub',
-    repo: 'axolotl-starter-stucco',
-    description: 'stucco.js starter',
-  },
   yoga: {
     example: 'examples/beerpub-yoga',
     repo: 'axolotl-starter-yoga',

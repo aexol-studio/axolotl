@@ -14,6 +14,7 @@ const Beers: Beer[] = [
     createdAt: '2023-10-11T14:51:09.029Z',
     name: 'Zubr',
     price: 100,
+    url: 'https://zubr.pl',
   },
 ];
 

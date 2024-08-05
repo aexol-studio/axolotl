@@ -72,7 +72,7 @@ const generateModelsString = (fileContent: string) => {
   const { nodes } = Parser.parse(fileContent);
 
   const scalars = nodes.filter((n) => n.data.type === TypeDefinition.ScalarTypeDefinition);
-  const scalarsString = scalars.map((s) => `export type ${s.name} = unknown`).join('\n');
+  const scalarsString = scalars.map((s) => `export type ${s.name} = unknown;`).join('\n');
 
   const enums = nodes.filter((n) => n.data.type === TypeDefinition.EnumTypeDefinition);
   const enumsString = enums.map((s) => `export enum ${s.name} ${buildEnumArgs(s.args)}`).join('\n');
@@ -113,16 +113,28 @@ const generateModelsString = (fileContent: string) => {
   const directives = nodes.filter((n) => n.data.type === TypeSystemDefinition.DirectiveDefinition);
   const directivesString = directives
     .map((a) => {
-      return `${TAB(2)}${a.name}: {\n${TAB(3)}args: ${buildArgs(a.args)}\n${TAB(2)}};`;
+      return `${TAB(1)}${a.name}: {\n${TAB(2)}args: ${buildArgs(a.args)}\n${TAB(1)}};`;
     })
     .join('\n');
 
   const typesFullString = `export type Models = {\n${typesString}\n};`;
+  const scalarsFullString = scalars.length
+    ? `export type Scalars = {\n${scalars.map((s) => `${TAB(1)}['${s.name}']: unknown;`).join('\n')}\n};`
+    : 'export type Scalars = unknown;';
   const directivesFullString = directivesString
     ? `export type Directives = {\n${directivesString}\n};`
-    : 'export type Directives = {}';
+    : 'export type Directives = unknown';
   return (
-    [scalarsString, enumsString, inputsString, typesFullString, directivesFullString, interfacesString, dbTypes]
+    [
+      scalarsString,
+      enumsString,
+      inputsString,
+      typesFullString,
+      directivesFullString,
+      interfacesString,
+      scalarsFullString,
+      dbTypes,
+    ]
       .filter(Boolean)
       .join('\n\n') + '\n'
   );

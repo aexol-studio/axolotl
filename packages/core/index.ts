@@ -8,6 +8,7 @@ import {
   ObjectsUnknown,
   InferAdapterTypeDirectives,
 } from '@/types';
+import { GraphQLScalarType } from 'graphql';
 
 export const AxolotlAdapter =
   <Inp, Dir>() =>
@@ -17,7 +18,7 @@ export const AxolotlAdapter =
 export const Axolotl =
   <ADAPTER extends (objects: ObjectsUnknown<any, any>) => any>(adapter: ADAPTER) =>
   // eslint-disable-next-line @typescript-eslint/ban-types
-  <Models, DirectiveModels>() => {
+  <Models, ScalarModels = unknown, DirectiveModels = unknown>() => {
     type Inp = InferAdapterType<ADAPTER>;
     type Dir = InferAdapterTypeDirectives<ADAPTER>;
     type Resolvers = {
@@ -25,11 +26,20 @@ export const Axolotl =
         [T in keyof Models[P]]?: CustomHandler<Inp, Models[P][T]>;
       };
     };
+    type Scalars = {
+      [P in keyof ScalarModels]?: GraphQLScalarType;
+    };
     type Directives = {
       [P in keyof DirectiveModels]?: Dir;
     };
     type Handler = CustomHandler<Inp>;
     type MiddlewareHandler = CustomMiddlewareHandler<Inp>;
+
+    const createScalars = <Z extends Scalars>(
+      k: Z & {
+        [P in keyof Z]: P extends keyof Scalars ? Z[P] : never;
+      },
+    ) => k as Z;
 
     const createResolvers = <Z extends Resolvers>(
       k: Z & {
@@ -69,6 +79,7 @@ export const Axolotl =
     return {
       createResolvers,
       createDirectives,
+      createScalars,
       applyMiddleware,
       adapter,
     };

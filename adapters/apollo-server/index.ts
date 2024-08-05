@@ -10,7 +10,7 @@ import { GraphQLSchema } from 'graphql';
 type SchemaMapperInitial = Required<Parameters<typeof mapSchema>>[1];
 export type SchemaMapper = (schema: GraphQLSchema, getDirective: typeof getDirectiveFn) => SchemaMapperInitial;
 export const apolloServerAdapter = AxolotlAdapter<[any, any, any, any], SchemaMapper>()((
-  { resolvers, directives },
+  { resolvers, directives, scalars },
   options?: {
     schema?: {
       file?: { path: string } | { content: string };
@@ -43,7 +43,10 @@ export const apolloServerAdapter = AxolotlAdapter<[any, any, any, any], SchemaMa
 
   let apolloSchema = makeExecutableSchema({
     typeDefs: schema,
-    resolvers: apolloResolvers,
+    resolvers: {
+      ...apolloResolvers,
+      ...scalars,
+    },
   });
 
   if (directives) {

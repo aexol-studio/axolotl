@@ -234,7 +234,6 @@
         "npm:node-fetch@^3.2.10",
         "npm:prettier@^3.3.0",
         "npm:sass@^1.69.3",
-        "npm:stucco-js@^0.10.19",
         "npm:ts-node@^10.9.1",
         "npm:ts-patch@^3.0.0",
         "npm:typescript-transform-paths@^3.4.6",

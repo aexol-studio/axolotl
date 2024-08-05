@@ -1,10 +1,14 @@
+export type URL = unknown;
+
 export interface CreateBeer {
   name: string;
   price: number;
+  url?: URL | undefined;
 }
 export interface UpdateBeer {
   name?: string | undefined;
   price?: number | undefined;
+  url?: URL | undefined;
 }
 
 export type Models = {
@@ -22,6 +26,9 @@ export type Models = {
       args: Record<string, never>;
     };
     info: {
+      args: Record<string, never>;
+    };
+    url: {
       args: Record<string, never>;
     };
   };
@@ -54,9 +61,18 @@ export type Models = {
 };
 
 export type Directives = {
-    auth: {
-      args: Record<string, never>;
-    };
+  auth: {
+    args: Record<string, never>;
+  };
+};
+
+export interface Node {
+  _id: string;
+  createdAt: string;
+}
+
+export type Scalars = {
+  ['URL']: unknown;
 };
 
 export interface Beer {
@@ -65,6 +81,7 @@ export interface Beer {
   _id: string;
   createdAt: string;
   info?: string | undefined;
+  url?: URL | undefined;
 }
 export interface Query {
   beers?: Array<Beer> | undefined;

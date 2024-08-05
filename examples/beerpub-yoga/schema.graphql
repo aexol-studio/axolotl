@@ -4,6 +4,7 @@ type Beer implements Node{
 	_id: String!
 	createdAt: String!
 	info:String
+	url: URL
 }
 
 type Query{
@@ -27,6 +28,7 @@ type Mutation{
 input CreateBeer{
 	name: String!
 	price: Int!
+	url: URL
 }
 
 interface Node{
@@ -37,6 +39,7 @@ interface Node{
 input UpdateBeer{
 	name: String
 	price: Int
+	url: URL
 }
 
 schema{
@@ -44,4 +47,6 @@ schema{
 	mutation: Mutation
 }
 
+
+scalar URL
 directive @auth on FIELD_DEFINITION

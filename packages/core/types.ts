@@ -1,7 +1,12 @@
+import { GraphQLScalarType } from 'graphql';
+
 export type ResolversUnknown<InputType> = {
   [x: string]: {
     [x: string]: (input: InputType, args?: any) => any | undefined | Promise<any | undefined>;
   };
+};
+export type ScalarsUnknown = {
+  [x: string]: GraphQLScalarType;
 };
 
 export type DirectivesUnknown<DirectiveType> = {
@@ -11,6 +16,7 @@ export type DirectivesUnknown<DirectiveType> = {
 export type ObjectsUnknown<InputType, DirectiveType> = {
   resolvers: ResolversUnknown<InputType>;
   directives?: DirectivesUnknown<DirectiveType>;
+  scalars?: ScalarsUnknown;
 };
 
 export interface CustomHandler<InputType, ArgumentsType = unknown> {

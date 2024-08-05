@@ -13,7 +13,7 @@ export type SchemaMapper = (
 ) => SchemaMapperInitial;
 
 export const graphqlYogaAdapter = AxolotlAdapter<[any, any, YogaInitialContext], SchemaMapper>()((
-  { resolvers, directives },
+  { resolvers, directives, scalars },
   options?: {
     yoga?: Parameters<typeof createYoga>[0];
     schema?: {
@@ -48,7 +48,10 @@ export const graphqlYogaAdapter = AxolotlAdapter<[any, any, YogaInitialContext],
   let yogaSchema = createSchema({
     ...options?.schema?.options,
     typeDefs: schema,
-    resolvers: yogaResolvers,
+    resolvers: {
+      ...yogaResolvers,
+      ...scalars,
+    },
   });
 
   if (directives) {

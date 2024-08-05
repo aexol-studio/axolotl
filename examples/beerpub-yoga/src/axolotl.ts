@@ -1,8 +1,7 @@
-import { Directives, Models } from '@/src/models.js';
+import { Directives, Models, Scalars } from '@/src/models.js';
 import { Axolotl } from '@aexol/axolotl-core';
 import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
 
-export const { applyMiddleware, createResolvers, createDirectives, adapter } = Axolotl(graphqlYogaAdapter)<
-  Models,
-  Directives
->();
+export const { applyMiddleware, createResolvers, createDirectives, adapter, createScalars } = Axolotl(
+  graphqlYogaAdapter,
+)<Models, Scalars, Directives>();
