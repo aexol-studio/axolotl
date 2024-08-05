@@ -85,6 +85,14 @@ const generateModelsString = (fileContent: string) => {
     })
     .join('\n');
 
+  const interfaces = nodes.filter((n) => n.data.type === TypeDefinition.InterfaceTypeDefinition);
+  const interfacesString = interfaces
+    .map((i) => {
+      const interfaceFields = i.args.map((a) => `${resolveField(a)};`);
+      return `export interface ${i.name} {\n${interfaceFields.join('\n')}\n}`;
+    })
+    .join('\n');
+
   const types = nodes.filter((n) => n.data.type === TypeDefinition.ObjectTypeDefinition);
   const typesString = types
     .map((t) => {
@@ -114,7 +122,7 @@ const generateModelsString = (fileContent: string) => {
     ? `export type Directives = {\n${directivesString}\n};`
     : 'export type Directives = {}';
   return (
-    [scalarsString, enumsString, inputsString, typesFullString, directivesFullString, dbTypes]
+    [scalarsString, enumsString, inputsString, typesFullString, directivesFullString, interfacesString, dbTypes]
       .filter(Boolean)
       .join('\n\n') + '\n'
   );
