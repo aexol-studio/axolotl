@@ -64,8 +64,8 @@ const buildArgs = (args: ParserField[]) => {
 
 const buildEnumArgs = (args: ParserField[]) => {
   if (args.length === 0) return NeverRecord;
-  const inputFields = args.map((a) => `${TAB(1)}${a.name} = "${a.name}"`);
-  return `{\n${inputFields.join(',\n')}\n}`;
+  const inputFields = args.map((a) => `${TAB(1)}${a.name} = '${a.name}',`);
+  return `{\n${inputFields.join('\n')}\n}`;
 };
 
 const generateModelsString = (fileContent: string) => {
@@ -82,6 +82,13 @@ const generateModelsString = (fileContent: string) => {
     .map((i) => {
       const inputFields = i.args.map((a) => `${resolveField(a)};`);
       return `export interface ${i.name} {\n${inputFields.join('\n')}\n}`;
+    })
+    .join('\n');
+
+  const unions = nodes.filter((n) => n.data.type === TypeDefinition.UnionTypeDefinition);
+  const unionsString = unions
+    .map((i) => {
+      return `export type ${i.name} = ${i.args.map((a) => a.name).join(' | ')};`;
     })
     .join('\n');
 
@@ -132,6 +139,7 @@ const generateModelsString = (fileContent: string) => {
       typesFullString,
       directivesFullString,
       interfacesString,
+      unionsString,
       scalarsFullString,
       dbTypes,
     ]

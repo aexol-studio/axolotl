@@ -5,10 +5,19 @@ type Beer implements Node{
 	createdAt: String!
 	info:String
 	url: URL
+	genre: BeerGenre
+}
+
+type Chips implements Node{
+	_id: String!
+	createdAt: String!
+	name: String!
+	price: Int!
 }
 
 type Query{
 	beers: [Beer!]
+	products: [Product!]
 	testAuth: String! @auth
 }
 
@@ -29,6 +38,7 @@ input CreateBeer{
 	name: String!
 	price: Int!
 	url: URL
+	genre: BeerGenre
 }
 
 interface Node{
@@ -47,6 +57,13 @@ schema{
 	mutation: Mutation
 }
 
+union Product = Beer | Chips
+
+enum BeerGenre{
+	IPA
+	LAGER
+	PORTER
+}
 
 scalar URL
 directive @auth on FIELD_DEFINITION
