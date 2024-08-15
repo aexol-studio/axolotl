@@ -18,7 +18,7 @@ export const STARTER_DICT: T = {
     description: 'GraphQL Yoga starter',
   },
   'federation-yoga': {
-    example: 'examples/beerpub-yoga-federated',
+    example: 'examples/yoga-federated',
     repo: 'axolotl-starter-federation-yoga',
     description: 'GraphQL Yoga starter',
   },
