@@ -1,4 +1,4 @@
-import { Models } from '@/src/shop/models.js';
+import { Models } from '@/src/users/models.js';
 import { Axolotl } from '@aexol/axolotl-core';
 import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
 

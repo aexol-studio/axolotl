@@ -1,8 +1,0 @@
-type Beer {
-	price: Int
-	_id: String!
-}
-
-type Mutation{
-	setBeerPrice(_id:String!,price: Float): Boolean
-}
