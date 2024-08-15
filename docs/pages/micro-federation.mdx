@@ -1,7 +1,7 @@
 ### Micro Federation
 You can use micro federation feature in axolotl. Micro federation means all the modules are located within one project or one monorepo or are distributed as npm packages. Those axolotl projects are merged to the supergraph later. 
 
-You can also run the project `examples/beerpub-yoga-federated` to watch how
+You can also run the project `examples/yoga-federated` to watch how
 micro federation works!
 
 To use micro federation you need to create config for your project containing
@@ -12,12 +12,12 @@ this kind of content:
     "models": "src/models.ts",
     "federation":[
         {
-            "schema":"src/beers/schema.graphql",
-            "models":"src/beers/models.ts",
+            "schema":"src/todos/schema.graphql",
+            "models":"src/todos/models.ts",
         },
         {
-            "schema":"src/shop/schema.graphql",
-            "models":"src/shop/models.ts",
+            "schema":"src/users/schema.graphql",
+            "models":"src/users/models.ts",
         }
     ]
 }
@@ -30,17 +30,17 @@ schema and its models. Here is how the federation process works:
 2. Create supergraph schema from all the federation schemas.
 3. Create models for supergraph
 
-To run federated axolotls - each of folders, `beers` and `shop` in our case has
+To run federated axolotls - each of folders, `users` and `todos` in our case has
 to provide their own `resolvers.ts` files based on local models and `Axolotl`.
 Then inside the main `resolvers.ts` file wee need to merge those subgraph
 resolvers:
 
 ```ts [filename="src/resolvers.ts"]
 import { mergeAxolotls } from '@aexol/axolotl-core';
-import beerResolvers from '@/src/beers/resolvers.js';
-import shopResolvers from '@/src/shop/resolvers.js';
+import usersResolvers from '@/src/users/resolvers.js';
+import todosResolvers from '@/src/todos/resolvers.js';
 
-export default mergeAxolotls(beerResolvers, shopResolvers);
+export default mergeAxolotls(usersResolvers, todosResolvers);
 ```
 
 then you can use those resolvers as normal resolvers result.
