@@ -30,7 +30,9 @@ export type Models = {
       };
     };
     todoOps: {
-      args: Record<string, never>;
+      args: {
+        _id: string;
+      };
     };
     changePassword: {
       args: {
