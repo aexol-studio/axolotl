@@ -33,6 +33,8 @@ export default createResolvers({
         ...src,
         done: true,
       });
+      // check if the state changed
+      return src.done !== true;
     },
   },
 });
