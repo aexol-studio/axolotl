@@ -18,7 +18,10 @@ Brought to you by the [GraphQL Editor](https://graphqleditor.com/) and [Aexol St
 
 Axolotl is a framework overlord/wrapper thats lets you forget about type-casting and looking into schemas. When there is no drama, only efficiency remains. 
 
-Features of Axolotl:
+<br /><!--STRONA WIZUALNA: przerwa na potrzeby wizualnego oddzielenia podpisu pod tytułem/wstępu od dalszej treści i podrozdziałów-->
+
+
+<ins>Features of Axolotl: </ins>
 - ⚙️ Generates models at runtime during development - which ensures type safety
 - 🏃 Enables seamless migration between different GraphQL Servers
 - 🤓 Lets you write your own adapters for various purposes
@@ -32,24 +35,18 @@ Features of Axolotl:
 
 ## 🤔 Why? 
 
-Writing GraphQL for backend developers remains a complicated process when you want to take the schema-first approach instead of going code-first. Over the years, I've come to understand that there was even more to it: we needed an **evolutionary** framework. 
+Writing GraphQL for backend developers remains a complicated process when you want to take the schema-first approach instead of going code-first. I was in the type-safety rabbit hole while building [GraphQL Zeus](https://github.com/graphql-editor/graphql-zeus) (a GraphQL Client with almost 1 Million downloads). Maintaining Zeus and developing with the constantly-changing TypeScript proved to be really hard. Over the years, I have come to understand that there was even more to it: we needed an **evolutionary** framework. I decided to write something simpler. Something that the community needed that integrated everything using the same knowledge. Something, ultimately, much more powerful.
 
-This is how Axolotl was created.
+This is how Axolotl was born.
 
 For example, maybe you want to use `apollo-server` but then prefer to switch to `graphql-yoga`? No problem. All you have to do is change the adapter. 
-How about wanting to set up each part of your system in a different graphql server with microservices? Done.
+How about wanting to set up each part of your system in a different GraphQL server with microservices? Done.
 
 <br /><!--STRONA WIZUALNA: przerwa na potrzeby wizualnego oddzielenia podpisu pod tytułem/wstępu od dalszej treści i podrozdziałów-->
 
 ## 🫠 How?
 
-Axolotl provides type-safety and it is up to you to choose an adapter (or write your own). And develop your GraphQL thing super-fast. How it runs it depends what framework you choose under the hood. 
-
-<br /><!--STRONA WIZUALNA: przerwa na potrzeby wizualnego oddzielenia podpisu pod tytułem/wstępu od dalszej treści i podrozdziałów-->
-
-## 🧌 Who?
-
-Me [aexol](https://github.com/aexol) is the author of the lib. I was in the type-safety rabbit hole while building [GraphQL Zeus](https://github.com/graphql-editor/graphql-zeus) a GraphQL Client downloaded almost Million of times. While maintaining zeus and developing together with all-the-time changing TypeScript is really hard. I discovered - I can write something simpler - much powerful, that community needs, that integrates with everything - using the same knowledge.
+Axolotl provides type-safety and lets you choose the adapter (or write your own). It allows you to develop your GraphQL project quickly and efficiently. How it runs it also depends on the underlying framework you choose. 
 
 <br /><!--STRONA WIZUALNA: przerwa na potrzeby wizualnego oddzielenia podpisu pod tytułem/wstępu od dalszej treści i podrozdziałów-->
 
