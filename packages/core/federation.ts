@@ -26,7 +26,7 @@ export const mergeAxolotls = (...resolvers: ResolversUnknown<any>[]) => {
         );
         if (results.length === 1) return results[0];
         if (results.length > 1) {
-          return mergeDeep({}, results);
+          return mergeDeep({}, ...results);
         }
       };
     }
