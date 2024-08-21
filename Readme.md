@@ -54,29 +54,44 @@ Axolotl provides type-safety and lets you choose the adapter (or write your own)
 
 ## Repository
 
-### Adapters
-Place to develop adapters for popular nodejs frameworks.
+### Adapters 
+![arrow-top](https://github.com/user-attachments/assets/3632196c-f2f8-46a2-9d3d-4a8071ca1908#gh-dark-mode-only) ![arrow-top-dark](https://github.com/user-attachments/assets/496077a7-85a9-44dc-8770-5a248d63886d#gh-light-mode-only) to develop adapters for popular nodejs frameworks
 
-### Examples
-Place to experiments with axolotl and its packages
 
-### Local
-Packages to support super fast local development
+### Examples 
+![arrow-top](https://github.com/user-attachments/assets/3632196c-f2f8-46a2-9d3d-4a8071ca1908#gh-dark-mode-only) ![arrow-top-dark](https://github.com/user-attachments/assets/496077a7-85a9-44dc-8770-5a248d63886d#gh-light-mode-only) to experiment with axolotl and its packages
 
-### Micro Federation
-You can use micro federation feature in axolotl. Micro federation means all the modules are located within one project or one monorepo or are distributed as npm packages. Those axolotl projects are merged to the supergraph later. 
+### Local 
+![arrow-top](https://github.com/user-attachments/assets/3632196c-f2f8-46a2-9d3d-4a8071ca1908#gh-dark-mode-only) ![arrow-top-dark](https://github.com/user-attachments/assets/496077a7-85a9-44dc-8770-5a248d63886d#gh-light-mode-only) to support high-speed local development through the use of packages
+
+### Micro Federation 
+![arrow-top](https://github.com/user-attachments/assets/3632196c-f2f8-46a2-9d3d-4a8071ca1908#gh-dark-mode-only) ![arrow-top-dark](https://github.com/user-attachments/assets/496077a7-85a9-44dc-8770-5a248d63886d#gh-light-mode-only)
+to use the micro federation feature in axolotl; micro federation means all the modules are located within one project or one monorepo **or** are distributed as npm packages. The axolotl projects are merged to the supergraph later
 
 <br /><!--STRONA WIZUALNA: przerwa na potrzeby wizualnego oddzielenia podpisu pod tytułem/wstępu od dalszej treści i podrozdziałów-->
 
 ## Development
 
-To start developing you need to know few things:
-- this is npm workspaces monorepo
-- there is sequential build order for command:
+>[!IMPORTANT]
+>To start developing you need to know a few things:
+
+<br />
+
+![arrow-top](https://github.com/user-attachments/assets/3632196c-f2f8-46a2-9d3d-4a8071ca1908#gh-dark-mode-only) ![arrow-top-dark](https://github.com/user-attachments/assets/496077a7-85a9-44dc-8770-5a248d63886d#gh-light-mode-only)
+this is an npm workspaces monorepo
+
+<br />
+
+![arrow-top](https://github.com/user-attachments/assets/3632196c-f2f8-46a2-9d3d-4a8071ca1908#gh-dark-mode-only) ![arrow-top-dark](https://github.com/user-attachments/assets/496077a7-85a9-44dc-8770-5a248d63886d#gh-light-mode-only)
+there is a sequential build order for commands as seen below:
 ```sh
  npm run build --ws --if-present
 ```
-- to run an example execute:
+
+<br />
+
+![arrow-top](https://github.com/user-attachments/assets/3632196c-f2f8-46a2-9d3d-4a8071ca1908#gh-dark-mode-only) ![arrow-top-dark](https://github.com/user-attachments/assets/496077a7-85a9-44dc-8770-5a248d63886d#gh-light-mode-only)
+to run an example execute you need to type in:
 ```sh
  npm run start -w beerpub
 ```
