@@ -1,6 +1,7 @@
-# <img src="https://github.com/user-attachments/assets/ac427bf6-6c02-48d1-bcd2-1e709eeb01d3" width="40"> AXOLOTL
+# <img src="https://github.com/user-attachments/assets/ac427bf6-6c02-48d1-bcd2-1e709eeb01d3#gh-dark-mode-only" width=4%> <img src="https://github.com/user-attachments/assets/5dc740b2-ac6d-4011-83dc-51cf1de1029a#gh-light-mode-only" width=4%> AXOLOTL
 
-Brought to you by the GraphQL Editor and the hard-working Aexol teams ([Editor homepage](https://github.com/graphql-editor)), comes a pre-alpha version of a universal backend (or frontend if you feel like creating something special) framework that will ensure GraphQL resolvers and arguments type-safety. 
+
+Brought to you by the [GraphQL Editor](https://graphqleditor.com/) and [Aexol Studio](http://aexol.com/) teams, comes a pre-alpha version of a universal backend (or frontend if you feel like creating something special) framework that will ensure GraphQL resolvers and arguments type-safety. 
 
 <br /><!--STRONA WIZUALNA: przerwa na potrzeby wizualnego oddzielenia podpisu pod tytułem/wstępu od dalszej treści i podrozdziałów-->
 
@@ -31,7 +32,7 @@ Features of Axolotl:
 
 ## 🤔 Why? 
 
-Writing GraphQL for backend developers remains a complicated process when you want to take the schema-first approach instead of code-first one. Over the years, I've come to understand that there was more to it: we needed an **evolutionary** framework. 
+Writing GraphQL for backend developers remains a complicated process when you want to take the schema-first approach instead of going code-first. Over the years, I've come to understand that there was even more to it: we needed an **evolutionary** framework. 
 
 This is how Axolotl was created.
 
