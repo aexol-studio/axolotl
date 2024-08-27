@@ -1,4 +1,4 @@
-### <img src="https://github.com/user-attachments/assets/5b5de3fa-c50e-4d46-831f-57a7d2599f9a" width=50%> ![Vector 902 (Stroke) (1)](https://github.com/user-attachments/assets/18e2f31f-a70f-4c3e-b284-3b66c989a15f)
+### <img src="https://github.com/user-attachments/assets/44a7535a-dfb6-4601-bd37-02711a873668" width=50%> ![Vector 902 (Stroke) (1)](https://github.com/user-attachments/assets/18e2f31f-a70f-4c3e-b284-3b66c989a15f)
 
 From the [GraphQL Editor](https://graphqleditor.com/) and [Aexol Studio](http://aexol.com/) teams, comes a pre-alpha version of a universal backend (or frontend if you feel like creating something special) framework that will ensure GraphQL resolvers and arguments type-safety. 
 
