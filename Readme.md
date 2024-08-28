@@ -15,7 +15,7 @@ From the [GraphQL Editor](https://graphqleditor.com/) and [Aexol Studio](http://
 <br />
 
 > [!TIP]
-> Check our ***full documentation*** and the ***Discord channel***:\
+> Check our *full documentation* and the *Discord channel*:\
 > [Full documentation](https://axolotl-docs.vercel.app)\
 > [Discord channel](https://discord.gg/f8SfgGBHRz)
 
@@ -61,37 +61,35 @@ Axolotl provides type-safety and lets you choose the adapter (or write your own)
 ## Repository
 
 
-|||
+|Included elements:||
 |:---|---| 
-| **Adapters**      | To develop adapters for popular nodejs frameworks | 
-| **Examples**      | To experiment with axolotl and its packages      |
-| **Local** |   To support high-speed local development through the use of packages |
-| **Micro-federation** | to use the micro-federation feature in axolotl <br /> <br /> - Micro-federation means that all the modules are located within one project or one monorepo **or** are distributed as npm packages <br /> - The axolotl projects are merged to the supergraph later|
+| Adapters      | To develop adapters for popular nodejs frameworks | 
+| Examples      | To experiment with axolotl and its packages      |
+| Local |   To support high-speed local development through the use of packages |
+| <br > Micro-federation | to use the micro-federation feature in axolotl <br /> <br /> - Micro-federation means that all the modules are located within one project or one monorepo **or** are distributed as npm packages <br /> - The axolotl projects are merged to the supergraph later|
 
 <br />
 
 ## Development
 
->[!TIP]
+>[!IMPORTANT]
 >To start developing you need to know a few things.
 
 <br />
 
-![arrow-top](https://github.com/user-attachments/assets/3632196c-f2f8-46a2-9d3d-4a8071ca1908#gh-dark-mode-only) ![arrow-top-dark](https://github.com/user-attachments/assets/496077a7-85a9-44dc-8770-5a248d63886d#gh-light-mode-only)
-This is an npm workspaces monorepo.
+- This is an npm workspaces monorepo.
 
 <br />
 
-![arrow-top](https://github.com/user-attachments/assets/3632196c-f2f8-46a2-9d3d-4a8071ca1908#gh-dark-mode-only) ![arrow-top-dark](https://github.com/user-attachments/assets/496077a7-85a9-44dc-8770-5a248d63886d#gh-light-mode-only)
-There is a sequential build order for commands as seen below:
+- There is a sequential build order for commands as seen below:
 ```sh
  npm run build --ws --if-present
 ```
 
 <br />
 
-![arrow-top](https://github.com/user-attachments/assets/3632196c-f2f8-46a2-9d3d-4a8071ca1908#gh-dark-mode-only) ![arrow-top-dark](https://github.com/user-attachments/assets/496077a7-85a9-44dc-8770-5a248d63886d#gh-light-mode-only)
-To run an example execute you need to type in:
+
+- To run an example execute you need to type in:
 ```sh
  npm run start -w beerpub
 ```
