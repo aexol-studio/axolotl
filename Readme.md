@@ -61,12 +61,12 @@ Axolotl provides type-safety and lets you choose the adapter (or write your own)
 ## Repository
 
 
-|Included elements:||
-|:---|---| 
+|Elements|Description|
+|:---|:---| 
 | Adapters      | To develop adapters for popular nodejs frameworks | 
 | Examples      | To experiment with axolotl and its packages      |
 | Local |   To support high-speed local development through the use of packages |
-| <br > Micro-federation | to use the micro-federation feature in axolotl <br /> <br /> - Micro-federation means that all the modules are located within one project or one monorepo **or** are distributed as npm packages <br /> - The axolotl projects are merged to the supergraph later|
+| <br > Micro-federation | To use the micro-federation feature in axolotl <br /> <br /> - Micro-federation means that all the modules are located within one project or one monorepo **or** are distributed as npm packages <br /> - The axolotl projects are merged to the supergraph later|
 
 <br />
 
@@ -77,11 +77,11 @@ Axolotl provides type-safety and lets you choose the adapter (or write your own)
 
 <br />
 
-- This is an npm workspaces monorepo.
+This is an npm workspaces monorepo.
 
 <br />
 
-- There is a sequential build order for commands as seen below:
+There is a sequential build order for commands as seen below:
 ```sh
  npm run build --ws --if-present
 ```
@@ -89,7 +89,7 @@ Axolotl provides type-safety and lets you choose the adapter (or write your own)
 <br />
 
 
-- To run an example execute you need to type in:
+To run an example execute you need to type in:
 ```sh
  npm run start -w beerpub
 ```
