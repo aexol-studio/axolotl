@@ -61,7 +61,7 @@ Axolotl provides type-safety and lets you choose the adapter (or write your own)
 ## Repository
 
 
-|Elements|Description|
+|Element|Description|
 |:---|:---| 
 | Adapters      | To develop adapters for popular nodejs frameworks | 
 | Examples      | To experiment with axolotl and its packages      |
