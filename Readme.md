@@ -52,7 +52,7 @@ How about wanting to set up each part of your system in a different GraphQL serv
 
 <br />
 
-## 🫠 How?
+## 😇 How?
 
 Axolotl provides type-safety and lets you choose the adapter (or write your own). It allows you to develop your GraphQL project quickly and efficiently. How it runs it also depends on the underlying framework you choose. 
 
