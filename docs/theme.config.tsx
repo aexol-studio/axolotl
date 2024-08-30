@@ -16,7 +16,11 @@ const config: DocsThemeConfig = {
   },
   docsRepositoryBase: 'https://github.com/aexol-studio/axolotl/tree/main/docs',
   footer: {
-    component: <a href="https://aexol.com">Aexol</a>,
+    component: (
+      <div className="p-4 text-center">
+        <a href="https://aexol.com">Aexol</a>
+      </div>
+    ),
   },
   sidebar: {
     autoCollapse: true,

@@ -1,25 +1,12 @@
-import Logo from '../components/logo';
+import { Callout, Tabs } from 'nextra/components'
 
-<div style={{display:'flex', flexDirection:"column", alignItems:"center", gap:"2rem", padding:"2rem"}}>
-<Logo />
-<h1 style={{fontSize:'4rem', textAlign:"center", lineHeight:1.25}}>Axolotl</h1>
-</div>
-This is super alpha version of universal backend( or frontend if you want to create something special) framework ensuring **GraphQL** Resolvers and arguments **type-safety**. 
+{<h1 className="text-center font-extrabold md:text-5xl mt-8">Axolotl</h1>}
 
-## 😮 What?
-
-Axolotl is a framework overlord/wrapper to forget about type-casting and looking into schema. With it you can just forget about those 😉
-- ⚙️ models generate runtime on dev providing type safety
-- 🏃 migrate between different GraphQL Servers
-- 🧐 write your own adapters for different purposes
-- 😂 easy to setup,start and integrate
-- 🫡 from GraphQL Editor and Aexol teams
-- 🪦 No RIP we will maintain forever
-- 🦕 Deno support from 0.2.7
+<p className="w-full text-center p-8">Framework ensuring **GraphQL** Resolvers and arguments **type-safety**. Written in TypeScript</p>
 
 ## 🫠 How?
 
-Axolotl provides type-safety and it is up to you to choose an adapter (or write your own). And develop your GraphQL thing super-fast. How it runs it depends what framework you choose under the hood. I am starting with `stucco` adapter which is Golang compiled backend running in TS
+Axolotl provides **type-safety** and it is up to you to choose an adapter (or write your own).
 Get more info in [Getting started](/getting-started) section
 ```ts filename="index.ts"
 import { Models, Directives } from '@/src/models.js';
@@ -46,19 +33,12 @@ type Query{
 
 Writing GraphQL for backend developers is still complicated when you want to go schema-first instead of code-first. Moreover I felt like we need an **evolutionary** framework. 
 
-For example using `apollo-server` but want to switch to `graphql-yoga` ? No problem just change an adapter. 
+For example using `apollo-server` but want to switch to `graphql-yoga` ? No
+problem just change an adapter.
 
-Want to experiment with `stucco-js` with Go lang core? No problem change the adapter. 
+We know that when you **begin the project** - you don't know what will be the
+best server technology and architecture.  
 
-Want to set up every part of your system in different graphql server with microservices?. No problem.
-
-## 🤯 Graph
-So you can write resolvers usually just once and then easily migrate to other GraphQL Server, Deploy, etc.
-```mermaid
-graph LR;
-    Resolvers-->Adapter-->Run
-    Adapter-->Deploy
-```
 ## 🧌 Who?
 
 Me [aexol](https://github.com/aexol) is the author of the lib. I was in the type-safety rabbit hole while building [GraphQL Zeus](https://github.com/graphql-editor/graphql-zeus) a GraphQL Client downloaded almost Million of times. While maintaining zeus and developing together with all-the-time changing TypeScript is really hard. I discovered - I can write something simpler - much powerful, that community needs, that integrates with everything - using the same knowledge.
