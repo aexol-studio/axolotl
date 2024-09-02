@@ -3,8 +3,27 @@ import { Callout, Tabs } from 'nextra/components'
 {<h1 className="text-center font-extrabold md:text-5xl mt-8">Axolotl</h1>}
 
 <p className="w-full text-center p-8">Framework ensuring **GraphQL** Resolvers and arguments **type-safety**. Written in TypeScript</p>
+{
+  <div className="w-full flex justify-center">
+  <div className="w-3/4 flex flex-wrap gap-2 justify-center">
+    {
+      [
+        "axolotl",
+        "axolotl-core",
+        "axolotl-graphql-yoga",
+        "axolotl-apollo-server"
+      ]
+      .map(p => `@aexol/${p}`)
+      .map(p => encodeURIComponent(p))
+      .map(p => <img key={p} alt="NPM Version" src={`https://img.shields.io/npm/v/${p}?style=flat-square&logoColor=%23333333&label=${p}&labelColor=%23333333&color=%23eeefee`} />)
+    }
+    <img alt="JSR Version" src="https://img.shields.io/jsr/v/%40aexol/axolotl-deno-yoga?style=flat-square&logoColor=%23333333&label=axolotl-deno-yoga&labelColor=%23333333&color=%23eeefee"/>
+  </div>
+  </div>
+}
 
-## 🫠 How?
+
+##
 
 Axolotl provides **type-safety** and it is up to you to choose an adapter (or write your own).
 Get more info in [Getting started](/getting-started) section
