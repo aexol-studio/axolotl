@@ -3,9 +3,9 @@ import { DocsThemeConfig } from 'nextra-theme-docs';
 
 const config: DocsThemeConfig = {
   logo: (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }} className="flex">
-      <img style={{ borderRadius: '0.25rem' }} width="32" src="/axodark.png" />
-      <span>Axolotl v.0.x.x</span>
+    <div className="flex items-center gap-2">
+      <img className="h-4" src="/axolotl-logo.png" />
+      <span>v.0.x.x</span>
     </div>
   ),
   project: {

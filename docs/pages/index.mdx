@@ -1,48 +1,100 @@
-import { Callout, Tabs } from 'nextra/components'
+import { Callout, Tabs } from 'nextra/components';
+import {Home} from '../components/home'
 
-{<h1 className="text-center font-extrabold md:text-5xl mt-8">Axolotl</h1>}
-
-<p className="w-full text-center p-8">Framework ensuring **GraphQL** Resolvers and arguments **type-safety**. Written in TypeScript</p>
-
-## 🫠 How?
-
-Axolotl provides **type-safety** and it is up to you to choose an adapter (or write your own).
-Get more info in [Getting started](/getting-started) section
-```ts filename="index.ts"
-import { Models, Directives } from '@/src/models.js';
-// choose your adapter
-const { createResolvers,adapter } = Axolotl(yourAdapter)<Models, Directives>();
-
-const resolvers = createResolvers({
-  Query: {
-    hello: () => "World"
-  },
-});
-
-adapter({ resolvers }).server.listen(parseInt(process.env.PORT || '4000'), () => {
-  console.log('LISTENING to ' + process.env.PORT || '4000');
-});
-```
-
-```graphql filename="schema.graphql"
-type Query{
-    hello: String!
+{<Home />}
+{
+  <div className="w-full flex  pt-8">
+    <img src="/axolotl-logo.png" className="w-1/2" />
+  </div>    
 }
+
+From the [GraphQL Editor](https://graphqleditor.com/) and [Aexol Studio](http://aexol.com/) teams, comes a Framework ensuring **GraphQL** Resolvers and arguments **type-safety**. Written in TypeScript.
+
+{
+  <div className="w-full flex pt-8 flex-wrap gap-2">
+      {
+        [
+          "axolotl",
+          "axolotl-core",
+          "axolotl-graphql-yoga",
+          "axolotl-apollo-server"
+        ]
+        .map(p => `@aexol/${p}`)
+        .map(p => encodeURIComponent(p))
+        .map(p => <img key={p} alt="NPM Version" src={`https://img.shields.io/npm/v/${p}?style=flat-square&logoColor=%23333333&label=${p}&labelColor=%23333333&color=%23eeefee`} />)
+      }
+      <img alt="JSR Version" src="https://img.shields.io/jsr/v/%40aexol/axolotl-deno-yoga?style=flat-square&logoColor=%23333333&label=axolotl-deno-yoga&labelColor=%23333333&color=%23eeefee"/>
+  </div>
+}
+
+
+<br />
+
+## 😮 Features
+
+Axolotl is a framework overlord/wrapper thats lets you forget about type-casting and looking into schemas. When there is no drama, only efficiency remains. 
+
+<br />
+
+- ⚙️ Generates models at runtime during development - which ensures type safety
+- 🏃 Enables seamless migration between different GraphQL Servers like GraphQL Yoga and Apollo Server
+- 🤓 Lets you write your own adapters for various purposes
+- 🐙 Supports micro-federation! It allows to merge different schemas and resolvers inside one repository.
+- 🦕 Supports Deno from version 0.2.7. It works with Deno in production.
+- 😂 Is very easy to setup, start and integrate. You just need to `npx @aexol/axololtl create-yoga`
+- 🦎 includes modularium, a package with installable GraphQL schemas with backend
+
+
+<br />
+
+
+## 🤔 Story
+
+Writing GraphQL for backend developers remains a complicated process when you want to take the schema-first approach instead of going code-first. I was in the type-safety rabbit hole while building [GraphQL Zeus](https://github.com/graphql-editor/graphql-zeus) (a GraphQL client with almost 1 million downloads). Maintaining Zeus and developing with the constantly-changing TypeScript proved to be really hard. \
+Over the years, I have come to understand that there was even more to it: we needed an **evolutionary** framework. I decided to write something simpler. Something that the community needed that integrated everything using the same knowledge. Something, ultimately, much more powerful.
+
+This is how Axolotl was born.
+
+<br />
+
+## 😇 How?
+
+Axolotl provides type-safety and lets you choose the adapter (or write your own). It allows you to develop your GraphQL project quickly and efficiently. How it runs it also depends on the underlying framework you choose. 
+
+<br />
+
+## Repository
+
+
+|Element|Description|
+|:---|:---| 
+| Adapters      | To develop adapters for popular nodejs frameworks | 
+| Examples      | To experiment with axolotl and its packages      |
+| Modularium      | Installable code chunks for your project      |
+| Micro-federation | To use the micro-federation feature in axolotl <br /> <br /> - Micro-federation means that all the modules are located within one project or one monorepo **or** are distributed as npm packages <br /> - The axolotl projects are merged to the supergraph later|
+
+<br />
+
+## Development
+
+>[!IMPORTANT]
+>To start developing you need to know a few things.
+
+<br />
+
+This is an npm workspaces monorepo.
+
+<br />
+
+There is a sequential build order for commands as seen below:
+```sh
+ npm run build --ws --if-present
 ```
-## 🤔 Why? 
 
-Writing GraphQL for backend developers is still complicated when you want to go schema-first instead of code-first. Moreover I felt like we need an **evolutionary** framework. 
+<br />
 
-For example using `apollo-server` but want to switch to `graphql-yoga` ? No
-problem just change an adapter.
 
-We know that when you **begin the project** - you don't know what will be the
-best server technology and architecture.  
-
-## 🧌 Who?
-
-Me [aexol](https://github.com/aexol) is the author of the lib. I was in the type-safety rabbit hole while building [GraphQL Zeus](https://github.com/graphql-editor/graphql-zeus) a GraphQL Client downloaded almost Million of times. While maintaining zeus and developing together with all-the-time changing TypeScript is really hard. I discovered - I can write something simpler - much powerful, that community needs, that integrates with everything - using the same knowledge.
-
-## 🫂 Community
-
-[Discord](https://discord.gg/f8SfgGBHRz)
+To run an example execute you need to type in:
+```sh
+ npm run start -w beerpub
+```
