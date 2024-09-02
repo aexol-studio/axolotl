@@ -1,4 +1,4 @@
-### <img src="https://github.com/user-attachments/assets/5bb137ba-a495-47af-b344-26dbb8b1036b" width=50%> ![Vector 902 (Stroke) (1)](https://github.com/user-attachments/assets/93e38773-7467-4374-a9e8-13387aa5b076)
+### <img src="https://github.com/user-attachments/assets/5bb137ba-a495-47af-b344-26dbb8b1036b" width=50%> ![Vector 902 (Stroke) (1)](https://github.com/user-attachments/assets/93e38773-7467-4374-a9e8-13387aa5b076#gh-dark-mode-only) ![Vector 902 (Stroke) (1)](https://github.com/user-attachments/assets/51b16a12-11c3-4b72-8f87-d78afdbe9c83#gh-light-mode-only)
 
 From the [GraphQL Editor](https://graphqleditor.com/) and [Aexol Studio](http://aexol.com/) teams, comes a Framework ensuring **GraphQL** Resolvers and arguments **type-safety**. Written in TypeScript.
 
