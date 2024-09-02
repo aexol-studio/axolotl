@@ -1,6 +1,6 @@
 ### <img src="https://github.com/user-attachments/assets/5bb137ba-a495-47af-b344-26dbb8b1036b" width=50%> ![Vector 902 (Stroke) (1)](https://github.com/user-attachments/assets/93e38773-7467-4374-a9e8-13387aa5b076)
 
-From the [GraphQL Editor](https://graphqleditor.com/) and [Aexol Studio](http://aexol.com/) teams, comes a pre-alpha version of a universal backend (or frontend if you feel like creating something special) framework that will ensure GraphQL resolvers and arguments type-safety. 
+From the [GraphQL Editor](https://graphqleditor.com/) and [Aexol Studio](http://aexol.com/) teams, comes a pre-alpha version of a universal backend (or frontend if you feel like creating something special) framework that will ensure all your GraphQL resolvers and arguments are type-safe. 
 
 <!-- COLORED AXOLOTL ICON LIBRARY:
 ![axolotl-white] (https://github.com/user-attachments/assets/ac427bf6-6c02-48d1-bcd2-1e709eeb01d3)
@@ -15,7 +15,7 @@ From the [GraphQL Editor](https://graphqleditor.com/) and [Aexol Studio](http://
 <br />
 
 > [!TIP]
-> Check our *full documentation* and the *Discord channel*:\
+> Check out the *full documentation* and our *Discord channel*:\
 > [Full documentation](https://axolotl-docs.vercel.app)\
 > [Discord channel](https://discord.gg/f8SfgGBHRz)
 
@@ -23,18 +23,18 @@ From the [GraphQL Editor](https://graphqleditor.com/) and [Aexol Studio](http://
 
 ## 😮 What?
 
-Axolotl is a framework overlord/wrapper thats lets you forget about type-casting and looking into schemas. When there is no drama, only efficiency remains. 
+Axolotl is a framework overlord/wrapper that lets you forget about type-casting and constantly looking into schemas. When there is no drama, only efficiency remains. 
 
 <br />
 
 
 Features of Axolotl:
-- ⚙️ Generates models at runtime during development - which ensures type safety
+- ⚙️ During development generates models at runtime - ensuring type safety
 - 🏃 Enables seamless migration between different GraphQL Servers
 - 🤓 Lets you write your own adapters for various purposes
 - 🐙 Supports micro-federation!
 - 🦕 Supports Deno from version 0.2.7
-- 😂 Is very easy to setup, start and integrate
+- 😂 Is very easy to set up, run and integrate
 
 
 <br />
@@ -42,19 +42,21 @@ Features of Axolotl:
 
 ## 🤔 Why? 
 
-Writing GraphQL for backend developers remains a complicated process when you want to take the schema-first approach instead of going code-first. I was in the type-safety rabbit hole while building [GraphQL Zeus](https://github.com/graphql-editor/graphql-zeus) (a GraphQL client with almost 1 million downloads). Maintaining Zeus and developing with the constantly-changing TypeScript proved to be really hard. \
+Writing GraphQL is still a complicated process if you want the benefits of taking the schema-first approach instead of just going code-first. I was in a type-safety rabbit hole while building [GraphQL Zeus](https://github.com/graphql-editor/graphql-zeus) (a GraphQL client with almost 1 million downloads) because maintaining and developing with constantly-changing TypeScript proved to be really hard. \
 Over the years, I have come to understand that there was even more to it: we needed an **evolutionary** framework. I decided to write something simpler. Something that the community needed that integrated everything using the same knowledge. Something, ultimately, much more powerful.
 
 This is how Axolotl was born.
 
-Perhaps you want to use `apollo-server` but then switch to `graphql-yoga`? No problem. All you have to do is change the adapter. 
-How about wanting to set up each part of your system in a different GraphQL server with microservices? Done.
+Do you want to use `apollo-server` but then switch to `graphql-yoga`? No problem. All you have to do is change the adapter.
+How about setting up each part of your system in a different GraphQL server with microservices? Done.
+
+Axolotl can do all that and more!
 
 <br />
 
 ## 😇 How?
 
-Axolotl provides type-safety and lets you choose the adapter (or write your own). It allows you to develop your GraphQL project quickly and efficiently. How it runs it also depends on the underlying framework you choose. 
+Axolotl provides type-safety and lets you choose the adapter (or write your own). How it runs your GraphQL project depends on the underlying framework you choose. This will let you develop your GraphQL projects quickly and efficiently!
 
 <br />
 
@@ -63,25 +65,25 @@ Axolotl provides type-safety and lets you choose the adapter (or write your own)
 
 |Element|Description|
 |:---|:---| 
-| Adapters      | To develop adapters for popular nodejs frameworks | 
-| Examples      | To experiment with axolotl and its packages      |
-| Local |   To support high-speed local development through the use of packages |
-| <br > Micro-federation | To use the micro-federation feature in axolotl <br /> <br /> - Micro-federation means that all the modules are located within one project or one monorepo **or** are distributed as npm packages <br /> - The axolotl projects are merged to the supergraph later|
+| Adapters      | Develop adapters for popular nodejs frameworks | 
+| Examples      | Experiment with axolotl and its packages      |
+| Local |   Support high-speed local development through the use of packages |
+| <br > Micro-federation | Use the micro-federation feature in axolotl <br /> <br /> - Micro-federation means that all the modules are located within one project or one monorepo **or** are distributed as npm packages <br /> - Axolotl projects are merged to the supergraph later|
 
 <br />
 
 ## Development
 
 >[!IMPORTANT]
->To start developing you need to know a few things.
+>Before you start developing, here are a few important things to know:
 
 <br />
 
-This is an npm workspaces monorepo.
+This project is an npm workspaces monorepo.
 
 <br />
 
-There is a sequential build order for commands as seen below:
+Commands follow a specific build order. To build the project, run:
 ```sh
  npm run build --ws --if-present
 ```
@@ -89,7 +91,7 @@ There is a sequential build order for commands as seen below:
 <br />
 
 
-To run an example execute you need to type in:
+To run an example, execute the following command:
 ```sh
  npm run start -w beerpub
 ```
