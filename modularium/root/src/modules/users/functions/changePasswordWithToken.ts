@@ -1,4 +1,4 @@
-import { ChangePasswordWithTokenError } from '@/src/models.js';
+import { ChangePasswordWithTokenError } from '@/src/modules/users/models.js';
 import { MongoOrb } from '@/src/modules/users/orm.js';
 import { isPasswordEqualToSpecialParams, passwordSha512 } from '@/src/modules/users/utils.js';
 import crypto from 'node:crypto';
