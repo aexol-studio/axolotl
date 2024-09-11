@@ -1,6 +1,6 @@
 import { iGraphQL, MongoModel } from 'i-graphql';
 import { ObjectId } from 'mongodb';
-import { User } from '@/src/models.js';
+import { User } from '@/src/modules/users/models.js';
 
 export type UserModel = Omit<User, 'teams'>;
 
