@@ -11,4 +11,5 @@
         "./deno/adapters/",
         "./deno/examples/beerpub-yoga",
     ],
+    "deno.enable": true,
 }

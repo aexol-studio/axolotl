@@ -1,5 +1,5 @@
-import { Axolotl } from 'npm:@aexol/axolotl-core@^0.3.1';
-import graphqlYogaDenoAdapter from 'jsr:@aexol/axolotl-deno-yoga';
+import { Axolotl } from 'npm:@aexol/axolotl-core@^0.5.4';
+import graphqlYogaDenoAdapter from 'jsr:@aexol/axolotl-deno-yoga@^0.1.3';
 
 import { Models } from './models.ts';
 
