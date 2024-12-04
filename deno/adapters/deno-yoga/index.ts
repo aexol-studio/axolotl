@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AxolotlAdapter } from "npm:@aexol/axolotl-core@^0.5.5";
+import { AxolotlAdapter } from "npm:@aexol/axolotl-core@^0.5.6";
 import type {
   GraphQLSchemaWithContext,
   YogaInitialContext,

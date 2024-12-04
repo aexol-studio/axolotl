@@ -1,6 +1,6 @@
 {
   "name": "@aexol/axolotl-core",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "private": false,
   "main": "./lib/index.js",
   "author": "Aexol, Artur Czemiel",
@@ -15,7 +15,7 @@
   ],
   "dependencies": {
     "@graphql-tools/utils": "^10.3.2",
-    "graphql-js-tree": "^3.0.1"
+    "graphql-js-tree": "^3.0.2"
   },
   "peerDependencies": {
     "graphql": "^16.0.0 || ^17.0.0"
