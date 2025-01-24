@@ -36,6 +36,7 @@ type AuthorizedUserMutation{
 		integrateSocialAccount(
 		userData: SimpleUserInput!
 	): IntegrateSocialAccountResponse!
+	deleteAccount: DeleteAccountResponse!
 }
 
 type PublicUsersQuery{
@@ -139,6 +140,17 @@ type IntegrateSocialAccountResponse{
 	result: Boolean
 	hasError: IntegrateSocialAccountError
 }
+
+enum DeleteAccountError{
+	CANNOT_FIND_USER
+	CANNOT_DELETE_ALL_ELEMENTS
+}
+
+type DeleteAccountResponse {
+	result: Boolean
+	hasError: DeleteAccountError
+}
+
 
 enum GenerateOAuthTokenError{
 	TOKEN_NOT_GENERATED

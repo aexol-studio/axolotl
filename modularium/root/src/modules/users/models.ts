@@ -28,6 +28,10 @@ export enum IntegrateSocialAccountError {
   CANNOT_FIND_USER = "CANNOT_FIND_USER",
   YOUR_ACCOUNT_DOES_NOT_HAVE_CONFIRMED_EMAIL = "YOUR_ACCOUNT_DOES_NOT_HAVE_CONFIRMED_EMAIL"
 }
+export enum DeleteAccountError {
+  CANNOT_FIND_USER = "CANNOT_FIND_USER",
+  CANNOT_DELETE_ALL_ELEMENTS = "CANNOT_DELETE_ALL_ELEMENTS"
+}
 export enum GenerateOAuthTokenError {
   TOKEN_NOT_GENERATED = "TOKEN_NOT_GENERATED",
   CANNOT_RETRIEVE_USER_INFORMATION_FROM_APPLE = "CANNOT_RETRIEVE_USER_INFORMATION_FROM_APPLE"
@@ -154,6 +158,9 @@ export type Models = {
         userData: SimpleUserInput;
       };
     };
+    deleteAccount: {
+      args: Record<string, never>;
+    };
   };
   ['PublicUsersQuery']: {
     login: {
@@ -240,6 +247,14 @@ export type Models = {
     };
   };
   ['IntegrateSocialAccountResponse']: {
+    result: {
+      args: Record<string, never>;
+    };
+    hasError: {
+      args: Record<string, never>;
+    };
+  };
+  ['DeleteAccountResponse']: {
     result: {
       args: Record<string, never>;
     };
@@ -350,6 +365,8 @@ export type Models = {
   };
 };
 
+export type Directives = {}
+
 export interface UsersQuery {
   publicUsers?: PublicUsersQuery | undefined;
   user?: AuthorizedUserQuery | undefined;
@@ -371,6 +388,7 @@ export interface AuthorizedUserMutation {
   changePasswordWhenLogged: ChangePasswordWhenLoggedResponse;
   editUser: EditUserResponse;
   integrateSocialAccount: IntegrateSocialAccountResponse;
+  deleteAccount: DeleteAccountResponse;
 }
 export interface PublicUsersQuery {
   login: LoginQuery;
@@ -405,6 +423,10 @@ export interface ChangePasswordWithTokenResponse {
 export interface IntegrateSocialAccountResponse {
   result?: boolean | undefined;
   hasError?: IntegrateSocialAccountError | undefined;
+}
+export interface DeleteAccountResponse {
+  result?: boolean | undefined;
+  hasError?: DeleteAccountError | undefined;
 }
 export interface GenerateOAuthTokenResponse {
   result?: string | undefined;

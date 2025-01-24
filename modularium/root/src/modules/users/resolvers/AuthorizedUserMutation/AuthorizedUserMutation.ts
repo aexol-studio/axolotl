@@ -20,6 +20,10 @@ export default createResolvers({
         update: args.updatedUser,
       });
     },
+    deleteAccount: async ([source], _) => {
+      const src = source as UserModel;
+      return UsersModule.deleteAccount(src);
+    },
     integrateSocialAccount: async ([source], args) => {
       const src = source as UserModel;
       return UsersModule.integrateSocialAccount({

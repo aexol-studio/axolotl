@@ -8,8 +8,9 @@ import { requestForgotPassword } from '@/src/modules/users/functions/requestForg
 import { verifyEmail } from '@/src/modules/users/functions/verifyEmail.js';
 import { changePasswordWhenLogged } from '@/src/modules/users/functions/changePasswordWhenLogged.js';
 import { integrateSocialAccount } from '@/src/modules/users/functions/integrateSocialAccount.js';
-
+import { deleteAccount } from '@/src/modules/users/functions/deleteAccount.js';
 export const UsersModule = {
+  deleteAccount,
   editUser,
   mustBeUser,
   register,
