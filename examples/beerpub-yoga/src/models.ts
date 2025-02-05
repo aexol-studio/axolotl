@@ -56,7 +56,18 @@ export type Models = {
       args: Record<string, never>;
     };
   };
+  ['UserActivity']: {
+    isActive: {
+      args: Record<string, never>;
+    };
+  };
   ['Query']: {
+    userIsActive: {
+      args: Record<string, never>;
+    };
+    activity: {
+      args: Record<string, never>;
+    };
     beers: {
       args: Record<string, never>;
     };
@@ -119,7 +130,12 @@ export interface Chips {
   name: string;
   price: number;
 }
+export interface UserActivity {
+  isActive?: boolean | undefined;
+}
 export interface Query {
+  userIsActive?: boolean | undefined;
+  activity?: UserActivity | undefined;
   beers?: Array<Beer> | undefined;
   products?: Array<Product> | undefined;
   testAuth: string;

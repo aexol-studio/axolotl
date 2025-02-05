@@ -12,59 +12,71 @@ export type SchemaMapper = (
   getDirective: typeof getDirectiveFn,
 ) => SchemaMapperInitial;
 
-export const graphqlYogaAdapter = AxolotlAdapter<[any, any, YogaInitialContext], SchemaMapper>()((
-  { resolvers, directives, scalars },
-  options?: {
-    yoga?: Parameters<typeof createYoga>[0];
-    schema?: {
-      options?: Parameters<typeof createYoga>[0]['schema'];
-      file?: { path: string } | { content: string };
-    };
-  },
-) => {
-  const yogaResolvers = Object.fromEntries(
-    Object.entries(resolvers).map(([typeName, v]) => {
-      return [
-        typeName,
-        Object.fromEntries(
-          Object.entries(v).map(([fieldName, resolver]) => {
-            return [
-              fieldName,
-              (_: any, args: any, context: YogaInitialContext) => {
-                return resolver([_, args, context], args);
-              },
-            ];
-          }),
-        ),
-      ];
-    }),
-  );
-  const file = options?.schema?.file;
-  const schema =
-    file && 'content' in file
-      ? file.content
-      : readFileSync(path.join(process.cwd(), file?.path || './schema.graphql'), 'utf-8');
+// eslint-disable-next-line @typescript-eslint/ban-types
+export const graphqlYogaWithContextAdapter = <
+  Ctx extends Record<string, any>,
+  Context = YogaInitialContext & Omit<Ctx, keyof YogaInitialContext>,
+>(
+  customContext?: Ctx,
+) =>
+  AxolotlAdapter<[any, any, Context], SchemaMapper>()(
+    (
+      { resolvers, directives, scalars },
+      options?: {
+        yoga?: Parameters<typeof createYoga>[0];
+        schema?: {
+          options?: Parameters<typeof createYoga>[0]['schema'];
+          file?: { path: string } | { content: string };
+        };
+      },
+    ) => {
+      const yogaResolvers = Object.fromEntries(
+        Object.entries(resolvers).map(([typeName, v]) => {
+          return [
+            typeName,
+            Object.fromEntries(
+              Object.entries(v).map(([fieldName, resolver]) => {
+                return [
+                  fieldName,
+                  (_: any, args: any, context: any) => {
+                    return resolver([_, args, context], args);
+                  },
+                ];
+              }),
+            ),
+          ];
+        }),
+      );
+      const file = options?.schema?.file;
+      const schema =
+        file && 'content' in file
+          ? file.content
+          : readFileSync(path.join(process.cwd(), file?.path || './schema.graphql'), 'utf-8');
 
-  let yogaSchema = createSchema({
-    ...options?.schema?.options,
-    typeDefs: schema,
-    resolvers: {
-      ...yogaResolvers,
-      ...scalars,
+      let yogaSchema = createSchema({
+        ...options?.schema?.options,
+        typeDefs: schema,
+        resolvers: {
+          ...yogaResolvers,
+          ...scalars,
+        },
+      });
+
+      if (directives) {
+        Object.values(directives).forEach((b) => {
+          yogaSchema = mapSchema(yogaSchema, b(yogaSchema, getDirectiveFn));
+        });
+      }
+
+      const yoga = createYoga({
+        ...options?.yoga,
+        schema: yogaSchema,
+        context: customContext,
+      });
+
+      const server = createServer(yoga);
+      return { server, yoga };
     },
-  });
+  );
 
-  if (directives) {
-    Object.values(directives).forEach((b) => {
-      yogaSchema = mapSchema(yogaSchema, b(yogaSchema, getDirectiveFn));
-    });
-  }
-
-  const yoga = createYoga({
-    ...options?.yoga,
-    schema: yogaSchema,
-  });
-
-  const server = createServer(yoga);
-  return { server, yoga };
-});
+export const graphqlYogaAdapter = graphqlYogaWithContextAdapter({});

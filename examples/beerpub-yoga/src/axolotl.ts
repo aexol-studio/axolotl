@@ -1,7 +1,7 @@
 import { Directives, Models, Scalars } from '@/src/models.js';
 import { Axolotl } from '@aexol/axolotl-core';
-import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
+import { graphqlYogaWithContextAdapter } from '@aexol/axolotl-graphql-yoga';
 
 export const { applyMiddleware, createResolvers, createDirectives, adapter, createScalars } = Axolotl(
-  graphqlYogaAdapter,
+  graphqlYogaWithContextAdapter<{ isActive?: boolean }>(),
 )<Models, Scalars, Directives>();

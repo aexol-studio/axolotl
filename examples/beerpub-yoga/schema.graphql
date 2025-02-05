@@ -15,7 +15,13 @@ type Chips implements Node{
 	price: Int!
 }
 
+type UserActivity{
+	isActive: Boolean
+}
+
 type Query{
+	userIsActive: Boolean
+	activity: UserActivity
 	beers: [Beer!]
 	products: [Product!]
 	testAuth: String! @auth
