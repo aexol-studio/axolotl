@@ -68,8 +68,8 @@ export const Axolotl =
         Object.keys(fields as Record<string, true>).forEach((fieldName) => {
           const oldResolver = (r as Record<string, Record<string, Handler>>)[typeName][fieldName];
           (r as Record<string, Record<string, Handler>>)[typeName][fieldName] = middlewares.reduce((a, b) => {
-            return (input, args) => {
-              const middlewaredInput = b(input);
+            return async (input, args) => {
+              const middlewaredInput = await b(input);
               return a(middlewaredInput, args);
             };
           }, oldResolver);

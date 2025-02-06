@@ -54,7 +54,7 @@ const resolvers = createResolvers({
 applyMiddleware(
   resolvers,
   [
-    (input) => {
+    async (input) => {
       input[2].isActive = true;
       return input;
     },

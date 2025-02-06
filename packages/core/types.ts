@@ -23,7 +23,7 @@ export interface CustomHandler<InputType, ArgumentsType = unknown> {
   (input: InputType, args: ArgumentsType extends { args: infer R } ? R : never): any;
 }
 export interface CustomMiddlewareHandler<InputType> {
-  (input: InputType): InputType;
+  (input: InputType): Promise<InputType>;
 }
 
 export type InferAdapterType<ADAPTER extends (objects: ObjectsUnknown<any, any>) => any> =

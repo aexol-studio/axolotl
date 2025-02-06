@@ -7,7 +7,7 @@ import resolvers from '@/src/resolvers.js';
 applyMiddleware(
   resolvers,
   [
-    (input) => {
+   async (input) => {
       console.log('Hello from Middleware I run only on Query.beers');
       return input;
     },
