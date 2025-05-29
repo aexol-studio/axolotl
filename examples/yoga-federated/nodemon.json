@@ -1,16 +1,15 @@
 {
-  "exec":"axolotl build -m ./src/models.ts -s schema.graphql && tspc && node lib/index.js",
+  "exec": "axolotl build -m ./src/models.ts -s schema.graphql && tspc || exit 1 && node --env-file=.env lib/index.js",
   "ignore": [
     ".git",
     "node_modules/**/node_modules",
     "src/models.ts",
-    "src/**/schema.graphql",
     "src/**/models.ts"
   ],
-  "watch":[
+  "watch": [
     "src",
     "package.json",
     ".env*"
   ],
-  "ext":"ts,mts,cts,graphql,json,js"
+  "ext": "ts,mts,cts,graphql,json,js"
 }

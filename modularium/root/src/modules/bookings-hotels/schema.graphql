@@ -1,0 +1,342 @@
+type PricingRule implements WithId{
+	maxDays: Int!
+	price: Int!
+	season: Season!
+	_id: String!
+	house: House!
+}
+
+type Season implements Nameable & WithId{
+	"""
+	from date in format MM-DD
+	"""
+	from: String!
+	"""
+	to Date in format MM-DD
+	"""
+	to: String!
+	name: String!
+	_id: String!
+}
+
+type HousePublicQuery{
+	house: House!
+	getPrice(
+		period: DeterminePrice!
+	): Int!
+	getAvailability(
+		year: Int!
+	): [Availability!]!
+}
+
+input DeterminePrice{
+	from: String!
+	to: String!
+}
+
+type Reservation implements WithId{
+	price: Int!
+	from: String!
+	to: String!
+	_id: String!
+	house: House!
+	paid: Boolean
+	guests: Int!
+	message: String
+	firstName: String!
+	lastName: String!
+	phone: String!
+	email: String!
+	status: ReservationStatus!
+	address: String
+	houseAddons: [HouseAddon!]
+}
+
+type HousePublicMutation{
+	reserve(
+		reservation: CreateReservation!
+	): String
+}
+
+input CreateReservation{
+	from: String!
+	to: String!
+	guests: Int!
+	message: String
+	firstName: String!
+	lastName: String!
+	phone: String!
+	email: String!
+	address: String
+	houseAddons: [String!]
+}
+
+input EditReservation{
+	from: String
+	to: String
+	guests: Int!
+	message: String
+	firstName: String
+	lastName: String
+	phone: String
+	email: String
+	status: ReservationStatus
+	address: String
+	houseAddons: [String!]
+}
+
+type Availability{
+	date: String!
+	booked: Boolean
+	start: Boolean
+	end: Boolean
+	price: Int!
+}
+
+type Query{
+	housePublic(
+		id: String!
+	): HousePublicQuery
+	houses: [House!]!
+}
+
+schema{
+	query: Query
+	mutation: Mutation
+}
+
+type Mutation{
+	housePublic(
+		id: String!
+	): HousePublicMutation
+	"""
+	create session for simply payment
+	"""
+	createPaymentSession(
+		payload: CreatePaymentSessionInput!
+	): String!
+}
+
+type AdminMutation{
+	createSeason(
+		season: CreateSeason!
+	): String
+	createHouse(
+		house: CreateHouse!
+	): String
+	houseOps(
+		_id: String!
+	): AdminHouseOps
+	seasonOps(
+		_id: String!
+	): SeasonOps
+	reservationOps(
+		_id: String!
+	): ReservationOps
+	createHouseAddon(
+		addon: CreateHouseAddon!
+	): String
+	addonOps(
+		_id: String!
+	): HouseAddonOps
+	createLandingPage(
+		landingPage: CreateLandingPage!
+	): String
+	landingPageOps(
+		_id: String!
+	): LandingPageOps
+}
+
+type AdminHouseOps{
+	delete: Boolean
+	update(
+		house: EditHouse!
+	): Boolean
+	pricingRuleOps(
+		_id: String!
+	): PricingRuleOps
+	createPricingRule(
+		pricingRule: CreatePricingRule!
+	): String
+}
+
+type SeasonOps{
+	delete: Boolean
+	edit(
+		season: EditSeason!
+	): Boolean
+}
+
+type PricingRuleOps{
+	delete: Boolean
+	update(
+		pricingRule: EditPricingRule!
+	): Boolean
+}
+
+type House implements Nameable & WithId{
+	_id: String!
+	name: String!
+	"""
+	If backend cant find the price for the season it will fallback to this price
+	"""
+	outOfSeasonPrice: Int!
+	owner: User!
+	addons: [HouseAddon!]
+	text: RichText
+}
+
+type AdminQuery{
+	houses: [House!]!
+	houseById(_id:String!): House
+	reservations: [Reservation!]!
+	seasons: [Season!]!
+	pricingRules: [PricingRule!]!
+	me: User!
+	addons: [HouseAddon!]
+	pages: [LandingPage!]
+}
+
+type AuthorizedUserQuery{
+	admin: AdminQuery
+}
+
+interface Nameable{
+	name: String!
+}
+
+interface WithId{
+	_id: String!
+}
+
+input CreateHouse{
+	name: String!
+	"""
+	If backend cant find the price for the season it will fallback to this price
+	"""
+	outOfSeasonPrice: Int!
+	addons: [String!]
+	text: RichText
+}
+
+input CreatePricingRule{
+	maxDays: Int!
+	price: Int!
+	season: String!
+}
+
+input CreateSeason{
+	from: String!
+	to: String!
+	name: String!
+}
+
+input EditHouse{
+	name: String
+	"""
+	If backend cant find the price for the season it will fallback to this price
+	"""
+	outOfSeasonPrice: Int
+	addons: [String!]
+	text: RichText
+}
+
+input EditPricingRule{
+	maxDays: Int
+	price: Int
+	season: String
+}
+
+input EditSeason{
+	from: String
+	to: String
+	name: String
+}
+
+input CreatePaymentSessionInput{
+	amount: Int!
+	currency: String!
+	successUrl: String!
+	cancelUrl: String!
+}
+
+type User{
+	_id: String!
+}
+
+type ReservationOps{
+	delete: Boolean
+	update(
+		reservation: EditReservation!
+	): Boolean
+}
+
+enum ReservationStatus{
+	PENDING
+	PAID
+}
+
+type AuthorizedUserMutation{
+	admin: AdminMutation
+}
+
+type HouseAddon implements WithId{
+	name: String!
+	price: Int!
+	_id: String!
+	perDay: Boolean
+}
+
+input CreateHouseAddon{
+	name: String!
+	price: Int!
+	perDay: Boolean
+}
+
+input UpdateHouseAddon{
+	name: String
+	price: Int
+	perDay: Boolean
+}
+
+type HouseAddonOps{
+	update(
+		addon: UpdateHouseAddon!
+	): Boolean
+	delete: Boolean
+}
+
+"""
+Node to hold rich text in some format that has a react renderer
+"""
+scalar RichText
+
+type LandingPage{
+	houses: [House!]
+	domain: String
+	slug: String!
+	description: String!
+	generatedCode: GeneratedCode
+}
+
+scalar GeneratedCode
+
+input CreateLandingPage{
+	domain: String
+	slug: String!
+	description: String!
+	generatedCode: GeneratedCode
+}
+
+input UpdateLandingPage{
+	domain: String
+	slug: String
+	description: String
+}
+
+type LandingPageOps{
+	delete: Boolean
+	update(
+		landingPage: UpdateLandingPage!
+	): Boolean
+}

@@ -1,10 +1,22 @@
 {
     "schema": "schema.graphql",
     "models": "src/models.ts",
-    "federation":[
+    "federation": [
         {
-            "schema":"src/modules/users/schema.graphql",
-            "models":"src/modules/users/models.ts"
+            "schema": "src/modules/users/schema.graphql",
+            "models": "src/modules/users/models.ts"
+        },
+        {
+            "schema": "src/modules/teams/schema.graphql",
+            "models": "src/modules/teams/models.ts"
+        },
+        {
+            "schema": "src/modules/bookings-services/schema.graphql",
+            "models": "src/modules/bookings-services/models.ts"
+        },
+        {
+            "schema": "src/modules/bookings-hotels/schema.graphql",
+            "models": "src/modules/bookings-hotels/models.ts"
         }
     ]
 }

@@ -130,7 +130,7 @@ const generateModelsString = (fileContent: string) => {
     : 'export type Scalars = unknown;';
   const directivesFullString = directivesString
     ? `export type Directives = {\n${directivesString}\n};`
-    : 'export type Directives = unknown';
+    : 'export type Directives = unknown;';
   return (
     [
       scalarsString,

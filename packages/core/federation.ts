@@ -62,11 +62,11 @@ export const createSuperGraph = (...schemas: string[]) => {
     const result = mergeSDLs(a, b);
     if (result.__typename === 'success') return result.sdl;
     throw new Error(
-      result.errors
+      `Federation conflict on Node.field pattern: ${result.errors
         .map(({ conflictingNode, conflictingField }) => {
           return `${conflictingNode}.${conflictingField}`;
         })
-        .join('\n\n'),
+        .join('\n\n')}`,
     );
   }, '');
 };
