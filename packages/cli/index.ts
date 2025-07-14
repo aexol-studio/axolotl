@@ -7,6 +7,8 @@ import chalk from 'chalk';
 import { createResolversConfig } from './codegen/index.js';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { config, ProjectOptions } from '@aexol/axolotl-config';
+import { aiCommand } from '@/codegen/ai.js';
+import { frontendAiCommand } from '@/codegen/frontendAi.js';
 
 const program = new Command();
 
@@ -77,6 +79,8 @@ program
   });
 
 createResolversConfig(program);
+aiCommand(program);
+frontendAiCommand(program);
 
 program
   .command('inspect')

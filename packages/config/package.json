@@ -1,6 +1,6 @@
 {
   "name": "@aexol/axolotl-config",
-  "version": "0.6.0",
+  "version": "0.8.0",
   "private": false,
   "main": "./lib/index.js",
   "author": "Aexol, Artur Czemiel",
@@ -15,5 +15,6 @@
   ],
   "dependencies": {
     "config-maker": "^0.0.6"
-  }
+  },
+  "devDependencies": {}
 }

@@ -1,5 +1,5 @@
-import { createResolvers } from './axolotl.ts';
-import { BeerOrm } from './ormBeersFile.ts';
+import { createResolvers } from './axolotl.js';
+import { BeerOrm } from './ormBeersFile.js';
 
 const Beer = BeerOrm();
 const resolvers = createResolvers({

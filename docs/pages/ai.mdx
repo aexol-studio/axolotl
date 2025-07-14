@@ -1,0 +1,76 @@
+# Ai
+
+Axolotl CLI enables to use prepared AI prompt to generate resolvers code and
+(soon) generate test code for those resolvers
+
+## Generate backend resolver 
+
+Given `schema.graphql`
+```graphql
+type User{
+    username: String!
+    posts: [Post!]
+}
+type Post{
+    title: String!
+    content: String!
+    user: User!
+}
+```
+
+Provide OPEN_AI_API_KEY env variable and run
+```sh
+npx OPENAI_AI_API_KEY=xxx axolotl ai path/to/schema.graphql User posts "resolver to list all the posts user has created use mongodb"
+```
+
+This command will generate the axolotl compatible typescript backend code for the resolver
+and copy it to clipboard
+
+### Config params
+
+**prompt_info** - you can add 'baked' additional prompt information into your
+axolotl config file
+
+```json
+{
+    "prompt_info": "use postgres with drizzle library to manage database"
+}
+```
+## Generate frontend react component 
+
+This agent generates react components that communicate with provided backend. 
+
+Given `schema.graphql`
+```graphql
+type User{
+    username: String!
+    posts: [Post!]
+}
+type Post{
+    title: String!
+    content: String!
+    user: User!
+}
+type Query{
+    posts: [Post!]
+}
+```
+
+Provide OPEN_AI_API_KEY env variable and run
+```sh
+npx OPENAI_AI_API_KEY=xxx axolotl ai path/to/schema.graphql User posts "component showing list of posts with title and author username"
+```
+
+This command will generate the component
+
+
+### Config params
+
+**prompt_info** - you can add 'baked' additional prompt information into your
+axolotl config file
+
+```json
+{
+    "prompt_info": "use postgres with drizzle library to manage database"
+}
+```

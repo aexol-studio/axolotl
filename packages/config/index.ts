@@ -7,6 +7,8 @@ export type ProjectOptions = {
     schema: string;
     models: string;
   }>;
+  prompt_info?: string;
+  frontend_prompt_info?: string;
 };
 
 // eslint-disable-next-line @typescript-eslint/ban-types
