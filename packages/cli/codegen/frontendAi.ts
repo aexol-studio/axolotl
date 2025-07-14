@@ -5,6 +5,8 @@ import openai from 'openai';
 import clipboard from 'clipboardy';
 import { config } from '@aexol/axolotl-config';
 import * as path from 'path';
+import { vaildateChatModel } from '@/codegen/utils.js';
+import { oraPromise } from 'ora';
 
 export const frontendAiCommand = (program: Command) => {
   program
@@ -17,7 +19,9 @@ export const frontendAiCommand = (program: Command) => {
 };
 
 export const createResolverFile = async (schemaPath: string, prompt: string, existing_path?: string) => {
-  let extra_prompt_info = await config.getValue('frontend_prompt_info');
+  const cfg = config.get();
+  let extra_prompt_info = cfg.frontend_prompt_info;
+  const agent_model = vaildateChatModel(cfg.agent_model || 'gpt-4.1');
   if (extra_prompt_info?.endsWith('.txt')) {
     extra_prompt_info = readFileSync(path.join(process.cwd(), extra_prompt_info), 'utf-8');
   }
@@ -212,7 +216,7 @@ const listCardsAndDraw = await chain('query')({
 \`\`\`
   ${extra_prompt_info ? `Also take into account that: \n${extra_prompt_info}\n` : ''}
   
-  User provides PROMPT telling what code should do
+  User provides PROMPT telling what code should do. Also return just the typescript code. If you want to add documentation add it in TypeScript. Don't return markdown.
 
   ${existing_path ? `Please change that in the following existing code: ${readFileSync(path.join(process.cwd(), existing_path), 'utf-8')}` : ''}
   `;
@@ -220,25 +224,29 @@ const listCardsAndDraw = await chain('query')({
   const apiKey = process.env.OPEN_AI_API_KEY;
   if (!apiKey) throw new Error('Please provide OPEN_AI_API_KEY env variable');
   const ai = new openai({ apiKey: process.env.OPEN_AI_API_KEY });
-  ai.chat.completions
-    .create({
-      model: 'gpt-4.1-nano',
-      messages: [
-        {
-          role: 'system',
-          content: system,
-        },
-        {
-          role: 'user',
-          content: user,
-        },
-      ],
-    })
-    .then((response) => {
-      const res = response.choices.at(0)?.message.content;
-      if (res) {
-        clipboard.writeSync(res);
-      }
-      console.log(`Generated code has been copied to clipboard`);
-    });
+
+  await oraPromise(
+    ai.chat.completions
+      .create({
+        model: agent_model,
+        messages: [
+          {
+            role: 'system',
+            content: system,
+          },
+          {
+            role: 'user',
+            content: user,
+          },
+        ],
+      })
+      .then((response) => {
+        const res = response.choices.at(0)?.message.content;
+        if (res) {
+          clipboard.writeSync(res);
+        }
+        console.log(`Generated code has been copied to clipboard`);
+      }),
+    { spinner: 'binary', text: 'Thinking' },
+  );
 };
