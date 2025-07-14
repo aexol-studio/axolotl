@@ -68,3 +68,15 @@ app.listen(4000, () => {
 ```
 
 And you can implement anything you want in express now.
+
+## Use with context
+
+You can use with context adapter that will provide type-safe context for all the function
+
+```ts filename="axolotl.ts"
+import { Axolotl } from '@aexol/axolotl-core';
+import { graphqlYogaWithContextAdapter } from '@aexol/axolotl-graphql-yoga';
+import { Models } from './models.js';
+
+export const { createResolvers, adapter } = Axolotl(graphqlYogaWithContextAdapter<{yourContextVar?: string; counter?: number}>({yourContextVar: "hello"}))<Models>();
+```
