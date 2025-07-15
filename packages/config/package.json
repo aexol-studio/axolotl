@@ -16,5 +16,6 @@
   "dependencies": {
     "config-maker": "^0.0.6"
   },
-  "devDependencies": {}
+  "devDependencies": {},
+  "peerDependencies": {}
 }

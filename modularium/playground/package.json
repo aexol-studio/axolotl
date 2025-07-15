@@ -16,5 +16,6 @@
   "devDependencies": {
     "@aexol/modularium": "^0.8.1"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "peerDependencies": {}
 }

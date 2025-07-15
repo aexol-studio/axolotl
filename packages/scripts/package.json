@@ -2,5 +2,6 @@
   "name": "@aexol/axolotl-scripts",
   "version": "0.8.1",
   "dependencies": {},
-  "devDependencies": {}
+  "devDependencies": {},
+  "peerDependencies": {}
 }

@@ -26,5 +26,7 @@
     "graphql-js-tree": "^3.0.2",
     "openai": "^5.9.0",
     "ora": "^8.2.0"
-  }
+  },
+  "devDependencies": {},
+  "peerDependencies": {}
 }

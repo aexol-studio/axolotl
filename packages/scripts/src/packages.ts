@@ -22,6 +22,7 @@ const changePackageVersion = (version: string, depsList: string[]) => (packageJS
     version,
     dependencies: updateDeps({ dependencies: packageJSON.dependencies, depsList, version }),
     devDependencies: updateDeps({ dependencies: packageJSON.devDependencies, depsList, version }),
+    peerDependencies: updateDeps({ dependencies: packageJSON.peerDependencies, depsList, version }),
   } satisfies PackageJSON;
 };
 
@@ -69,4 +70,5 @@ type PackageJSON = {
   version: string;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
 };

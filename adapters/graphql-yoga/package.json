@@ -17,7 +17,7 @@
     "@graphql-tools/utils": "^10.3.2"
   },
   "peerDependencies": {
-    "@aexol/axolotl-core": "^0.6.0",
+    "@aexol/axolotl-core": "^0.8.1",
     "graphql": "^16.0.0 || ^17.0.0",
     "graphql-yoga": "^5.0.0"
   },
