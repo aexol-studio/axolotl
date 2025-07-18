@@ -503,7 +503,10 @@ export const createResolverFile = async (prompt: string, existing_schema_path?: 
   if (extra_prompt_info?.endsWith('.txt')) {
     extra_prompt_info = readFileSync(path.join(process.cwd(), extra_prompt_info), 'utf-8');
   }
-  const system = `${graphqlAiPrompt}${extra_prompt_info ? `\nAlso take to account that:\n${extra_prompt_info}\n\n` : ''}  ${existing_schema_path ? `Please change that in the following existing schema code: ${readFileSync(path.join(process.cwd(), existing_schema_path), 'utf-8')}` : ''}`;
+  const system = `${graphqlAiPrompt}${extra_prompt_info ? `\nAlso take to account that:\n${extra_prompt_info}\n\n` : ''}  ${existing_schema_path ? `Please change that in the following existing schema code: ${readFileSync(path.join(process.cwd(), existing_schema_path), 'utf-8')}` : ''}
+  
+  Return pure GraphQL schema in graphql text format dont return markdown with embedded graphql just GraphQL
+  `;
   const apiKey = process.env.OPEN_AI_API_KEY;
   if (!apiKey) throw new Error('Please provide OPEN_AI_API_KEY env variable');
   const ai = new openai({ apiKey: process.env.OPEN_AI_API_KEY });
