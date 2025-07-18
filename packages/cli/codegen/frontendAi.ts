@@ -214,6 +214,33 @@ const listCardsAndDraw = await chain('query')({
   },
 });
 \`\`\`
+
+To declare RETURN_TYPE you can also use Selector function imported from zeus. There is also FromSelector function that can convert Selector to a type which is useful to hold returned objects in state. The Selector syntax looks like that:
+\`\`\`typescript
+import { Chain, Selector } from './zeus';
+
+// Create a Chain client instance with the endpoint
+const chain = Chain('https://faker.graphqleditor.com/a-team/olympus/graphql');
+
+const Card = Selector('Card')({
+    name: true,
+    description: true,
+    id: true
+})
+
+type CardType = FromSelector<typeof Card, 'Card'>
+
+// Query the endpoint with Typescript autocomplete for arguments and response fields
+const draw = await chain('query')({
+  drawCard: {
+    name: true,
+    description: true,
+    id: true
+  },
+});
+\`\`\`
+
+
   ${extra_prompt_info ? `Also take into account that: \n${extra_prompt_info}\n` : ''}
   
   User provides PROMPT telling what code should do. Also return just the typescript code. If you want to add documentation add it in TypeScript. Don't return markdown.
