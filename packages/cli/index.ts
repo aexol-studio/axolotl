@@ -9,6 +9,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { config, ProjectOptions } from '@aexol/axolotl-config';
 import { aiCommand } from '@/codegen/ai.js';
 import { frontendAiCommand } from '@/codegen/frontendAi.js';
+import { graphqlAiCommand } from '@/codegen/graphqlAi.js';
 
 const program = new Command();
 
@@ -81,6 +82,7 @@ program
 createResolversConfig(program);
 aiCommand(program);
 frontendAiCommand(program);
+graphqlAiCommand(program);
 
 program
   .command('inspect')

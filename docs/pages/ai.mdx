@@ -59,7 +59,7 @@ type Query{
 
 Provide OPEN_AI_API_KEY env variable and run
 ```sh
-npx OPENAI_AI_API_KEY=xxx axolotl ai path/to/schema.graphql User posts "component showing list of posts with title and author username"
+npx OPENAI_AI_API_KEY=xxx axolotl fai path/to/schema.graphql User posts "component showing list of posts with title and author username"
 ```
 
 This command will generate the component
@@ -75,4 +75,12 @@ axolotl config file
     "frontend_prompt_info": "use shadcn components: Input, Button, Select",
     "agent_model": "gpt-4.1-nano"
 }
+```
+
+
+## Generate schema
+This command will generate the GraphQL schema
+
+```sh
+npx axolotl gai "schema for booking hotel rooms"
 ```

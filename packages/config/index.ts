@@ -9,6 +9,7 @@ export type ProjectOptions = {
   }>;
   prompt_info?: string;
   frontend_prompt_info?: string;
+  graphql_prompt_info?: string;
   agent_model?: string;
 };
 
