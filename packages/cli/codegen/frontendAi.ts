@@ -240,6 +240,21 @@ const draw = await chain('query')({
 });
 \`\`\`
 
+use zeus Selector and FromSelector to construct types and ZEUS RETURN_TYPE
+To insert headers into Chain the syntax is following
+
+\`\`\`typescript
+ Chain(API_URL,{
+    headers:{
+        HEADER_KEY:HEADER_VALUE
+    }
+  });
+\`\`\`
+
+use optional chaining for zeus response if the  returned fields are optional.
+\`\`\`
+
+
 
   ${extra_prompt_info ? `Also take into account that: \n${extra_prompt_info}\n` : ''}
   

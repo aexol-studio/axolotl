@@ -1,6 +1,6 @@
 {
   "name": "@aexol/modularium",
-  "version": "0.8.6",
+  "version": "0.8.7",
   "private": false,
   "main": "./lib/index.js",
   "author": "Aexol, Artur Czemiel",
@@ -17,7 +17,7 @@
     "lib"
   ],
   "dependencies": {
-    "@aexol/axolotl-config": "^0.8.6",
+    "@aexol/axolotl-config": "^0.8.7",
     "chalk": "^5.3.0",
     "commander": "^11.0.0"
   },
