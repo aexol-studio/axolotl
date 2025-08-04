@@ -49,7 +49,7 @@ export const createAppAction = ({
             color: 'yellow' as const,
           }
         : {
-            message: `cd ${chalk.magenta(`${path}`)} && ${chalk.magenta(`npm run start`)}`,
+            message: `cd ${chalk.magenta(`${path}`)} && ${chalk.magenta(`npm run build`)} && ${chalk.magenta(`npm run start`)}`,
             color: 'yellow' as const,
           },
     ];
