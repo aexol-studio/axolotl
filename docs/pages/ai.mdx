@@ -3,6 +3,35 @@
 Axolotl CLI enables to use prepared AI prompt to generate resolvers code and
 (soon) generate test code for those resolvers
 
+## Generate graphql schema 
+
+Provide OPEN_AI_API_KEY env variable and run
+```sh
+npx OPENAI_AI_API_KEY=xxx axolotl gai  "schema for booking.com like system"
+```
+
+This command will generate the graphql schema
+
+### Config params
+
+**prompt_info** - you can add 'baked' additional prompt information into your
+axolotl config file
+
+```json
+{
+    "graphql_prompt_info": "use pipes",
+    "agent_model": "gpt-4.1-nano"
+}
+```
+
+Prompt info can be also a txt file for bigger prompts
+```json
+{
+    "graphql_prompt_info": "graphql.txt",
+    "agent_model": "gpt-4.1-nano"
+}
+```
+
 ## Generate backend resolver 
 
 Given `schema.graphql`
@@ -78,9 +107,10 @@ axolotl config file
 ```
 
 
-## Generate schema
-This command will generate the GraphQL schema
+## Generate code
+You can also generate typescript code - universal one for webhooks utility
+functions etc
 
 ```sh
-npx axolotl gai "schema for booking hotel rooms"
+npx axolotl cai schema.graphql "stripe webhook to handle payments"
 ```
