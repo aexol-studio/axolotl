@@ -10,6 +10,7 @@ import { config, ProjectOptions } from '@aexol/axolotl-config';
 import { aiCommand } from '@/codegen/ai.js';
 import { frontendAiCommand } from '@/codegen/frontendAi.js';
 import { graphqlAiCommand } from '@/codegen/graphqlAi.js';
+import { caiCommand } from '@/codegen/cai.js';
 
 const program = new Command();
 
@@ -83,6 +84,7 @@ createResolversConfig(program);
 aiCommand(program);
 frontendAiCommand(program);
 graphqlAiCommand(program);
+caiCommand(program);
 
 program
   .command('inspect')
