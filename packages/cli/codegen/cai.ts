@@ -10,7 +10,7 @@ import { oraPromise } from 'ora';
 
 export const caiCommand = (program: Command) => {
   program
-    .command('wai')
+    .command('cai')
     .argument('<schemaPath>')
     .argument('<prompt>')
     .argument('[existing_resolver_path]', 'path to the file containing existing implementation of webhook')
