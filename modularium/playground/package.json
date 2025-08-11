@@ -1,6 +1,6 @@
 {
   "name": "@aexol/modularium-playground",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "description": "Axolotl modularium",
   "main": "lib/index.js",
   "type": "module",
@@ -14,7 +14,7 @@
   "author": "GraphQL Editor Centaur Generator",
   "license": "ISC",
   "devDependencies": {
-    "@aexol/modularium": "^0.9.3"
+    "@aexol/modularium": "^0.9.4"
   },
   "dependencies": {},
   "peerDependencies": {}

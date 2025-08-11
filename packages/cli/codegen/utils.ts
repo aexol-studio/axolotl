@@ -22,6 +22,13 @@ export const createResolverFile = (dir?: string) => {
 };
 
 const chatModels: ChatModel[] = [
+  'gpt-5',
+  'gpt-5-2025-08-07',
+  'gpt-5-chat-latest',
+  'gpt-5-mini',
+  'gpt-5-mini-2025-08-07',
+  'gpt-5-nano',
+  'gpt-5-nano-2025-08-07',
   'gpt-4.1',
   'gpt-4.1-mini',
   'gpt-4.1-nano',
