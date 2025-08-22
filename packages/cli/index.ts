@@ -12,6 +12,7 @@ import { frontendAiCommand } from '@/codegen/frontendAi.js';
 import { graphqlAiCommand } from '@/codegen/graphqlAi.js';
 import { caiCommand } from '@/codegen/cai.js';
 import { caiContextCommand } from '@/codegen/context.js';
+import { mcpCommand } from '@/codegen/mcp.js';
 
 const program = new Command();
 
@@ -87,6 +88,7 @@ frontendAiCommand(program);
 graphqlAiCommand(program);
 caiCommand(program);
 caiContextCommand(program);
+mcpCommand(program);
 
 program
   .command('inspect')
