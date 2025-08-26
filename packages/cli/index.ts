@@ -5,7 +5,7 @@ import { createApp } from './create/index.js';
 import { watch } from 'chokidar';
 import chalk from 'chalk';
 import { createResolversConfig } from './codegen/index.js';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { mkdir, readFileSync, writeFile, writeFileSync } from 'node:fs';
 import { config, ProjectOptions } from '@aexol/axolotl-config';
 import { aiCommand } from '@/codegen/ai.js';
 import { frontendAiCommand } from '@/codegen/frontendAi.js';
@@ -13,6 +13,8 @@ import { graphqlAiCommand } from '@/codegen/graphqlAi.js';
 import { caiCommand } from '@/codegen/cai.js';
 import { caiContextCommand } from '@/codegen/context.js';
 import { mcpCommand } from '@/codegen/mcp.js';
+import * as path from 'node:path';
+import { TranslateGraphQL } from 'graphql-zeus-core';
 
 const program = new Command();
 
@@ -21,7 +23,28 @@ program
   .description('CLI for axolotl backend framework, type-safe, schema-first, development.')
   .version('0.1.1');
 
+export const writeSchema = (schemaFile: Record<string, string>, pathToFile: string) => {
+  Object.keys(schemaFile).forEach((k) =>
+    writeFileRecursive(path.join(pathToFile, 'zeus'), `${k}.ts`, schemaFile[k as keyof typeof schemaFile]),
+  );
+};
+
+export function writeFileRecursive(pathToFile: string, filename: string, data: string): void {
+  mkdir(pathToFile, { recursive: true }, () => {
+    writeFile(path.join(pathToFile, filename), data, () => {});
+  });
+}
+
+const generateZeusSchema = (schema: string, generationPath: string) => {
+  const schemaFile = TranslateGraphQL.typescriptSplit({
+    schema,
+    env: 'browser',
+  });
+  writeSchema(schemaFile, generationPath);
+};
+
 const generateFiles = (options: ProjectOptions) => {
+  let superGraphSchema = '';
   if (options.federation?.length) {
     options.federation.forEach((f) => {
       generateModels({
@@ -32,7 +55,7 @@ const generateFiles = (options: ProjectOptions) => {
       console.log(chalk.greenBright(generationMessage));
     });
     const federatedSchemas = options.federation.map((f) => readFileSync(f.schema, 'utf-8'));
-    const superGraphSchema = createSuperGraph(...federatedSchemas);
+    superGraphSchema = createSuperGraph(...federatedSchemas);
     writeFileSync(options.schema, superGraphSchema);
     console.log(chalk.greenBright(`Supergraph schema saved in ${options.schema}`));
   }
@@ -42,6 +65,12 @@ const generateFiles = (options: ProjectOptions) => {
   });
   const generationMessage = `Models in path "${options.models}" have been generated.`;
   console.log(chalk.greenBright(generationMessage));
+  if (options.zeus?.length) {
+    options.zeus.forEach((z) => {
+      generateZeusSchema(z.schema ? readFileSync(z.schema, 'utf-8') : superGraphSchema, z.generationPath);
+      console.log(chalk.greenBright(`Zeus schema ${z.schema ? z.schema : 'supergraph'} saved in ${z.generationPath}`));
+    });
+  }
 };
 
 program
@@ -51,7 +80,8 @@ program
   .option('-m, --models <path>', 'path to generated models file')
   .option('-w, --watch', 'watch schema changes and regenerate models')
   .action(async (options) => {
-    const isFederated = await config.get().federation;
+    const cfg = await config.get();
+    const isFederated = cfg.federation;
     const schemaPath = await config.getValueOrThrow('schema', {
       ...('schema' in options && { commandLineProvidedOptions: options }),
       saveOnInput: true,
@@ -64,6 +94,7 @@ program
       schema: schemaPath,
       models: modelsPath,
       federation: isFederated,
+      zeus: cfg.zeus,
     });
     if (options.watch) {
       console.log(chalk.yellowBright(`Watching for "${schemaPath}" file changes to regenerate models`));

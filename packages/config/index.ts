@@ -7,6 +7,10 @@ export type ProjectOptions = {
     schema: string;
     models: string;
   }>;
+  zeus?: Array<{
+    schema?: string;
+    generationPath: string;
+  }>;
   prompt_info?: string;
   frontend_prompt_info?: string;
   graphql_prompt_info?: string;
@@ -14,7 +18,6 @@ export type ProjectOptions = {
   agent_model?: string;
 };
 
-// eslint-disable-next-line @typescript-eslint/ban-types
 export const config = new ConfigMaker<ProjectOptions>('axolotl', {
   decoders: {},
   config: {

@@ -43,7 +43,7 @@ export type Models = {
   };
 };
 
-export type Directives = unknown
+export type Directives = unknown;
 
 export type Scalars = unknown;
 
