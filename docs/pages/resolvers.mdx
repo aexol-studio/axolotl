@@ -1,8 +1,8 @@
 # Resolvers
 
-To write resolvers create `resolvers.ts` file. Resolvers arguments are
-type-safe. To make type-safe responses please use `satisfies` and import
-generated response types from `models.js`
+Create a `resolvers.ts` file. Resolver arguments are type‑safe; you can also
+use the TypeScript `satisfies` operator with types from `models.ts` to validate
+responses.
 
 ```ts filename="resolvers.ts"
 import { BeerOrm } from '@/src/ormBeersFile.js';

@@ -1,6 +1,6 @@
 # GraphQL Yoga
 
-Install adapter
+Install the adapter and peer deps
 
 ```sh
 npm i @aexol/axolotl-core @aexol/axolotl-graphql-yoga graphql-yoga graphql
@@ -8,15 +8,15 @@ npm i @aexol/axolotl-core @aexol/axolotl-graphql-yoga graphql-yoga graphql
 
 Now you need a `schema.graphql` file or a URL with settings to download the schema from upstream. Out of it Axolotl can generate simple type definitions needed for the library out of your GraphQL Schema.
 
-`models.ts` are located where you specify when initiating Axolotl
+`models.ts` is generated at the path you provide.
 
-First execute `axolotl build` command
+First, generate models with `axolotl build`:
 
 ```sh
 npx @aexol/axolotl build
 ```
 
-Then write your `axolotl.ts` file.
+Then write your `axolotl.ts` file:
 
 ```ts filename="axolotl.ts"
 import { Axolotl } from '@aexol/axolotl-core';
@@ -33,19 +33,19 @@ export default createResolvers({
 });
 ```
 
-Then write your `index.ts` file.
+Finally, write your `index.ts` file and start the server:
 
 ```ts filename="index.ts"
 import { adapter } from './axolotl.js';
 import resolvers from './resolvers.js';
 
-adapter({resolvers}).server.listen(4000, () => {
-  console.log('LISTENING');
+const PORT = Number(process.env.PORT) || 4000;
+adapter({ resolvers }).server.listen(PORT, () => {
+  console.log(`GraphQL running at http://localhost:${PORT}/graphql`);
 });
 ```
 
-You can also use this adapter with express. This is useful when dealing with
-webhooks. Take a look how to implement a simple webhook.
+You can also use this adapter with Express (useful for webhooks). Example:
 
 ```ts filename="index.ts"
 import { adapter } from './axolotl.js';
@@ -56,22 +56,22 @@ const app = express();
 
 const {yoga} = adapter({ resolvers });
 
-app.use(yoga.graphqlEndpoint, yoga)
+app.use(yoga.graphqlEndpoint, yoga);
 
 app.get('/webhook', (req, res) => {
-  res.send('Show me the money!')
-})
+  res.send('ok');
+});
 
-app.listen(4000, () => {
-  console.log('Running a GraphQL API server at http://localhost:4000/graphql')
-})
+app.listen(PORT, () => {
+  console.log(`Running a GraphQL API server at http://localhost:${PORT}/graphql`);
+});
 ```
 
 And you can implement anything you want in express now.
 
 ## Use with context
 
-You can use with context adapter that will provide type-safe context for all the function
+Use the context adapter to get type‑safe context in all resolvers:
 
 ```ts filename="axolotl.ts"
 import { Axolotl } from '@aexol/axolotl-core';

@@ -1,21 +1,19 @@
 # 🚀 Getting Started
 
-If you want to create a new project - just go ahead and [start from starter
-🚀](/from-examples)
+Want a ready‑to‑run template? Start with a starter: [/from-examples](/from-examples)
 
-However it is good to know how `axolotl` work under the hood and read this:
+Prefer to understand how Axolotl works under the hood? Read on.
 
 ## Installation
 
-Install dependencies. Install yoga adapter.
+Install dependencies and the Yoga adapter:
 
 ```sh
 npm i @aexol/axolotl-core @aexol/axolotl-graphql-yoga graphql-yoga graphql
 ```
 
-Now you need a `schema.graphql` file or a URL with settings to download the
-schema from upstream. Out of it Axolotl can generate simple type definitions
-needed for the library out of your GraphQL Schema.
+Create a `schema.graphql` file (or point to a URL). Axolotl will generate
+type‑safe models from your schema.
 
 Take a look at the following schema
 ```graphql filename="schema.graphql"
@@ -59,23 +57,18 @@ input UpdateBeer{
 }
 
 schema{
-	query: Query
-	mutation: Mutation
+    query: Query
+    mutation: Mutation
 }
-s
 directive @auth on FIELD_DEFINITION
 ```
-This is a simple schema and we will generate `models.ts` for it.
-`models.ts` are located where you specify when initiating Axolotl To use in existing project run
+This simple schema will produce `models.ts` at the path you choose.
+Generate models:
 
 ```sh
 npx @aexol/axolotl build
 ```
-This will generate type safe models for your Axolotl engine. For the following schema:
-
-
-
-For the following schema the models command will generate the following models:
+This generates type‑safe models for your Axolotl engine. Example output:
 ```ts filename="src/models.ts"
 export interface CreateBeer {
   name: string;
@@ -153,7 +146,7 @@ types that you can use to check if the response is valid using TypeScript
 `satisfies` keyword.
 
 
-Then you need to create the `axolotl.ts` file with the following content:
+Then create the `axolotl.ts` adapter entry:
 
 ```ts filename="axolotl.ts"
 import { Directives, Models } from '@/src/models.js';
@@ -167,8 +160,7 @@ export const { applyMiddleware, createResolvers, createDirectives, adapter } = A
 >();
 ```
 
-When you have this file you can create actual resolvers implementation inside
-`resolvers.ts` file:
+Now implement resolvers in `resolvers.ts`:
 
 ```ts filename="resolvers.ts"
 import { createResolvers } from '@/src/axolotl.js';

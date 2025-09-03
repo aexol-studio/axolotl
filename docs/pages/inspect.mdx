@@ -1,14 +1,14 @@
-# inspect
+# Inspect
 
-Axolotl inspect command is dedicated for inspecting implemented, to check which
-fields are left for implementation.
+The `inspect` command helps you see which schema fields are not implemented in
+your resolvers.
 
 ```sh
 npx axolotl inspect -s ./schema.graphql -r ./lib/resolvers.js
 ```
 
-Remember to build the project before running inspect. Also your resolvers file
-should contain default export.
+Build your project before running `inspect`. The resolvers file must export a
+default value created with `createResolvers`.
 
 Here is the example file we can inspect:
 
@@ -101,4 +101,3 @@ Beer._id is not implemented in resolvers passed to Axolotl
 Beer.createdAt is not implemented in resolvers passed to Axolotl
 Beer.info is not implemented in resolvers passed to Axolotl
 ```
-

@@ -1,9 +1,10 @@
-# E2E Type-Safe Tests helper
+# Testing
 
-While having many testing frameworks already we are not going to include one
-here. 
+Axolotl encourages testing resolvers directly. You can reuse the same
+type‑safe resolvers in tests and run them with your preferred framework.
 
-In this example I split the content of our backend to multiple files
+Below we split the backend into small units and test with Node’s built‑in
+`node:test` runner.
 
 ```ts filename="setup.ts"
 export const axolotl = Axolotl(yourAdapter)<Models>();
@@ -20,17 +21,16 @@ export const resolvers = axolotl.createResolvers({
 
 So in this file we test
 
-```ts filename="index.spec.ts"
-import { resolvers } from './resolvers.js'
-// You can reuse resolvers in tests to test their resolving functions in any testing framework
+```ts filename="index.test.ts"
+import test from 'node:test';
+import assert from 'node:assert';
+import { resolvers } from './resolvers.js';
 
-describe("Tests for resolvers", () => {
-    it("Returns world", () => {
-        const result = resolvers.Query.hello()
-        expect(result).toEqual("World")
-    })
-})
+test('Query.hello returns World', () => {
+  const result = resolvers.Query.hello();
+  assert.equal(result, 'World');
+});
 ```
 
-If you want to run full e2e tests on your server of choice - to test the server
-additionaly you should write tests with full gql queries using your framework of choice
+For end‑to‑end testing, start your server (Yoga/Apollo) and run full GraphQL
+queries using your HTTP test client of choice.

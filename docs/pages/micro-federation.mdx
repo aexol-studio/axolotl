@@ -1,11 +1,12 @@
-### Micro Federation
-You can use micro federation feature in axolotl. Micro federation means all the modules are located within one project or one monorepo or are distributed as npm packages. Those axolotl projects are merged to the supergraph later. 
+### Micro‑Federation
+Use micro‑federation to compose multiple Axolotl modules in a single project or
+monorepo (or via npm packages). Individual schemas are merged into a supergraph
+that your server uses at runtime.
 
 You can also run the project `examples/yoga-federated` to watch how
 micro federation works!
 
-To use micro federation you need to create config for your project containing
-this kind of content:
+To enable it, configure `axolotl.json` like:
 ```json [filename="axolotl.json"]
 {
     "schema": "schema.graphql",
@@ -23,16 +24,16 @@ this kind of content:
 }
 ```
 
-Inside this config main field `schema` and `models` specify paths for supergraph
-schema and its models. Here is how the federation process works:
+`schema`/`models` point to the supergraph schema and its generated models.
+Federation flow:
 
-1. Take all the schemas from federation array and generate models file for each
-2. Create supergraph schema from all the federation schemas.
-3. Create models for supergraph
+1. Generate models for each entry in `federation`.
+2. Merge those schemas into the supergraph saved at `schema`.
+3. Generate models for the supergraph.
 
 To run federated axolotls - each of folders, `users` and `todos` in our case has
 to provide their own `resolvers.ts` files based on local models and `Axolotl`.
-Then inside the main `resolvers.ts` file wee need to merge those subgraph
+Then inside the main `resolvers.ts` file we need to merge the subgraph
 resolvers:
 
 ```ts [filename="src/resolvers.ts"]
@@ -43,4 +44,4 @@ import todosResolvers from '@/src/todos/resolvers.js';
 export default mergeAxolotls(usersResolvers, todosResolvers);
 ```
 
-then you can use those resolvers as normal resolvers result.
+Use the merged resolvers as the adapter input, just like a single‑schema setup.

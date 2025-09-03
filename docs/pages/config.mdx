@@ -1,16 +1,18 @@
 # Config
 
-Most commands in axolotl are based on the available configuration in the project root folder. To generate the configuration file we can call the command
+Most commands in Axolotl read options from a config file in your project root
+(`axolotl.json`). To create/update it and generate models, run:
 
 ```sh
-axolotl models
+npx axolotl build
 ```
 
-The arguments -m and -s are mandatory. If they are not provided as arguments, you can input them via standard input.
+The `-m/--models` and `-s/--schema` flags are supported; if omitted, the CLI
+prompts for paths and saves them into `axolotl.json` for future runs.
 
 Based on the [beerpub-yoga example](/examples/beerpub-yoga) run `axolotl build`:
 
-Axolotl will generate a configuration file named "configuration.json" which will contain the flags passed when building the models, an example configuration file may look like this
+Axolotl writes `axolotl.json` with the paths used to build models. Example:
 
 ```json filename="axolotl.json"
 {
@@ -19,13 +21,18 @@ Axolotl will generate a configuration file named "configuration.json" which will
 }
 ```
 
-This guide should help you understand your Axolotl configuration. More detailed examples can be found in the Examples section.
+This guide should help you understand your Axolotl configuration. See Examples
+for end‑to‑end setups.
 
 ## Micro federation
 
-Config supports GraphQL Federation baked into axolotl. The main schema file is
-generated then and becomes `supergraph`. The example how federation works in
-Axolotl is used in [yoga-federated example](/examples/yoga-federated)
+Config supports built‑in micro‑federation. When `federation` is provided, the
+CLI:
+1) generates models for each subgraph,
+2) merges schemas into a supergraph saved at `schema`,
+3) generates supergraph models.
+
+See the [yoga-federated example](/examples/yoga-federated).
 
 ```json filename="axolotl.json"
 {

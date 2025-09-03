@@ -1,7 +1,6 @@
 # Fly.io
 
-We will always point to the official docs, but also provide you with an example
-on how to do it faster with axolotl.
+We link to the official docs and provide a quick Axolotl workflow.
 
 [Link to Fly.io docs](https://fly.io/docs/apps/)
 
@@ -13,8 +12,8 @@ on how to do it faster with axolotl.
 3. `flyctl auth login` - login to fly.io
 4. `flyctl launch` - follow the instructions in CLI
 5. `flyctl deploy` - deploy the app
-6. By default flyctl will listen to PORT 3000, so we need to add secret to flyio `flyctl secrets set PORT=3000`. We can change it later if needed.
+6. Set your server port via secret, e.g. `flyctl secrets set PORT=3000`.
 
-[Fly.io](https://fly.io/) will do everything for you, you just need to follow the instructions in the CLI.
+Follow the CLI prompts to finalize deployment.
 
 After all the steps are done, you will have your app deployed and running.

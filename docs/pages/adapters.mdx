@@ -1,10 +1,9 @@
 # Adapters
 
-Adapters are the ones that transform your resolvers code into the actual GraphQL
-Server. Main reason we have adapters in Axolotl is that we can write same code
-for resolvers and there is very low migration effort if we want to change the
-server library. Moreover you can run different GraphQL Engines for different
-parts of your graph in future.
+Adapters transform your Axolotl resolvers into a concrete GraphQL server.
+They let you write the same resolvers code and switch the underlying server
+with minimal migration effort. You can also run different engines for different
+parts of your graph in the future.
 
 ## Currently implemented adapters
 
@@ -92,7 +91,7 @@ export const graphqlYogaAdapter = AxolotlAdapter<[any, any, YogaInitialContext],
 
 ```
 
-As you may see in this yoga adapter is responsible for:
-- starting GraphQL serviers
-- merging the resolvers into yoga Object
+As you can see, this Yoga adapter is responsible for:
+- starting the GraphQL server
+- merging resolvers into the Yoga schema
 - reading the schema

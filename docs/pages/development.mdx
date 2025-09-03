@@ -1,12 +1,12 @@
 # Development
 
-To start developing you need to know few things:
-- this is npm workspaces monorepo
-- there is sequential build order for command:
+To develop locally:
+- This is an npm workspaces monorepo.
+- Build in workspace order when needed:
 ```sh
 npm run build --ws --if-present
 ```
-- to run an example execute:
+- To run an example:
 ```sh
 npm run start -w examples/beerpub-yoga
 ```
@@ -14,16 +14,17 @@ npm run start -w examples/beerpub-yoga
 ## Repository
 
 ### Adapters
-Place to develop adapters for popular nodejs frameworks.
+Place to develop adapters for popular Node.js frameworks.
 #### How to write adapter
 ```ts
 import { AxolotlAdapter } from '@aexol/axolotl-core';
 ```
 
-Just wrap your adapter in AxolotlAdapter function which receives resolvers without type specified
+Wrap your adapter with `AxolotlAdapter(...)` and map raw framework inputs to
+Axolotl resolver signatures.
 
 ### Examples
-Place to experiments with axolotl and its packages
+Place to experiment with Axolotl and its packages.
 
 ### Modularium
-CLI and modules to support micro-federation inside axolotl framework
+CLI and modules that support micro‑federation within Axolotl.

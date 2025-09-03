@@ -1,6 +1,6 @@
 # Apollo Server
 
-Install adapter
+Install the adapter and peer deps
 
 ```sh
 npm i @aexol/axolotl-core @aexol/axolotl-apollo-server @apollo/server graphql
@@ -8,15 +8,16 @@ npm i @aexol/axolotl-core @aexol/axolotl-apollo-server @apollo/server graphql
 
 Now you need a `schema.graphql` file or a URL with settings to download the schema from upstream. Out of it Axolotl can generate simple type definitions needed for the library out of your GraphQL Schema.
 
-`models.ts` are located where you specify when initiating Axolotl
+`models.ts` is generated at the path you provide.
 
-First execute axolotl `build` command
+First, generate models with `axolotl build`:
 
 ```sh
 npx @aexol/axolotl build
 ```
 
-Then write your `index.ts` file. The `apolloServerAdapter()` will return ApolloServer object, so to start a server in easiest way you may use standalone server from apollo.
+Then write your files. The `apolloServerAdapter()` returns an `ApolloServer`
+instance; the simplest way to run it is via Apollo’s standalone server.
 
 ```ts filename="axolotl.ts"
 import { Axolotl } from '@aexol/axolotl-core';
@@ -40,8 +41,7 @@ import { startStandaloneServer } from '@apollo/server/standalone';
 import { adapter, applyMiddleware } from '@/src/axolotl.js';
 import resolvers from '@/src/resolvers.js';
 
-const {url } = await startStandaloneServer(adapter({resolvers}))
+const { url } = await startStandaloneServer(adapter({ resolvers }));
 console.log(`Server ready at ${url}`);
 ```
-
 

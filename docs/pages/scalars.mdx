@@ -1,3 +1,51 @@
-# Custom scalars
+# Custom Scalars
 
-Custom scalar use built-in `GraphQLScalar` from `graphql` package.
+Define custom scalars with `GraphQLScalarType` from `graphql` and reference
+them in your schema. In Axolotl, register them via `createScalars` (just like
+`createResolvers` and `createDirectives`) and pass to the adapter.
+
+```ts filename="scalars.ts"
+import { GraphQLScalarType, Kind } from 'graphql';
+
+export const DateTime = new GraphQLScalarType({
+  name: 'DateTime',
+  serialize: (v) => new Date(v as string | number | Date).toISOString(),
+  parseValue: (v) => new Date(v as string),
+  parseLiteral: (ast) => (ast.kind === Kind.STRING ? new Date(ast.value) : null),
+});
+```
+
+Register and wire up with Axolotl:
+
+```ts filename="src/axolotl.ts"
+import { Axolotl } from '@aexol/axolotl-core';
+import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
+import { Models, Scalars, Directives } from './models.js';
+
+export const { createScalars, createResolvers, createDirectives, adapter } = Axolotl(graphqlYogaAdapter)<
+  Models,
+  Scalars,
+  Directives
+>();
+```
+
+```ts filename="src/scalars.ts"
+import { createScalars } from './axolotl.js';
+import { DateTime } from './dateTime.js';
+
+export default createScalars({
+  DateTime,
+});
+```
+
+```ts filename="src/index.ts"
+import { adapter } from './axolotl.js';
+import resolvers from './resolvers.js';
+import directives from './directives.js';
+import scalars from './scalars.js';
+
+adapter({ resolvers, directives, scalars }).server.listen(4000);
+```
+
+Add `scalar DateTime` to your schema. The adapter merges scalars into the schema
+resolvers and exposes them to your GraphQL server.

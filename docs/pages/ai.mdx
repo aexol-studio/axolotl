@@ -5,16 +5,16 @@ Axolotl CLI enables to use prepared AI prompt to generate resolvers code and
 
 ## Generate graphql schema 
 
-Provide OPEN_AI_API_KEY env variable and run
+Provide `OPEN_AI_API_KEY` env variable and run
 ```sh
-npx OPENAI_AI_API_KEY=xxx axolotl gai  "schema for booking.com like system"
+npx OPEN_AI_API_KEY=xxx axolotl gai "schema for booking.com like system"
 ```
 
 This command will generate the graphql schema
 
 ### Config params
 
-**prompt_info** - you can add 'baked' additional prompt information into your
+**prompt_info** – add baked prompt information to your
 axolotl config file
 
 ```json
@@ -47,9 +47,9 @@ type Post{
 }
 ```
 
-Provide OPEN_AI_API_KEY env variable and run
+Provide `OPEN_AI_API_KEY` env variable and run
 ```sh
-npx OPENAI_AI_API_KEY=xxx axolotl ai path/to/schema.graphql User posts "resolver to list all the posts user has created use mongodb"
+npx OPEN_AI_API_KEY=xxx axolotl ai path/to/schema.graphql User posts "resolver to list all the posts user has created; use mongodb"
 ```
 
 This command will generate the axolotl compatible typescript backend code for the resolver
@@ -57,7 +57,7 @@ and copy it to clipboard
 
 ### Config params
 
-**prompt_info** - you can add 'baked' additional prompt information into your
+**prompt_info** – add baked prompt information to your
 axolotl config file
 
 ```json
@@ -86,9 +86,9 @@ type Query{
 }
 ```
 
-Provide OPEN_AI_API_KEY env variable and run
+Provide `OPEN_AI_API_KEY` env variable and run
 ```sh
-npx OPENAI_AI_API_KEY=xxx axolotl fai path/to/schema.graphql User posts "component showing list of posts with title and author username"
+npx OPEN_AI_API_KEY=xxx axolotl fai path/to/schema.graphql User posts "component showing list of posts with title and author username"
 ```
 
 This command will generate the component
@@ -96,7 +96,7 @@ This command will generate the component
 
 ### Config params
 
-**prompt_info** - you can add 'baked' additional prompt information into your
+**frontend_prompt_info** – add baked prompt information to your
 axolotl config file
 
 ```json

@@ -32,7 +32,8 @@ From the [GraphQL Editor](https://graphqleditor.com/) and [Aexol Studio](http://
 
 ## 😮 Features
 
-Axolotl is a framework overlord/wrapper thats lets you forget about type-casting and looking into schemas. When there is no drama, only efficiency remains. 
+Axolotl is a framework wrapper that lets you forget about type‑casting and
+schema spelunking. When there is no drama, only efficiency remains.
 
 <br />
 
@@ -41,7 +42,7 @@ Axolotl is a framework overlord/wrapper thats lets you forget about type-casting
 - 🤓 Lets you write your own adapters for various purposes
 - 🐙 Supports micro-federation! It allows to merge different schemas and resolvers inside one repository.
 - 🦕 Supports Deno from version 0.2.7. It works with Deno in production.
-- 😂 Is very easy to setup, start and integrate. You just need to `npx @aexol/axololtl create-yoga`
+- 😂 Is very easy to set up, start and integrate. You just need to `npx @aexol/axolotl create-yoga`
 - 🦎 includes modularium, a package with installable GraphQL schemas with backend
 
 
@@ -57,9 +58,11 @@ This is how Axolotl was born.
 
 <br />
 
-## 😇 How?
+## 😇 How It Works
 
-Axolotl provides type-safety and lets you choose the adapter (or write your own). It allows you to develop your GraphQL project quickly and efficiently. How it runs it also depends on the underlying framework you choose. 
+Axolotl provides type‑safety and lets you choose the adapter (or write your
+own). You develop your GraphQL project quickly, and the adapter handles the
+runtime details for your chosen server.
 
 <br />
 
@@ -86,7 +89,7 @@ This is an npm workspaces monorepo.
 
 <br />
 
-There is a sequential build order for commands as seen below:
+Build workspaces in order:
 ```sh
  npm run build --ws --if-present
 ```
@@ -94,7 +97,7 @@ There is a sequential build order for commands as seen below:
 <br />
 
 
-To run an example execute you need to type in:
+Run an example:
 ```sh
- npm run start -w beerpub
+ npm run start -w examples/beerpub-yoga
 ```
