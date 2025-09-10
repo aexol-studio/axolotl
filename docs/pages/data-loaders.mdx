@@ -1,0 +1,80 @@
+# Data Loaders
+
+DataLoaders batch and cache backend fetches during a single request. Axolotl’s Yoga adapter now supports per‑request context building so you can attach DataLoader instances safely for every request.
+
+> Install DataLoader in your project:
+
+```sh
+npm i dataloader
+```
+
+## Quick Start (Yoga)
+
+1) Expose loaders in per‑request context using the Yoga adapter `context` option.
+
+```ts filename="src/axolotl.ts"
+import { Axolotl } from '@aexol/axolotl-core';
+import { graphqlYogaWithContextAdapter } from '@aexol/axolotl-graphql-yoga';
+import DataLoader from 'dataloader';
+
+// Example backend fetcher
+async function batchUsers(ids: readonly string[]) {
+  // Replace with DB call that returns users in the same order as ids
+  const rows = await db.users.findMany({ where: { id: { $in: ids as string[] } } });
+  const byId = new Map(rows.map((u) => [u.id, u]));
+  return ids.map((id) => byId.get(id) || null);
+}
+
+export const { applyMiddleware, createResolvers, createDirectives, adapter } = Axolotl(
+  graphqlYogaWithContextAdapter<{ loaders: { userById: DataLoader<string, any> } }>(),
+)();
+
+export const server = adapter({
+  resolvers: {/* ... */},
+}).server;
+
+// When starting server, pass context builder via adapter options
+// (e.g., in src/index.ts):
+//
+// adapter({ resolvers, /* directives/scalars */ }, {
+//   context: () => ({
+//     loaders: {
+//       userById: new DataLoader(batchUsers),
+//     },
+//   }),
+// }).server.listen(4000)
+```
+
+2) Use loaders in resolvers via `context`.
+
+```ts filename="src/resolvers.ts"
+import { createResolvers } from '@/src/axolotl.js';
+
+export default createResolvers({
+  Query: {
+    user: async (input, args) => {
+      return input[2].loaders.userById.load(args.id);
+    },
+  },
+  Post: {
+    author: (input) => input[2].loaders.userById.load(input.source.authorId),
+  },
+});
+```
+
+## Notes
+- Scope loaders per request. Do not share DataLoader instances globally.
+- Compose multiple loaders in the `context` option. The Yoga adapter now builds context per request to support this pattern.
+- You can still pass static values via the first generic argument to `graphqlYogaWithContextAdapter<Ctx>()`. The `context` builder merges with those values on each request.
+- For Apollo Server, use its framework integration to provide a per‑request context with loaders. Axolotl’s Apollo adapter focuses on schema/resolver mapping; see Apollo’s docs for attaching request context in your chosen HTTP framework.
+
+## Example DB Patterns
+- Ensure your batch function returns results in the same order as input keys.
+- Prefer fetching using a single query with `$in` logic and map the results.
+- Return `null` for missing records to preserve order.
+
+## Troubleshooting
+- “Context is reused across requests”: verify you’re using the adapter `context` option (a function), not a shared object.
+- “N+1 still happening”: confirm all resolvers use the loader access path from context, not direct DB reads.
+- “Types don’t match”: declare your context shape in `graphqlYogaWithContextAdapter<Ctx>()` so TypeScript knows where loaders live.
+

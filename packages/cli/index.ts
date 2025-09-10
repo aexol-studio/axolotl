@@ -182,8 +182,35 @@ program
   .description('Perform chaos testing on GraphQL server')
   .option('-s, --schema <path>', 'schema to compare', './schema.graphql')
   .option('-u, --url <path>', 'url path to the server', 'http://localhost:4000/graphql')
+  .option('-d, --depth <number>', 'max selection depth', '2')
+  .option('-t, --tests <number>', 'number of queries to execute', '10')
+  .option('-m, --mutations', 'include mutations in chaos run')
+  .option('-H, --header <header...>', 'optional headers (repeatable, "Key: Value")')
+  .option('-v, --verbose', 'print queries and sample errors')
+  .option('--seed <number>', 'seed for deterministic chaos runs')
+  .option('--fragments <number>', 'max inline fragments per interface/union', '2')
   .action((options) => {
-    chaos(options.url, options.schema);
+    const headers: Record<string, string> = {};
+    const hs: string[] | undefined = options.header;
+    if (Array.isArray(hs)) {
+      hs.forEach((h) => {
+        const idx = h.indexOf(':');
+        if (idx !== -1) {
+          const k = h.slice(0, idx).trim();
+          const v = h.slice(idx + 1).trim();
+          if (k) headers[k] = v;
+        }
+      });
+    }
+    chaos(options.url, options.schema, {
+      maxDepth: Number(options.depth) || 2,
+      tests: Number(options.tests) || 10,
+      includeMutations: !!options.mutations,
+      headers,
+      verbose: !!options.verbose,
+      seed: options.seed !== undefined ? Number(options.seed) : undefined,
+      fragmentsPerType: Number(options.fragments) || 2,
+    });
   });
 createApp(program);
 

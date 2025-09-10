@@ -13,6 +13,9 @@
   "adapters": "Adapters",
   "deploy": "Deploy",
   "development": "Development",
+  "data-loaders": "Data loaders",
+  "cache": "Cache",
+  "chaos": "Chaos",
   "tests": "Tests",
   "roadmap": "Roadmap"
 }

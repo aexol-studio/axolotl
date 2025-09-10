@@ -12,7 +12,6 @@ export type SchemaMapper = (
   getDirective: typeof getDirectiveFn,
 ) => SchemaMapperInitial;
 
-// eslint-disable-next-line @typescript-eslint/ban-types
 export const graphqlYogaWithContextAdapter = <
   Ctx extends Record<string, any>,
   Context = YogaInitialContext & Omit<Ctx, keyof YogaInitialContext>,
@@ -28,6 +27,8 @@ export const graphqlYogaWithContextAdapter = <
           options?: Parameters<typeof createYoga>[0]['schema'];
           file?: { path: string } | { content: string };
         };
+        // Optional per-request context builder to support things like DataLoaders
+        context?: (initial: YogaInitialContext) => Promise<Record<string, any>> | Record<string, any>;
       },
     ) => {
       const yogaResolvers = Object.fromEntries(
@@ -71,7 +72,16 @@ export const graphqlYogaWithContextAdapter = <
       const yoga = createYoga({
         ...options?.yoga,
         schema: yogaSchema,
-        context: customContext,
+        // Build a fresh context per request so users can attach DataLoaders, request-scoped caches, etc.
+        context: async (initial) => {
+          const extra = options?.context ? await options.context(initial) : {};
+          // Merge order: initial (from Yoga) <- customContext (static) <- extra (dynamic)
+          return {
+            ...initial,
+            ...(customContext || {}),
+            ...extra,
+          } as Context;
+        },
       });
 
       const server = createServer(yoga);

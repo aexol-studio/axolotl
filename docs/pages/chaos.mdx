@@ -1,0 +1,38 @@
+# Chaos Testing
+
+The `chaos` command executes randomized GraphQL operations built from your SDL against a running endpoint. It helps surface missing resolvers, invalid selections, and schema/runtime mismatches.
+
+## Usage
+
+```sh
+npx axolotl chaos -s ./schema.graphql -u http://localhost:4000/graphql
+```
+
+### Options
+- `-s, --schema <path>`: Path to SDL used to generate random selections. Defaults to `./schema.graphql`.
+- `-u, --url <path>`: Target GraphQL endpoint. Defaults to `http://localhost:4000/graphql`.
+- `-d, --depth <number>`: Max selection depth. Defaults to `2`.
+- `-t, --tests <number>`: Number of randomized operations to run. Defaults to `10`.
+- `-m, --mutations`: Include mutations in the chaos run (no arguments are generated; only arg‑less fields are used).
+- `-H, --header <header...>`: Optional HTTP headers, repeatable: e.g. `-H "Authorization: Bearer TOKEN"`.
+- `-v, --verbose`: Print generated operations and sample errors.
+ - `-v, --verbose`: Print generated operations and sample errors.
+ - `--seed <number>`: Fix the random seed for deterministic runs.
+ - `--fragments <number>`: Max inline fragments to include for interface/union fields (default: 2).
+
+## How It Works
+- Parses your SDL to find root Query/Mutation types and walk fields.
+- Skips fields that require arguments for stability (no variable generation yet).
+- Selects a random subset (up to 3) of fields per level, up to the max depth.
+- Executes each operation and records successes and failures.
+- Prints a summary and (with `--verbose`) example failing operations.
+
+## Notes & Roadmap
+- Arguments: chaos now generates values for scalar, enum, input object, lists, and non‑null arguments. Custom scalars are emitted as strings. Optional args are included randomly.
+- Interfaces/unions: chaos generates inline fragments for a subset of implementations (configurable via `--fragments`).
+- Combine with `inspect` to get a full picture: coverage + runtime validation.
+
+```sh
+npx axolotl inspect -s ./schema.graphql -r ./lib/resolvers.js
+npx axolotl chaos -s ./schema.graphql -u http://localhost:4000/graphql -v
+```

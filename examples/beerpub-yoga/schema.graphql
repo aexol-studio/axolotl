@@ -22,7 +22,7 @@ type UserActivity{
 type Query{
 	userIsActive: Boolean
 	activity: UserActivity
-	beers: [Beer!]
+	beers: [Beer!] @cache(ttl: 120, scope: PUBLIC)
 	products: [Product!]
 	testAuth: String! @auth
 }
@@ -73,3 +73,11 @@ enum BeerGenre{
 
 scalar URL
 directive @auth on FIELD_DEFINITION
+
+# Cache directive demo
+directive @cache(ttl: Int = 60, scope: CacheScope = PUBLIC) on FIELD_DEFINITION
+
+enum CacheScope {
+  PUBLIC
+  PRIVATE
+}
