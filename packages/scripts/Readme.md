@@ -1,10 +1,16 @@
-# Skrypty migracyjne
+# @aexol/axolotl-scripts
 
-Te skrypty i pattern na nie przyda nam się do tworzenia migracji w systemie
+Internal maintenance scripts for the monorepo. The current tool synchronizes package versions across workspaces and updates internal dependency ranges to the root version.
 
-## Odpalanie
+## What’s here
+
+- `src/packages.ts` – bumps each package.json version to the root version and rewrites internal deps to `^<rootVersion>` for packages found in `packages/`, `adapters/`, `modularium/`, and `examples/`.
+
+## Run
 
 ```
-cd scripts
-npx tsx --env-file=../panel/envs/.env.qa src/index.ts
+cd packages/scripts
+node lib/packages.js
 ```
+
+Note: build first if needed: `npm run build --ws --if-present`.
