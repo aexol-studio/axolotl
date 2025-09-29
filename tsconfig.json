@@ -5,6 +5,9 @@
             "path": "./packages/core"
         },
         {
+            "path": "./packages/config"
+        },
+        {
             "path": "./packages/cli"
         },
         {
@@ -24,6 +27,9 @@
         },
         {
             "path": "./modularium/cli"
-        }
+        },
+        {
+            "path": "./packages/agent"
+        },
     ]
 }

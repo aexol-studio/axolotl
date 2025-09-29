@@ -1,10 +1,15 @@
 {
   "name": "@aexol/axolotl-deno-yoga",
-  "version": "0.1.4",
+  "version": "0.9.8",
+  "license": "MIT",
+  "lock": false,
   "exports": "./index.ts",
+  "workspace": [],
   "lint": {
     "rules": {
-      "exclude": ["no-slow-types"]
+      "exclude": [
+        "no-slow-types"
+      ]
     }
   }
 }
