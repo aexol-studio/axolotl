@@ -48,3 +48,8 @@ type Mutation{
 type Query{
 	user: AuthorizedUserQuery!
 }
+
+schema{
+	query: Query
+	mutation: Mutation
+}
