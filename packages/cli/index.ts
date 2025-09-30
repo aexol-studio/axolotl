@@ -14,7 +14,7 @@ import { caiCommand } from '@/codegen/cai.js';
 import { caiContextCommand } from '@/codegen/context.js';
 import { mcpCommand } from '@/codegen/mcp.js';
 import * as path from 'node:path';
-import { TranslateGraphQL } from 'graphql-zeus-core';
+import { TranslateGraphQL, TranslateOptions } from 'graphql-zeus-core';
 
 const program = new Command();
 
@@ -35,10 +35,11 @@ export function writeFileRecursive(pathToFile: string, filename: string, data: s
   });
 }
 
-const generateZeusSchema = (schema: string, generationPath: string) => {
+const generateZeusSchema = (schema: string, generationPath: string, opts?: Partial<TranslateOptions>) => {
   const schemaFile = TranslateGraphQL.typescriptSplit({
     schema,
     env: 'browser',
+    ...opts,
   });
   writeSchema(schemaFile, generationPath);
 };
@@ -67,7 +68,9 @@ const generateFiles = (options: ProjectOptions) => {
   console.log(chalk.greenBright(generationMessage));
   if (options.zeus?.length) {
     options.zeus.forEach((z) => {
-      generateZeusSchema(z.schema ? readFileSync(z.schema, 'utf-8') : superGraphSchema, z.generationPath);
+      generateZeusSchema(z.schema ? readFileSync(z.schema, 'utf-8') : superGraphSchema, z.generationPath, {
+        deno: options.deno,
+      });
       console.log(chalk.greenBright(`Zeus schema ${z.schema ? z.schema : 'supergraph'} saved in ${z.generationPath}`));
     });
   }
@@ -90,11 +93,13 @@ program
       ...('models' in options && { commandLineProvidedOptions: options }),
       saveOnInput: true,
     });
+    const deno = !!cfg.deno;
     generateFiles({
       schema: schemaPath,
       models: modelsPath,
       federation: isFederated,
       zeus: cfg.zeus,
+      deno,
     });
     if (options.watch) {
       console.log(chalk.yellowBright(`Watching for "${schemaPath}" file changes to regenerate models`));
@@ -108,6 +113,7 @@ program
           schema: schemaPath,
           models: modelsPath,
           federation: isFederated,
+          deno,
         });
       });
     }

@@ -3,6 +3,7 @@ import { ConfigMaker } from 'config-maker';
 export type ProjectOptions = {
   schema: string;
   models: string;
+  deno?: boolean;
   federation?: Array<{
     schema: string;
     models: string;
