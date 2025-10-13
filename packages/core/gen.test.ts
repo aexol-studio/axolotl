@@ -5,7 +5,7 @@ import * as assert from 'node:assert';
 
 test('resolveFieldType', (t, done) => {
   const possibleVariants = {
-    ['Person | undefined']: resolveFieldType('Person', {
+    ['Person | undefined | null']: resolveFieldType('Person', {
       type: Options.name,
       name: 'Person',
     }),
@@ -16,14 +16,14 @@ test('resolveFieldType', (t, done) => {
         name: 'Person',
       },
     }),
-    ['Array<Person | undefined> | undefined']: resolveFieldType('Person', {
+    ['Array<Person | undefined | null> | undefined | null']: resolveFieldType('Person', {
       type: Options.array,
       nest: {
         type: Options.name,
         name: 'Person',
       },
     }),
-    ['Array<Person | undefined>']: resolveFieldType('Person', {
+    ['Array<Person | undefined | null>']: resolveFieldType('Person', {
       type: Options.required,
       nest: {
         type: Options.array,
