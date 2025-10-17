@@ -75,10 +75,23 @@ export const graphqlYogaWithContextAdapter = <
         // Build a fresh context per request so users can attach DataLoaders, request-scoped caches, etc.
         context: async (initial) => {
           const extra = options?.context ? await options.context(initial) : {};
+          const hydratedCustomContext = Object.entries(customContext || {}).length
+            ? Object.fromEntries(
+                await Promise.all(
+                  Object.entries(customContext || {}).map(async ([key, value]) => {
+                    if (typeof value === 'function') {
+                      const resolvedValue = await (value as Function)(initial);
+                      return [key, resolvedValue];
+                    }
+                    return [key, value];
+                  }),
+                ),
+              )
+            : null;
           // Merge order: initial (from Yoga) <- customContext (static) <- extra (dynamic)
           return {
             ...initial,
-            ...(customContext || {}),
+            ...(hydratedCustomContext || {}),
             ...extra,
           } as Context;
         },
