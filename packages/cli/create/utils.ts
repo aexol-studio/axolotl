@@ -42,14 +42,27 @@ export const createAppAction = ({
           starter,
         )} example created.`,
       },
-      { message: `To run it, type:`, color: 'white' as const },
+      { message: `Development:`, color: 'white' as const },
+      isDeno
+        ? {
+            message: `cd ${chalk.magenta(`${path}`)} && ${chalk.magenta(`deno task dev`)}`,
+            color: 'yellow' as const,
+          }
+        : {
+            message: `cd ${chalk.magenta(`${path}`)} && ${chalk.magenta(`npm run dev`)}`,
+            color: 'yellow' as const,
+          },
+      { message: ``, color: 'white' as const },
+      { message: `Production:`, color: 'white' as const },
       isDeno
         ? {
             message: `cd ${chalk.magenta(`${path}`)} && ${chalk.magenta(`deno task start`)}`,
             color: 'yellow' as const,
           }
         : {
-            message: `cd ${chalk.magenta(`${path}`)} && ${chalk.magenta(`npm run start`)}`,
+            message: `cd ${chalk.magenta(`${path}`)} && ${chalk.magenta(`npm run build`)} && ${chalk.magenta(
+              `npm run start`,
+            )}`,
             color: 'yellow' as const,
           },
     ];
@@ -136,8 +149,14 @@ const runCommand = (command: string, withLog = true) => {
   try {
     const stdio = withLog ? 'inherit' : 'ignore';
     execSync(command, { stdio });
-  } catch (e) {
-    if (withLog) log([{ message: `Command ${command} failed.`, color: 'red' as const }]);
+  } catch (error) {
+    if (withLog)
+      log([
+        {
+          message: `Command ${command} failed.${error instanceof Error ? ' ' + error.message : ''}`,
+          color: 'red' as const,
+        },
+      ]);
     return false;
   }
   return true;

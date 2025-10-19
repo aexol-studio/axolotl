@@ -40,14 +40,8 @@ const resolvers = createResolvers({
     updateBeer: (input, args) => {
       const oldElement = Beers.find((b) => b._id);
       if (!oldElement) return false;
-      return Beers.splice(
-        Beers.findIndex((b) => b._id === args._id),
-        1,
-        {
-          ...oldElement,
-          ...args.beer,
-        },
-      );
+      Object.assign(oldElement, args.beer);
+      return true;
     },
   },
 });
