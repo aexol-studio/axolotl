@@ -11,12 +11,18 @@ export type SchemaMapper = (
   schema: GraphQLSchemaWithContext<YogaInitialContext>,
   getDirective: typeof getDirectiveFn,
 ) => SchemaMapperInitial;
+type UnwrapValue<T> = T extends (...args: any[]) => infer R ? (R extends Promise<infer PR> ? PR : R) : T;
+type ResolveContext<T> = { [K in keyof T]: UnwrapValue<T[K]> };
+type ContextDefinition<Ctx> = {
+  [K in keyof Ctx]: Ctx[K] | ((initial: YogaInitialContext) => Ctx[K] | Promise<Ctx[K]>);
+};
 
 export const graphqlYogaWithContextAdapter = <
   Ctx extends Record<string, any>,
-  Context = YogaInitialContext & Omit<Ctx, keyof YogaInitialContext>,
+  ResolvedCtx extends Record<string, any> = ResolveContext<Ctx>,
+  Context = YogaInitialContext & Omit<ResolvedCtx, keyof YogaInitialContext>,
 >(
-  customContext?: Ctx,
+  customContext?: ContextDefinition<Ctx>,
 ) =>
   AxolotlAdapter<[any, any, Context], SchemaMapper>()(
     (
@@ -80,7 +86,7 @@ export const graphqlYogaWithContextAdapter = <
                 await Promise.all(
                   Object.entries(customContext || {}).map(async ([key, value]) => {
                     if (typeof value === 'function') {
-                      const resolvedValue = await (value as Function)(initial);
+                      const resolvedValue = await (value as (ctx: YogaInitialContext) => any)(initial);
                       return [key, resolvedValue];
                     }
                     return [key, value];

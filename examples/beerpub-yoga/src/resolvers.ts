@@ -1,4 +1,4 @@
-import { applyMiddleware, createResolvers } from '@/src/axolotl.js';
+import { createResolvers } from '@/src/axolotl.js';
 import { Beer } from '@/src/models.js';
 
 const Beers: Beer[] = [
@@ -20,7 +20,7 @@ const Beers: Beer[] = [
 
 const resolvers = createResolvers({
   Query: {
-    userIsActive: (input) => input[2].isActive,
+    userIsActive: ([, , context]) => (context.user.id === 'user-123' ? true : false),
     beers: () => Beers,
     testAuth: () => 'TOP SECRET',
     activity: async () => {
@@ -51,14 +51,4 @@ const resolvers = createResolvers({
     },
   },
 });
-applyMiddleware(
-  resolvers,
-  [
-    async (input) => {
-      input[2].isActive = true;
-      return input;
-    },
-  ],
-  { Query: { activity: true } },
-);
 export default resolvers;
