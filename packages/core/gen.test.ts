@@ -1,7 +1,7 @@
-import test from 'node:test';
-import { resolveFieldType } from './gen.js';
 import { Options } from 'graphql-js-tree';
 import * as assert from 'node:assert';
+import { test } from 'node:test';
+import { resolveFieldType } from './gen.js';
 
 test('resolveFieldType', (t, done) => {
   const possibleVariants = {
