@@ -5,17 +5,21 @@ export enum BeerGenre {
   LAGER = 'LAGER',
   PORTER = 'PORTER',
 }
+export enum CacheScope {
+  PUBLIC = 'PUBLIC',
+  PRIVATE = 'PRIVATE',
+}
 
 export interface CreateBeer {
   name: string;
   price: number;
-  url?: URL | undefined;
-  genre?: BeerGenre | undefined;
+  url?: URL | undefined | null;
+  genre?: BeerGenre | undefined | null;
 }
 export interface UpdateBeer {
-  name?: string | undefined;
-  price?: number | undefined;
-  url?: URL | undefined;
+  name?: string | undefined | null;
+  price?: number | undefined | null;
+  url?: URL | undefined | null;
 }
 
 export type Models = {
@@ -102,6 +106,12 @@ export type Directives = {
   auth: {
     args: Record<string, never>;
   };
+  cache: {
+    args: {
+        ttl?: number | undefined | null;
+        scope?: CacheScope | undefined | null;
+      };
+  };
 };
 
 export interface Node {
@@ -120,9 +130,9 @@ export interface Beer {
   price: number;
   _id: string;
   createdAt: string;
-  info?: string | undefined;
-  url?: URL | undefined;
-  genre?: BeerGenre | undefined;
+  info?: string | undefined | null;
+  url?: URL | undefined | null;
+  genre?: BeerGenre | undefined | null;
 }
 export interface Chips {
   _id: string;
@@ -131,17 +141,17 @@ export interface Chips {
   price: number;
 }
 export interface UserActivity {
-  isActive?: boolean | undefined;
+  isActive?: boolean | undefined | null;
 }
 export interface Query {
-  userIsActive?: boolean | undefined;
-  activity?: UserActivity | undefined;
-  beers?: Array<Beer> | undefined;
-  products?: Array<Product> | undefined;
+  userIsActive?: boolean | undefined | null;
+  activity?: UserActivity | undefined | null;
+  beers?: Array<Beer> | undefined | null;
+  products?: Array<Product> | undefined | null;
   testAuth: string;
 }
 export interface Mutation {
-  addBeer?: string | undefined;
-  deleteBeer?: boolean | undefined;
-  updateBeer?: boolean | undefined;
+  addBeer?: string | undefined | null;
+  deleteBeer?: boolean | undefined | null;
+  updateBeer?: boolean | undefined | null;
 }
