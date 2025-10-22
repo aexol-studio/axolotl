@@ -1,8 +1,21 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { GraphQLScalarType } from 'graphql';
+
+export type ResolverFunction<InputType> = (input: InputType, args?: any) => any | undefined | Promise<any | undefined>;
+
+export type SubscriptionHandler<InputType, ArgumentsType = unknown> = {
+  subscribe: (
+    input: InputType,
+    args: ArgumentsType extends { args: infer R } ? R : never,
+  ) => AsyncGenerator<any> | Generator<any> | AsyncIterable<any>;
+  resolve?: (payload: any) => any;
+};
+
+export type ResolverOrSubscription<InputType> = ResolverFunction<InputType> | SubscriptionHandler<InputType>;
 
 export type ResolversUnknown<InputType> = {
   [x: string]: {
-    [x: string]: (input: InputType, args?: any) => any | undefined | Promise<any | undefined>;
+    [x: string]: ResolverOrSubscription<InputType>;
   };
 };
 export type ScalarsUnknown = {

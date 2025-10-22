@@ -7,6 +7,7 @@ import {
   CustomMiddlewareHandler,
   ObjectsUnknown,
   InferAdapterTypeDirectives,
+  SubscriptionHandler,
 } from '@/types';
 import { GraphQLScalarType } from 'graphql';
 
@@ -17,14 +18,17 @@ export const AxolotlAdapter =
 
 export const Axolotl =
   <ADAPTER extends (objects: ObjectsUnknown<any, any>) => any>(adapter: ADAPTER) =>
-  // eslint-disable-next-line @typescript-eslint/ban-types
   <Models, ScalarModels = unknown, DirectiveModels = unknown>() => {
     type Inp = InferAdapterType<ADAPTER>;
     type Dir = InferAdapterTypeDirectives<ADAPTER>;
     type Resolvers = {
-      [P in keyof Models]?: {
-        [T in keyof Models[P]]?: CustomHandler<Inp, Models[P][T]>;
-      };
+      [P in keyof Models]?: P extends 'Subscription'
+        ? {
+            [T in keyof Models[P]]?: CustomHandler<Inp, Models[P][T]> | SubscriptionHandler<Inp, Models[P][T]>;
+          }
+        : {
+            [T in keyof Models[P]]?: CustomHandler<Inp, Models[P][T]>;
+          };
     };
     type Scalars = {
       [P in keyof ScalarModels]?: GraphQLScalarType;

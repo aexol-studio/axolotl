@@ -70,8 +70,18 @@ export type Models = {
       };
     };
   };
+  ['Subscription']: {
+    countdown: {
+      args: {
+        from: number;
+      };
+    };
+  };
   ['Query']: {
     user: {
+      args: Record<string, never>;
+    };
+    subscription: {
       args: Record<string, never>;
     };
   };
@@ -84,10 +94,10 @@ export type Scalars = unknown;
 export interface Todo {
   _id: string;
   content: string;
-  done?: boolean | undefined;
+  done?: boolean | undefined | null;
 }
 export interface TodoOps {
-  markDone?: boolean | undefined;
+  markDone?: boolean | undefined | null;
 }
 export interface User {
   _id: string;
@@ -96,10 +106,10 @@ export interface User {
 export interface AuthorizedUserMutation {
   createTodo: string;
   todoOps: TodoOps;
-  changePassword?: boolean | undefined;
+  changePassword?: boolean | undefined | null;
 }
 export interface AuthorizedUserQuery {
-  todos?: Array<Todo> | undefined;
+  todos?: Array<Todo> | undefined | null;
   todo: Todo;
   me: User;
 }
@@ -108,6 +118,10 @@ export interface Mutation {
   login: string;
   register: string;
 }
+export interface Subscription {
+  countdown: number;
+}
 export interface Query {
   user: AuthorizedUserQuery;
+  subscription: Subscription;
 }

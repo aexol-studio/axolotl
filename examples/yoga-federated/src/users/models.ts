@@ -24,8 +24,18 @@ export type Models = {
       };
     };
   };
+  ['Subscription']: {
+    countdown: {
+      args: {
+        from: number;
+      };
+    };
+  };
   ['Query']: {
     user: {
+      args: Record<string, never>;
+    };
+    subscription: {
       args: Record<string, never>;
     };
   };
@@ -56,11 +66,15 @@ export interface Mutation {
   login: string;
   register: string;
 }
+export interface Subscription {
+  countdown: number;
+}
 export interface Query {
   user: AuthorizedUserQuery;
+  subscription: Subscription;
 }
 export interface AuthorizedUserMutation {
-  changePassword?: boolean | undefined;
+  changePassword?: boolean | undefined | null;
 }
 export interface AuthorizedUserQuery {
   me: User;

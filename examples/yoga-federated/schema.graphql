@@ -45,11 +45,19 @@ type Mutation{
 	): String!
 }
 
+type Subscription{
+	countdown(
+		from: Int!
+	): Int!
+}
+
 type Query{
 	user: AuthorizedUserQuery!
+	subscription: Subscription!
 }
 
 schema{
 	query: Query
 	mutation: Mutation
+	subscription: Subscription
 }

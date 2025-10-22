@@ -910,38 +910,51 @@ export type ValueTypes = {
 	_id?:boolean | `@${string}`,
 	content?:boolean | `@${string}`,
 	done?:boolean | `@${string}`,
-		__typename?: boolean | `@${string}`
+		__typename?: boolean | `@${string}`,
+	['...on Todo']?: Omit<ValueTypes["Todo"], "...on Todo">
 }>;
 	["TodoOps"]: AliasType<{
 	markDone?:boolean | `@${string}`,
-		__typename?: boolean | `@${string}`
+		__typename?: boolean | `@${string}`,
+	['...on TodoOps']?: Omit<ValueTypes["TodoOps"], "...on TodoOps">
 }>;
 	["User"]: AliasType<{
 	_id?:boolean | `@${string}`,
 	username?:boolean | `@${string}`,
-		__typename?: boolean | `@${string}`
+		__typename?: boolean | `@${string}`,
+	['...on User']?: Omit<ValueTypes["User"], "...on User">
 }>;
 	["AuthorizedUserMutation"]: AliasType<{
 createTodo?: [{	content: string | Variable<any, string>},boolean | `@${string}`],
 todoOps?: [{	_id: string | Variable<any, string>},ValueTypes["TodoOps"]],
 changePassword?: [{	newPassword: string | Variable<any, string>},boolean | `@${string}`],
-		__typename?: boolean | `@${string}`
+		__typename?: boolean | `@${string}`,
+	['...on AuthorizedUserMutation']?: Omit<ValueTypes["AuthorizedUserMutation"], "...on AuthorizedUserMutation">
 }>;
 	["AuthorizedUserQuery"]: AliasType<{
 	todos?:ValueTypes["Todo"],
 todo?: [{	_id: string | Variable<any, string>},ValueTypes["Todo"]],
 	me?:ValueTypes["User"],
-		__typename?: boolean | `@${string}`
+		__typename?: boolean | `@${string}`,
+	['...on AuthorizedUserQuery']?: Omit<ValueTypes["AuthorizedUserQuery"], "...on AuthorizedUserQuery">
 }>;
 	["Mutation"]: AliasType<{
 	user?:ValueTypes["AuthorizedUserMutation"],
 login?: [{	username: string | Variable<any, string>,	password: string | Variable<any, string>},boolean | `@${string}`],
 register?: [{	username: string | Variable<any, string>,	password: string | Variable<any, string>},boolean | `@${string}`],
-		__typename?: boolean | `@${string}`
+		__typename?: boolean | `@${string}`,
+	['...on Mutation']?: Omit<ValueTypes["Mutation"], "...on Mutation">
+}>;
+	["Subscription"]: AliasType<{
+countdown?: [{	from: number | Variable<any, string>},boolean | `@${string}`],
+		__typename?: boolean | `@${string}`,
+	['...on Subscription']?: Omit<ValueTypes["Subscription"], "...on Subscription">
 }>;
 	["Query"]: AliasType<{
 	user?:ValueTypes["AuthorizedUserQuery"],
-		__typename?: boolean | `@${string}`
+	subscription?:ValueTypes["Subscription"],
+		__typename?: boolean | `@${string}`,
+	['...on Query']?: Omit<ValueTypes["Query"], "...on Query">
 }>;
 	["ID"]:unknown
   }
@@ -980,13 +993,19 @@ login?: [{	username: string,	password: string},boolean | `@${string}`],
 register?: [{	username: string,	password: string},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`
 }>;
+	["Subscription"]: AliasType<{
+countdown?: [{	from: number},boolean | `@${string}`],
+		__typename?: boolean | `@${string}`
+}>;
 	["Query"]: AliasType<{
 	user?:ResolverInputTypes["AuthorizedUserQuery"],
+	subscription?:ResolverInputTypes["Subscription"],
 		__typename?: boolean | `@${string}`
 }>;
 	["schema"]: AliasType<{
 	query?:ResolverInputTypes["Query"],
 	mutation?:ResolverInputTypes["Mutation"],
+	subscription?:ResolverInputTypes["Subscription"],
 		__typename?: boolean | `@${string}`
 }>;
 	["ID"]:unknown
@@ -1020,12 +1039,17 @@ export type ModelTypes = {
 	login: string,
 	register: string
 };
+	["Subscription"]: {
+		countdown: number
+};
 	["Query"]: {
-		user: ModelTypes["AuthorizedUserQuery"]
+		user: ModelTypes["AuthorizedUserQuery"],
+	subscription: ModelTypes["Subscription"]
 };
 	["schema"]: {
 	query?: ModelTypes["Query"] | undefined | null,
-	mutation?: ModelTypes["Mutation"] | undefined | null
+	mutation?: ModelTypes["Mutation"] | undefined | null,
+	subscription?: ModelTypes["Subscription"] | undefined | null
 };
 	["ID"]:any
     }
@@ -1035,38 +1059,51 @@ export type GraphQLTypes = {
 	__typename: "Todo",
 	_id: string,
 	content: string,
-	done?: boolean | undefined | null
+	done?: boolean | undefined | null,
+	['...on Todo']: Omit<GraphQLTypes["Todo"], "...on Todo">
 };
 	["TodoOps"]: {
 	__typename: "TodoOps",
-	markDone?: boolean | undefined | null
+	markDone?: boolean | undefined | null,
+	['...on TodoOps']: Omit<GraphQLTypes["TodoOps"], "...on TodoOps">
 };
 	["User"]: {
 	__typename: "User",
 	_id: string,
-	username: string
+	username: string,
+	['...on User']: Omit<GraphQLTypes["User"], "...on User">
 };
 	["AuthorizedUserMutation"]: {
 	__typename: "AuthorizedUserMutation",
 	createTodo: string,
 	todoOps: GraphQLTypes["TodoOps"],
-	changePassword?: boolean | undefined | null
+	changePassword?: boolean | undefined | null,
+	['...on AuthorizedUserMutation']: Omit<GraphQLTypes["AuthorizedUserMutation"], "...on AuthorizedUserMutation">
 };
 	["AuthorizedUserQuery"]: {
 	__typename: "AuthorizedUserQuery",
 	todos?: Array<GraphQLTypes["Todo"]> | undefined | null,
 	todo: GraphQLTypes["Todo"],
-	me: GraphQLTypes["User"]
+	me: GraphQLTypes["User"],
+	['...on AuthorizedUserQuery']: Omit<GraphQLTypes["AuthorizedUserQuery"], "...on AuthorizedUserQuery">
 };
 	["Mutation"]: {
 	__typename: "Mutation",
 	user: GraphQLTypes["AuthorizedUserMutation"],
 	login: string,
-	register: string
+	register: string,
+	['...on Mutation']: Omit<GraphQLTypes["Mutation"], "...on Mutation">
+};
+	["Subscription"]: {
+	__typename: "Subscription",
+	countdown: number,
+	['...on Subscription']: Omit<GraphQLTypes["Subscription"], "...on Subscription">
 };
 	["Query"]: {
 	__typename: "Query",
-	user: GraphQLTypes["AuthorizedUserQuery"]
+	user: GraphQLTypes["AuthorizedUserQuery"],
+	subscription: GraphQLTypes["Subscription"],
+	['...on Query']: Omit<GraphQLTypes["Query"], "...on Query">
 };
 	["ID"]: "scalar" & { name: "ID" }
     }

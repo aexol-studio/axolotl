@@ -43,10 +43,34 @@ export const graphqlYogaWithContextAdapter = <
             typeName,
             Object.fromEntries(
               Object.entries(v).map(([fieldName, resolver]) => {
+                // Subscription resolvers need special handling
+                // Support both object form { subscribe, resolve } and function form
+                if (typeName === 'Subscription') {
+                  if (typeof resolver === 'object' && resolver !== null && 'subscribe' in resolver) {
+                    return [
+                      fieldName,
+                      {
+                        subscribe: (_: any, args: any, context: any) => {
+                          return (resolver as any).subscribe([_, args, context], args);
+                        },
+                        resolve: (resolver as any).resolve || ((payload: any) => payload),
+                      },
+                    ];
+                  }
+                  return [
+                    fieldName,
+                    {
+                      subscribe: (_: any, args: any, context: any) => {
+                        return (resolver as any)([_, args, context], args);
+                      },
+                      resolve: (payload: any) => payload,
+                    },
+                  ];
+                }
                 return [
                   fieldName,
                   (_: any, args: any, context: any) => {
-                    return resolver([_, args, context], args);
+                    return (resolver as any)([_, args, context], args);
                   },
                 ];
               }),

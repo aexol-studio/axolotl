@@ -1,7 +1,19 @@
 import { UserModel, db } from '@/src/users/db.js';
 import { createResolvers } from '@/src/users/axolotl.js';
+import { setTimeout as setTimeout$ } from 'node:timers/promises';
 
 export default createResolvers({
+  Subscription: {
+    countdown: {
+      subscribe: async function* (input, args) {
+        for (let i = args.from; i >= 0; i--) {
+          await setTimeout$(1000);
+          yield { countdown: i };
+        }
+      },
+      resolve: (payload) => payload.countdown,
+    },
+  },
   AuthorizedUserQuery: {
     me: ([source]) => {
       const src = source as UserModel;

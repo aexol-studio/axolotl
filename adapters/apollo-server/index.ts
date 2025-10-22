@@ -23,10 +23,35 @@ export const apolloServerAdapter = AxolotlAdapter<[any, any, any, any], SchemaMa
         typeName,
         Object.fromEntries(
           Object.entries(v).map(([fieldName, resolver]) => {
+            // Subscription resolvers need special handling
+            // Support both object form { subscribe, resolve } and function form
+            if (typeName === 'Subscription') {
+              if (typeof resolver === 'object' && resolver !== null && 'subscribe' in resolver) {
+                return [
+                  fieldName,
+                  {
+                    subscribe: (parent: any, args: any, contextValue: any, info: any) => {
+                      return (resolver as any).subscribe([parent, args, contextValue, info], args);
+                    },
+                    resolve: (resolver as any).resolve || ((payload: any) => payload),
+                  },
+                ];
+              }
+              return [
+                fieldName,
+                {
+                  subscribe: (parent: any, args: any, contextValue: any, info: any) => {
+                    return (resolver as any)([parent, args, contextValue, info], args);
+                  },
+                  resolve: (payload: any) => payload,
+                },
+              ];
+            }
+            // For regular resolvers, wrap them with our input adapter
             return [
               fieldName,
               (parent: any, args: any, contextValue: any, info: any) => {
-                return resolver([parent, args, contextValue, info], args);
+                return (resolver as any)([parent, args, contextValue, info], args);
               },
             ];
           }),

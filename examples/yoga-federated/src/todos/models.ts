@@ -51,19 +51,19 @@ export type Scalars = unknown;
 export interface Todo {
   _id: string;
   content: string;
-  done?: boolean | undefined;
+  done?: boolean | undefined | null;
 }
 export interface User {
   _id: string;
 }
 export interface TodoOps {
-  markDone?: boolean | undefined;
+  markDone?: boolean | undefined | null;
 }
 export interface AuthorizedUserMutation {
   createTodo: string;
   todoOps: TodoOps;
 }
 export interface AuthorizedUserQuery {
-  todos?: Array<Todo> | undefined;
+  todos?: Array<Todo> | undefined | null;
   todo: Todo;
 }
