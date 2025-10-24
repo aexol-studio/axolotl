@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { readFileSync } from 'fs';
-import { AxolotlAdapter } from '@aexol/axolotl-core';
+import { AxolotlAdapter, InternalSubscriptionHandler } from '@aexol/axolotl-core';
 import { GraphQLSchemaWithContext, YogaInitialContext, createSchema, createYoga } from 'graphql-yoga';
 import { createServer } from 'http';
 import * as path from 'path';
@@ -43,10 +43,22 @@ export const graphqlYogaWithContextAdapter = <
             typeName,
             Object.fromEntries(
               Object.entries(v).map(([fieldName, resolver]) => {
+                // Check if this is an InternalSubscriptionHandler instance
+                if (resolver instanceof InternalSubscriptionHandler) {
+                  return [
+                    fieldName,
+                    {
+                      subscribe: (_: any, args: any, context: any) => {
+                        return resolver.subscribe([_, args, context], args);
+                      },
+                    },
+                  ];
+                }
+                // Regular resolver function
                 return [
                   fieldName,
                   (_: any, args: any, context: any) => {
-                    return resolver([_, args, context], args);
+                    return (resolver as any)([_, args, context], args);
                   },
                 ];
               }),

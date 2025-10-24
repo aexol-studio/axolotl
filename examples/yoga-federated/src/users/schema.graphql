@@ -9,6 +9,10 @@ type Mutation{
 	register(username:String!, password: String!): String!
 }
 
+type Subscription{
+	countdown(from: Int!): Int!
+}
+
 type Query{
 	user: AuthorizedUserQuery!
 }

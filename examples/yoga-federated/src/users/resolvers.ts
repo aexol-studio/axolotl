@@ -1,5 +1,7 @@
 import { UserModel, db } from '@/src/users/db.js';
 import { createResolvers } from '@/src/users/axolotl.js';
+import { createSubscriptionHandler } from '@aexol/axolotl-core';
+import { setTimeout as setTimeout$ } from 'node:timers/promises';
 
 export default createResolvers({
   AuthorizedUserQuery: {
@@ -54,5 +56,13 @@ export default createResolvers({
       });
       return src;
     },
+  },
+  Subscription: {
+    countdown: createSubscriptionHandler(async function* (source, { from }) {
+      for (let i = from; i >= 0; i--) {
+        await setTimeout$(1000);
+        yield { countdown: i };
+      }
+    }),
   },
 });
