@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { readFileSync } from 'fs';
-import { AxolotlAdapter } from '@aexol/axolotl-core';
+import { AxolotlAdapter, InternalSubscriptionHandler } from '@aexol/axolotl-core';
 import { ApolloServer } from '@apollo/server';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { getDirective as getDirectiveFn, mapSchema } from '@graphql-tools/utils';
@@ -23,10 +23,22 @@ export const apolloServerAdapter = AxolotlAdapter<[any, any, any, any], SchemaMa
         typeName,
         Object.fromEntries(
           Object.entries(v).map(([fieldName, resolver]) => {
+            // Check if this is an InternalSubscriptionHandler instance
+            if (resolver instanceof InternalSubscriptionHandler) {
+              return [
+                fieldName,
+                {
+                  subscribe: (_: any, args: any, context: any) => {
+                    return resolver.subscribe([_, args, context], args);
+                  },
+                },
+              ];
+            }
+            // Regular resolver function
             return [
               fieldName,
-              (parent: any, args: any, contextValue: any, info: any) => {
-                return resolver([parent, args, contextValue, info], args);
+              (_: any, args: any, context: any) => {
+                return (resolver as any)([_, args, context], args);
               },
             ];
           }),
