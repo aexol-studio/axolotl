@@ -25,6 +25,11 @@ export const AllTypesProps: Record<string,any> = {
 
 		}
 	},
+	Subscription:{
+		countdown:{
+
+		}
+	},
 	ID: `scalar.ID` as const
 }
 
@@ -56,6 +61,9 @@ export const ReturnTypes: Record<string,any> = {
 		login:"String",
 		register:"String"
 	},
+	Subscription:{
+		countdown:"Int"
+	},
 	Query:{
 		user:"AuthorizedUserQuery"
 	},
@@ -64,5 +72,6 @@ export const ReturnTypes: Record<string,any> = {
 
 export const Ops = {
 query: "Query" as const,
-	mutation: "Mutation" as const
+	mutation: "Mutation" as const,
+	subscription: "Subscription" as const
 }

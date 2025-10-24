@@ -1,8 +1,12 @@
 import { GraphQLScalarType } from 'graphql';
 
+export type ResolverFunction<InputType> = (input: InputType, args?: any) => any | undefined | Promise<any | undefined>;
+export type SubscriptionObject<InputType> = { subscribe: ResolverFunction<InputType> };
+export type ResolverOrSubscription<InputType> = ResolverFunction<InputType> | SubscriptionObject<InputType>;
+
 export type ResolversUnknown<InputType> = {
   [x: string]: {
-    [x: string]: (input: InputType, args?: any) => any | undefined | Promise<any | undefined>;
+    [x: string]: ResolverOrSubscription<InputType>;
   };
 };
 export type ScalarsUnknown = {

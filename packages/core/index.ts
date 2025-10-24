@@ -9,6 +9,7 @@ import {
   InferAdapterTypeDirectives,
 } from '@/types';
 import { GraphQLScalarType } from 'graphql';
+import { InternalSubscriptionHandler } from '@/subscription.js';
 
 export const AxolotlAdapter =
   <Inp, Dir>() =>
@@ -17,13 +18,12 @@ export const AxolotlAdapter =
 
 export const Axolotl =
   <ADAPTER extends (objects: ObjectsUnknown<any, any>) => any>(adapter: ADAPTER) =>
-  // eslint-disable-next-line @typescript-eslint/ban-types
   <Models, ScalarModels = unknown, DirectiveModels = unknown>() => {
     type Inp = InferAdapterType<ADAPTER>;
     type Dir = InferAdapterTypeDirectives<ADAPTER>;
     type Resolvers = {
       [P in keyof Models]?: {
-        [T in keyof Models[P]]?: CustomHandler<Inp, Models[P][T]>;
+        [T in keyof Models[P]]?: CustomHandler<Inp, Models[P][T]> | InternalSubscriptionHandler<Inp, Models[P][T]>;
       };
     };
     type Scalars = {
@@ -66,13 +66,23 @@ export const Axolotl =
     ) => {
       Object.entries(k).forEach(([typeName, fields]) => {
         Object.keys(fields as Record<string, true>).forEach((fieldName) => {
-          const oldResolver = (r as Record<string, Record<string, Handler>>)[typeName][fieldName];
+          const oldResolver = (r as Record<string, Record<string, any>>)[typeName][fieldName];
+
+          // Skip middleware for subscription handlers
+          if (InternalSubscriptionHandler.isSubscriptionHandler(oldResolver)) {
+            return;
+          }
+          if (oldResolver && typeof oldResolver === 'object' && 'subscribe' in oldResolver) {
+            return;
+          }
+
+          // Apply middleware only to regular resolvers
           (r as Record<string, Record<string, Handler>>)[typeName][fieldName] = middlewares.reduce((a, b) => {
             return async (input, args) => {
               const middlewaredInput = await b(input);
               return a(middlewaredInput, args);
             };
-          }, oldResolver);
+          }, oldResolver as Handler);
         });
       });
     };
@@ -98,3 +108,4 @@ export * from '@/chaos.js';
 export * from '@/gen.js';
 export * from '@/inspect.js';
 export * from '@/federation.js';
+export * from '@/subscription.js';
