@@ -4,15 +4,8 @@ import { chaos, generateModels, inspectResolvers, createSuperGraph } from '@aexo
 import { createApp } from './create/index.js';
 import { watch } from 'chokidar';
 import chalk from 'chalk';
-import { createResolversConfig } from './codegen/index.js';
 import { mkdir, readFileSync, writeFile, writeFileSync } from 'node:fs';
 import { config, ProjectOptions } from '@aexol/axolotl-config';
-import { aiCommand } from '@/codegen/ai.js';
-import { frontendAiCommand } from '@/codegen/frontendAi.js';
-import { graphqlAiCommand } from '@/codegen/graphqlAi.js';
-import { caiCommand } from '@/codegen/cai.js';
-import { caiContextCommand } from '@/codegen/context.js';
-import { mcpCommand } from '@/codegen/mcp.js';
 import * as path from 'node:path';
 import { TranslateGraphQL, TranslateOptions } from 'graphql-zeus-core';
 
@@ -118,14 +111,6 @@ program
       });
     }
   });
-
-createResolversConfig(program);
-aiCommand(program);
-frontendAiCommand(program);
-graphqlAiCommand(program);
-caiCommand(program);
-caiContextCommand(program);
-mcpCommand(program);
 
 program
   .command('inspect')

@@ -29,13 +29,22 @@ const changePackageVersion = (version: string, depsList: string[]) => (packageJS
 const remapPackages = async () => {
   const mainVersion = await fs.readFile(path.join(process.cwd(), 'package.json'), 'utf-8');
   const mainVersionJSON = JSON.parse(mainVersion) as PackageJSON;
-  const paths = [
-    path.join(process.cwd(), 'packages'),
-    path.join(process.cwd(), 'modularium'),
-    path.join(process.cwd(), 'adapters'),
-    path.join(process.cwd(), 'examples'),
-  ];
-  const dirs = await Promise.all(paths.map(async (root) => ({ root, dir: await fs.readdir(root) })));
+  const roots = ['packages', 'adapters', 'examples'] as const;
+  const dirs = await Promise.all(
+    roots.map(async (relative) => {
+      const root = path.join(process.cwd(), relative);
+      try {
+        const dir = await fs.readdir(root);
+        return { root, dir };
+      } catch (error) {
+        const err = error as NodeJS.ErrnoException;
+        if (err.code === 'ENOENT') {
+          return { root, dir: [] };
+        }
+        throw err;
+      }
+    }),
+  );
   const allJsons = await Promise.all(
     dirs.map(async ({ dir, root }) => {
       const all = await Promise.all(

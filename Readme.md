@@ -11,6 +11,12 @@ From the [GraphQL Editor](https://graphqleditor.com/) and [Aexol Studio](http://
 
 <br />
 
+## Agent Guide
+
+Need an AI coding assistant to work in this repo? Share the [Axolotl Agent Guide](docs/agent-guide.md). It summarizes the monorepo layout, CLI tooling, GraphQL Yoga integration, and the quickstart playbook for new projects.
+
+<br />
+
 ## 😮 Features
 
 Axolotl is a framework overlord/wrapper thats lets you forget about type-casting and looking into schemas. When there is no drama, only efficiency remains. 
@@ -18,12 +24,11 @@ Axolotl is a framework overlord/wrapper thats lets you forget about type-casting
 <br />
 
 - ⚙️ Generates models at runtime during development - which ensures type safety
-- 🏃 Enables seamless migration between different GraphQL Servers like GraphQL Yoga and Apollo Server
+- 🏃 Ships with a GraphQL Yoga adapter for rapid schema-first development
 - 🤓 Lets you write your own adapters for various purposes
 - 🐙 Supports micro-federation! It allows to merge different schemas and resolvers inside one repository.
 - 🦕 Supports Deno from version 0.2.7. It works with Deno in production.
 - 😂 Is very easy to setup, start and integrate. You just need to `npx @aexol/axololtl create-yoga`
-- 🦎 includes modularium, a package with installable GraphQL schemas with backend
 
 
 <br />
@@ -51,8 +56,7 @@ Axolotl provides type-safety and lets you choose the adapter (or write your own)
 |:---|:---| 
 | Adapters      | To develop adapters for popular nodejs frameworks | 
 | Examples      | To experiment with axolotl and its packages      |
-| Modularium      | Installable code chunks for your project      |
-| <br > Micro-federation | To use the micro-federation feature in axolotl <br /> <br /> - Micro-federation means that all the modules are located within one project or one monorepo **or** are distributed as npm packages <br /> - The axolotl projects are merged to the supergraph later|
+| Docs      | Documentation site and agent guide (`docs/agent-guide.md`)      |
 
 <br />
 
@@ -77,5 +81,5 @@ There is a sequential build order for commands as seen below:
 
 To run an example execute you need to type in:
 ```sh
- npm run start -w beerpub
+ npm run start -w examples/yoga-federated
 ```

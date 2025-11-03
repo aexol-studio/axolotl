@@ -6,7 +6,6 @@
   "config": "Configuration",
   "resolvers": "Resolvers",
   "directives": "Directives",
-  "modularium": "Modularium",
   "micro-federation": "Micro federation",
   "inspect": "Inspect missing resolvers",
   "infer-source": "Infer Source",

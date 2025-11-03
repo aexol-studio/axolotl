@@ -2,10 +2,9 @@
 
 ## Project Structure & Module Organization
 - Root is an npm workspaces monorepo. Key folders:
-  - `packages/`: core library (`core`), CLI (`cli`), shared config/scripts.
-  - `adapters/`: framework adapters (`graphql-yoga`, `apollo-server`).
-  - `examples/`: runnable examples (e.g., `beerpub-yoga`, `yoga-federated`).
-  - `modularium/`: installable GraphQL modules and playground.
+  - `packages/`: core library (`core`), CLI (`cli`), shared config/scripts, maintenance scripts.
+  - `adapters/`: framework adapters (currently only `graphql-yoga`).
+  - `examples/`: runnable examples (e.g., `yoga-federated`).
   - `deno/`: Deno-compatible adapters and examples.
   - `docs/`: documentation and assets.
 - Tests live alongside source (e.g., `packages/core/gen.test.ts`).
@@ -16,8 +15,8 @@
 - Run tests: `npm test` (Node test runner over `packages/**/*.test.*`)
 - Lint: `npx eslint .`
 - Format: `npx prettier -w .`
-- Run an example (watch): `npm -w examples/beerpub-yoga run dev`
-- Start an example (compiled): `npm -w examples/beerpub-yoga run start`
+- Run an example (watch): `npm -w examples/yoga-federated run dev`
+- Start an example (compiled): `npm -w examples/yoga-federated run start`
 - Regenerate/packages sync (internal): `npm run sync` (runs codegen + builds + commits; use with care)
 
 ## Coding Style & Naming Conventions

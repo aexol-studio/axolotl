@@ -5,7 +5,7 @@ These notes summarize what Axolotl already does well and concrete steps to make 
 
 ## What’s Strong Today
 - Type‑safe resolvers: `createResolvers` + generated `Models`, `Directives`, `Scalars` with great DX.
-- Adapter abstraction: Yoga and Apollo adapters with directive mapping support; Deno support present.
+- Adapter abstraction: Yoga adapters (Node.js and Deno) with directive mapping support.
 - Micro‑federation: `mergeAxolotls` to compose resolvers and `createSuperGraph` to produce a supergraph SDL.
 - CLI ergonomics: `build`, `inspect`, `chaos`, codegen (incl. Zeus), “create-*” starters, watch mode.
 - Smart utilities: `setSourceTypeFromResolver` for narrowing source types; middleware injection; directive pipelines.
@@ -53,12 +53,6 @@ These notes summarize what Axolotl already does well and concrete steps to make 
 - Subscriptions: WebSocket + SSE support with typed payloads; example showing live queries.
 - Deno parity: mirror Yoga features in Deno adapter; publish “deno deploy” example with KV/cache.
 
-### Modularium
-- Module registry: discoverable, versioned modules (npm scopes) + local templates; `modularium add users@^1`.
-- Module tests: scaffold module‑level tests and example seeds; include resolver coverage gates.
-- Docs generator: produce module README from schema/resolvers/directives automatically.
-
-
 ## Concrete Proposals (Short‑Term)
 
 1) Resolver Coverage as a First‑Class Check
@@ -66,7 +60,7 @@ These notes summarize what Axolotl already does well and concrete steps to make 
 - PR annotation helper: show missing resolvers next to files.
 
 2) DataLoader & Cache Directives MVP
-- `@cache(ttl: Int, scope: PUBLIC|PRIVATE)`; Yoga/Apollo adapters read and set hints.
+- `@cache(ttl: Int, scope: PUBLIC|PRIVATE)`; Yoga adapters read and set hints.
 - `axolotl codegen loaders` creates typed batchers for IDs/refs; starter example wired.
 
 3) Typed Directives SDK
@@ -78,7 +72,7 @@ These notes summarize what Axolotl already does well and concrete steps to make 
 - Output histogram of status codes, resolver timings (if telemetry enabled).
 
 5) Adapter Add‑On: Subscriptions
-- Add WebSocket server wiring to Yoga adapter (and Apollo where available) with a small demo.
+- Add WebSocket server wiring to Yoga adapter with a small demo.
 
 
 ## “MCP” For Axolotl
@@ -95,12 +89,12 @@ There are two complementary “MCP”s worth pursuing:
   - Packager: `axolotl mcp bundle` to produce a redistributable MCP server config for a project.
 
 2) Minimum Complete Product (MCP) of Axolotl (aka MVP with teeth)
-- Core: schema‑first codegen (models, directives, scalars), adapters (Yoga, Apollo), typed resolvers, middleware, directives.
+- Core: schema‑first codegen (models, directives, scalars), adapters (Yoga Node/Deno), typed resolvers, middleware, directives.
 - DX: `build --watch`, `inspect`, `chaos v2`, resolver stubs generator, scalar/directive stubs, starter templates.
 - Micro‑federation: `createSuperGraph`, `mergeAxolotls`, conflict detection with clear errors, per‑module context composition.
 - Observability: basic OpenTelemetry spans, console timing per resolver in dev, simple log integration.
 - Security: `@auth` example directive with typed context; depth/complexity limits; persisted queries opt‑in.
-- Docs & Examples: yoga, apollo, federated, subscriptions, Deno; cookbook for directives and caching.
+- Docs & Examples: yoga, federated, subscriptions, Deno; cookbook for directives and caching.
 
 This “complete” baseline is enough to win most greenfield GraphQL projects and be production‑credible.
 
@@ -121,4 +115,3 @@ This “complete” baseline is enough to win most greenfield GraphQL projects a
 - Enhance `axolotl mcp` with profiles, examples, and selection‑set suggestions.
 
 If you want, I can start with the “inspect JSON + CI fail” and `@cache` directive MVPs to make measurable DX/production gains quickly.
-

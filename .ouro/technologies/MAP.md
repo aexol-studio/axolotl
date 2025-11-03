@@ -1,0 +1,268 @@
+# Technologies Docs Map
+
+- @aexol/axolotl
+  - @aexol/axolotl
+    - local: .ouro/technologies/aexol__axolotl.md
+    - npm: https://www.npmjs.com/package/@aexol/axolotl
+- @aexol/axolotl-config
+  - @aexol/axolotl-config
+    - local: .ouro/technologies/aexol__axolotl-config.md
+    - npm: https://www.npmjs.com/package/@aexol/axolotl-config
+- @aexol/axolotl-core
+  - @aexol/axolotl-core
+    - local: .ouro/technologies/aexol__axolotl-core.md
+    - npm: https://www.npmjs.com/package/@aexol/axolotl-core
+- @modelcontextprotocol/sdk
+  - @modelcontextprotocol/sdk
+    - local: .ouro/technologies/modelcontextprotocol__sdk.md
+    - npm: https://www.npmjs.com/package/@modelcontextprotocol/sdk
+    - repository: https://github.com/modelcontextprotocol/typescript-sdk
+    - homepage: https://modelcontextprotocol.io
+- autoprefixer
+  - autoprefixer
+    - local: .ouro/technologies/autoprefixer.md
+    - npm: https://www.npmjs.com/package/autoprefixer
+    - repository: https://github.com/postcss/autoprefixer
+    - homepage: https://github.com/postcss/autoprefixer#readme
+- chalk
+  - chalk
+    - local: .ouro/technologies/chalk.md
+    - npm: https://www.npmjs.com/package/chalk
+    - repository: https://github.com/chalk/chalk
+    - homepage: https://github.com/chalk/chalk#readme
+- chokidar
+  - chokidar
+    - local: .ouro/technologies/chokidar.md
+    - npm: https://www.npmjs.com/package/chokidar
+    - repository: https://github.com/paulmillr/chokidar
+    - homepage: https://github.com/paulmillr/chokidar
+- clipboardy
+  - clipboardy
+    - local: .ouro/technologies/clipboardy.md
+    - npm: https://www.npmjs.com/package/clipboardy
+    - repository: https://github.com/sindresorhus/clipboardy
+    - homepage: https://github.com/sindresorhus/clipboardy#readme
+- commander
+  - commander
+    - local: .ouro/technologies/commander.md
+    - npm: https://www.npmjs.com/package/commander
+    - repository: https://github.com/tj/commander.js
+    - homepage: https://github.com/tj/commander.js#readme
+- config-maker
+  - config-maker
+    - local: .ouro/technologies/config-maker.md
+    - npm: https://www.npmjs.com/package/config-maker
+- ESLint
+  - @eslint/js
+    - local: .ouro/technologies/eslint__js.md
+    - npm: https://www.npmjs.com/package/@eslint/js
+    - repository: https://github.com/eslint/eslint
+    - homepage: https://eslint.org
+  - @typescript-eslint/eslint-plugin
+    - local: .ouro/technologies/typescript-eslint__eslint-plugin.md
+    - npm: https://www.npmjs.com/package/@typescript-eslint/eslint-plugin
+    - repository: https://github.com/typescript-eslint/typescript-eslint
+    - homepage: https://typescript-eslint.io/packages/eslint-plugin
+  - @typescript-eslint/parser
+    - local: .ouro/technologies/typescript-eslint__parser.md
+    - npm: https://www.npmjs.com/package/@typescript-eslint/parser
+    - repository: https://github.com/typescript-eslint/typescript-eslint
+    - homepage: https://typescript-eslint.io/packages/parser
+  - eslint
+    - local: .ouro/technologies/eslint.md
+    - npm: https://www.npmjs.com/package/eslint
+    - repository: https://github.com/eslint/eslint
+    - homepage: https://eslint.org
+  - eslint-config-prettier
+    - local: .ouro/technologies/eslint-config-prettier.md
+    - npm: https://www.npmjs.com/package/eslint-config-prettier
+    - repository: https://github.com/prettier/eslint-config-prettier
+    - homepage: https://github.com/prettier/eslint-config-prettier#readme
+  - eslint-plugin-prettier
+    - local: .ouro/technologies/eslint-plugin-prettier.md
+    - npm: https://www.npmjs.com/package/eslint-plugin-prettier
+    - repository: https://github.com/prettier/eslint-plugin-prettier
+    - homepage: https://github.com/prettier/eslint-plugin-prettier#readme
+  - typescript-eslint
+    - local: .ouro/technologies/typescript-eslint.md
+    - npm: https://www.npmjs.com/package/typescript-eslint
+    - repository: https://github.com/typescript-eslint/typescript-eslint
+    - homepage: https://typescript-eslint.io/packages/typescript-eslint
+- glob
+  - glob
+    - local: .ouro/technologies/glob.md
+    - npm: https://www.npmjs.com/package/glob
+    - repository: https://github.com/isaacs/node-glob
+    - homepage: https://github.com/isaacs/node-glob#readme
+- globals
+  - globals
+    - local: .ouro/technologies/globals.md
+    - npm: https://www.npmjs.com/package/globals
+    - repository: https://github.com/sindresorhus/globals
+    - homepage: https://github.com/sindresorhus/globals#readme
+- GraphQL
+  - @aexol/axolotl-graphql-yoga
+    - local: .ouro/technologies/aexol__axolotl-graphql-yoga.md
+    - npm: https://www.npmjs.com/package/@aexol/axolotl-graphql-yoga
+  - @graphql-tools/utils
+    - local: .ouro/technologies/graphql-tools__utils.md
+    - npm: https://www.npmjs.com/package/@graphql-tools/utils
+    - repository: https://github.com/ardatan/graphql-tools
+    - homepage: https://github.com/ardatan/graphql-tools#readme
+  - graphql
+    - local: .ouro/technologies/graphql.md
+    - npm: https://www.npmjs.com/package/graphql
+    - repository: https://github.com/graphql/graphql-js
+    - homepage: https://github.com/graphql/graphql-js
+  - graphql-js-tree
+    - local: .ouro/technologies/graphql-js-tree.md
+    - npm: https://www.npmjs.com/package/graphql-js-tree
+    - repository: https://github.com/graphql-editor/graphql-js-tree
+    - homepage: https://graphqleditor.com
+  - graphql-zeus-core
+    - local: .ouro/technologies/graphql-zeus-core.md
+    - npm: https://www.npmjs.com/package/graphql-zeus-core
+    - repository: https://github.com/graphql-editor/graphql-zeus
+    - homepage: https://github.com/graphql-editor/graphql-zeus#readme
+- GraphQL Yoga
+  - graphql-yoga
+    - local: .ouro/technologies/graphql-yoga.md
+    - npm: https://www.npmjs.com/package/graphql-yoga
+    - repository: https://github.com/graphql-hive/graphql-yoga
+    - homepage: https://github.com/graphql-hive/graphql-yoga#readme
+- Jest
+  - jest
+    - local: .ouro/technologies/jest.md
+    - npm: https://www.npmjs.com/package/jest
+    - repository: https://github.com/jestjs/jest
+    - homepage: https://jestjs.io/
+- jiti
+  - jiti
+    - local: .ouro/technologies/jiti.md
+    - npm: https://www.npmjs.com/package/jiti
+    - repository: https://github.com/unjs/jiti
+    - homepage: https://github.com/unjs/jiti#readme
+- Next.js
+  - next
+    - local: .ouro/technologies/next.md
+    - npm: https://www.npmjs.com/package/next
+    - repository: https://github.com/vercel/next.js
+    - homepage: https://nextjs.org
+- nextra
+  - nextra
+    - local: .ouro/technologies/nextra.md
+    - npm: https://www.npmjs.com/package/nextra
+    - repository: https://github.com/shuding/nextra
+    - homepage: https://github.com/shuding/nextra#readme
+- nextra-theme-docs
+  - nextra-theme-docs
+    - local: .ouro/technologies/nextra-theme-docs.md
+    - npm: https://www.npmjs.com/package/nextra-theme-docs
+    - repository: https://github.com/shuding/nextra
+    - homepage: https://github.com/shuding/nextra#readme
+- node-fetch
+  - node-fetch
+    - local: .ouro/technologies/node-fetch.md
+    - npm: https://www.npmjs.com/package/node-fetch
+    - repository: https://github.com/node-fetch/node-fetch
+    - homepage: https://github.com/node-fetch/node-fetch
+- nodemon
+  - nodemon
+    - local: .ouro/technologies/nodemon.md
+    - npm: https://www.npmjs.com/package/nodemon
+    - repository: https://github.com/remy/nodemon
+    - homepage: https://nodemon.io
+- openai
+  - openai
+    - local: .ouro/technologies/openai.md
+    - npm: https://www.npmjs.com/package/openai
+    - repository: https://github.com/openai/openai-node
+- ora
+  - ora
+    - local: .ouro/technologies/ora.md
+    - npm: https://www.npmjs.com/package/ora
+    - repository: https://github.com/sindresorhus/ora
+    - homepage: https://github.com/sindresorhus/ora#readme
+- Playwright
+  - playwright
+    - local: .ouro/technologies/playwright.md
+    - npm: https://www.npmjs.com/package/playwright
+    - repository: https://github.com/microsoft/playwright
+    - homepage: https://playwright.dev
+- postcss
+  - postcss
+    - local: .ouro/technologies/postcss.md
+    - npm: https://www.npmjs.com/package/postcss
+    - repository: https://github.com/postcss/postcss
+    - homepage: https://postcss.org/
+- Prettier
+  - prettier
+    - local: .ouro/technologies/prettier.md
+    - npm: https://www.npmjs.com/package/prettier
+    - repository: https://github.com/prettier/prettier
+    - homepage: https://prettier.io
+- React
+  - react
+    - local: .ouro/technologies/react.md
+    - npm: https://www.npmjs.com/package/react
+    - repository: https://github.com/facebook/react
+    - homepage: https://react.dev/
+  - react-dom
+    - local: .ouro/technologies/react-dom.md
+    - npm: https://www.npmjs.com/package/react-dom
+    - repository: https://github.com/facebook/react
+    - homepage: https://react.dev/
+- sass
+  - sass
+    - local: .ouro/technologies/sass.md
+    - npm: https://www.npmjs.com/package/sass
+    - repository: https://github.com/sass/dart-sass
+    - homepage: https://github.com/sass/dart-sass
+- tailwindcss
+  - tailwindcss
+    - local: .ouro/technologies/tailwindcss.md
+    - npm: https://www.npmjs.com/package/tailwindcss
+    - repository: https://github.com/tailwindlabs/tailwindcss
+    - homepage: https://tailwindcss.com
+- ts-node
+  - ts-node
+    - local: .ouro/technologies/ts-node.md
+    - npm: https://www.npmjs.com/package/ts-node
+    - repository: https://github.com/TypeStrong/ts-node
+    - homepage: https://typestrong.org/ts-node
+- ts-patch
+  - ts-patch
+    - local: .ouro/technologies/ts-patch.md
+    - npm: https://www.npmjs.com/package/ts-patch
+    - repository: ssh://git@github.com/nonara/ts-patch
+    - homepage: https://github.com/nonara/ts-patch#readme
+- tsx
+  - tsx
+    - local: .ouro/technologies/tsx.md
+    - npm: https://www.npmjs.com/package/tsx
+    - repository: https://github.com/privatenumber/tsx
+    - homepage: https://tsx.is
+- TypeScript
+  - typescript
+    - local: .ouro/technologies/typescript.md
+    - npm: https://www.npmjs.com/package/typescript
+    - repository: https://github.com/microsoft/TypeScript
+    - homepage: https://www.typescriptlang.org/
+- typescript-transform-paths
+  - typescript-transform-paths
+    - local: .ouro/technologies/typescript-transform-paths.md
+    - npm: https://www.npmjs.com/package/typescript-transform-paths
+    - repository: https://github.com/LeDDGroup/typescript-transform-paths
+    - homepage: https://github.com/LeDDGroup/typescript-transform-paths#readme
+- wrangler
+  - wrangler
+    - local: .ouro/technologies/wrangler.md
+    - npm: https://www.npmjs.com/package/wrangler
+    - repository: https://github.com/cloudflare/workers-sdk
+    - homepage: https://github.com/cloudflare/workers-sdk#readme
+- ws
+  - ws
+    - local: .ouro/technologies/ws.md
+    - npm: https://www.npmjs.com/package/ws
+    - repository: https://github.com/websockets/ws
+    - homepage: https://github.com/websockets/ws

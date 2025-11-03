@@ -4,7 +4,7 @@ Internal maintenance scripts for the monorepo. The current tool synchronizes pac
 
 ## What’s here
 
-- `src/packages.ts` – bumps each package.json version to the root version and rewrites internal deps to `^<rootVersion>` for packages found in `packages/`, `adapters/`, `modularium/`, and `examples/`.
+- `src/packages.ts` – bumps each package.json version to the root version and rewrites internal deps to `^<rootVersion>` for packages found in `packages/`, `adapters/`, and `examples/`.
 
 ## Run
 

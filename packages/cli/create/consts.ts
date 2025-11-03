@@ -1,7 +1,7 @@
 export const MESSAGE_BRAKE = `~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`;
 export const BASE_REPOSITORY = `https://github.com/aexol-studio/axolotl.git`;
 
-export type STARTERS = 'yoga' | 'apollo' | 'deno-yoga' | 'federation-yoga';
+export type STARTERS = 'yoga' | 'deno-yoga' | 'federation-yoga';
 type T = {
   [key in STARTERS]: {
     example: string;
@@ -27,10 +27,5 @@ export const STARTER_DICT: T = {
     repo: 'axolotl-starter-deno-yoga',
     description: 'GraphQL Yoga starter',
     isDeno: true,
-  },
-  apollo: {
-    example: 'examples/beerpub-apollo-server',
-    repo: 'axolotl-starter-apollo',
-    description: 'GraphQL Apollo server starter',
   },
 };

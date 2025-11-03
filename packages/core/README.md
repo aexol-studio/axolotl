@@ -18,7 +18,7 @@ See `packages/core/index.ts:1` for exports and `packages/core/types.ts:1` for ty
 ## When To Use
 
 - Building GraphQL servers with strong typing over your schema
-- Sharing common logic across adapters (Yoga, Apollo) and examples
+- Sharing common logic across adapters (Node.js Yoga, Deno Yoga) and examples
 
 ## Develop
 

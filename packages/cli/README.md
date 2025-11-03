@@ -20,7 +20,7 @@ Environment for AI commands is read via `@aexol/axolotl-config` (see `packages/c
 - Global: `npm i -g @aexol/axolotl`
 - Local via npx: `npx @aexol/axolotl <command>`
 
-Examples use these scripts in workspaces under `examples/` and `modularium/`.
+Examples use these scripts in the workspaces under `examples/`.
 
 ## Develop
 

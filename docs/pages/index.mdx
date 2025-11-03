@@ -16,8 +16,7 @@ From the [GraphQL Editor](https://graphqleditor.com/) and [Aexol Studio](http://
         [
           "axolotl",
           "axolotl-core",
-          "axolotl-graphql-yoga",
-          "axolotl-apollo-server"
+          "axolotl-graphql-yoga"
         ]
         .map(p => `@aexol/${p}`)
         .map(p => encodeURIComponent(p))
@@ -38,12 +37,11 @@ schema spelunking. When there is no drama, only efficiency remains.
 <br />
 
 - ⚙️ Generates models at runtime during development - which ensures type safety
-- 🏃 Enables seamless migration between different GraphQL Servers like GraphQL Yoga and Apollo Server
+- 🏃 Ships with a GraphQL Yoga adapter for rapid schema-first development
 - 🤓 Lets you write your own adapters for various purposes
 - 🐙 Supports micro-federation! It allows to merge different schemas and resolvers inside one repository.
 - 🦕 Supports Deno from version 0.2.7. It works with Deno in production.
 - 😂 Is very easy to set up, start and integrate. You just need to `npx @aexol/axolotl create-yoga`
-- 🦎 includes modularium, a package with installable GraphQL schemas with backend
 
 
 <br />
@@ -73,8 +71,8 @@ runtime details for your chosen server.
 |:---|:---| 
 | Adapters      | To develop adapters for popular nodejs frameworks | 
 | Examples      | To experiment with axolotl and its packages      |
-| Modularium      | Installable code chunks for your project      |
 | Micro-federation | To use the micro-federation feature in axolotl <br /> <br /> - Micro-federation means that all the modules are located within one project or one monorepo **or** are distributed as npm packages <br /> - The axolotl projects are merged to the supergraph later|
+| Docs      | Documentation site and agent guide (`docs/agent-guide.md`)      |
 
 <br />
 
@@ -99,5 +97,5 @@ Build workspaces in order:
 
 Run an example:
 ```sh
- npm run start -w examples/beerpub-yoga
+npm run start -w examples/yoga-federated
 ```
