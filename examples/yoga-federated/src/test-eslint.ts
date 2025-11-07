@@ -1,7 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
-export type Scalars = unknown;
+export type Secret = unknown;
+
+export type Scalars = {
+  ['Secret']: unknown;
+};
 
 export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> = {
   ['Todo']: {
@@ -12,6 +15,9 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
       args: Record<string, never>;
     };
     done: {
+      args: Record<string, never>;
+    };
+    secret: {
       args: Record<string, never>;
     };
   };
@@ -32,6 +38,7 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
     createTodo: {
       args: {
         content: string;
+        secret?: S['Secret'] | undefined | null;
       };
     };
     todoOps: {
@@ -95,6 +102,7 @@ export interface Todo<S extends { [P in keyof Scalars]: any } = { [P in keyof Sc
   _id: string;
   content: string;
   done?: boolean | undefined | null;
+  secret?: S['Secret'] | undefined | null;
 }
 export interface TodoOps<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   markDone?: boolean | undefined | null;

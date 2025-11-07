@@ -1,4 +1,9 @@
-export type Models = {
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+export type Scalars = unknown;
+
+export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> = {
   ['Todo']: {
     _id: {
       args: Record<string, never>;
@@ -44,26 +49,24 @@ export type Models = {
   };
 };
 
-export type Directives = unknown;
+export type Directives<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> = unknown;
 
-export type Scalars = unknown;
-
-export interface Todo {
+export interface Todo<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   _id: string;
   content: string;
   done?: boolean | undefined | null;
 }
-export interface User {
+export interface User<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   _id: string;
 }
-export interface TodoOps {
+export interface TodoOps<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   markDone?: boolean | undefined | null;
 }
-export interface AuthorizedUserMutation {
+export interface AuthorizedUserMutation<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   createTodo: string;
   todoOps: TodoOps;
 }
-export interface AuthorizedUserQuery {
+export interface AuthorizedUserQuery<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   todos?: Array<Todo> | undefined | null;
   todo: Todo;
 }

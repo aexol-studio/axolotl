@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { GraphQLScalarType } from 'graphql';
 
 export type ResolverFunction<InputType> = (input: InputType, args?: any) => any | undefined | Promise<any | undefined>;
@@ -23,8 +24,15 @@ export type ObjectsUnknown<InputType, DirectiveType> = {
   scalars?: ScalarsUnknown;
 };
 
-export interface CustomHandler<InputType, ArgumentsType = unknown> {
-  (input: InputType, args: ArgumentsType extends { args: infer R } ? R : never): any;
+export interface CustomHandler<InputType, ArgumentsType = unknown, ScalarModels = unknown> {
+  (
+    input: InputType,
+    args: ArgumentsType extends { args: infer R }
+      ? {
+          [K in keyof R]: K extends keyof ScalarModels ? ScalarModels[K] : R[K];
+        }
+      : never,
+  ): any;
 }
 export interface CustomMiddlewareHandler<InputType> {
   (input: InputType): Promise<InputType>;

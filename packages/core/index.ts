@@ -23,7 +23,9 @@ export const Axolotl =
     type Dir = InferAdapterTypeDirectives<ADAPTER>;
     type Resolvers = {
       [P in keyof Models]?: {
-        [T in keyof Models[P]]?: CustomHandler<Inp, Models[P][T]> | InternalSubscriptionHandler<Inp, Models[P][T]>;
+        [T in keyof Models[P]]?:
+          | CustomHandler<Inp, Models[P][T], ScalarModels>
+          | InternalSubscriptionHandler<Inp, Models[P][T]>;
       };
     };
     type Scalars = {

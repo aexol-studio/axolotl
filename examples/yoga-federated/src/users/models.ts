@@ -1,4 +1,9 @@
-export type Models = {
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+export type Scalars = unknown;
+
+export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> = {
   ['User']: {
     _id: {
       args: Record<string, never>;
@@ -50,28 +55,26 @@ export type Models = {
   };
 };
 
-export type Directives = unknown;
+export type Directives<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> = unknown;
 
-export type Scalars = unknown;
-
-export interface User {
+export interface User<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   _id: string;
   username: string;
 }
-export interface Mutation {
+export interface Mutation<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   user: AuthorizedUserMutation;
   login: string;
   register: string;
 }
-export interface Subscription {
+export interface Subscription<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   countdown: number;
 }
-export interface Query {
+export interface Query<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   user: AuthorizedUserQuery;
 }
-export interface AuthorizedUserMutation {
+export interface AuthorizedUserMutation<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   changePassword?: boolean | undefined | null;
 }
-export interface AuthorizedUserQuery {
+export interface AuthorizedUserQuery<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   me: User;
 }

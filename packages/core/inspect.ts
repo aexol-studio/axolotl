@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ResolversUnknown } from '@/types';
 import { Parser, ScalarTypes, TypeDefinition, compileType, getTypeName } from 'graphql-js-tree';
 import { readFileSync } from 'node:fs';
