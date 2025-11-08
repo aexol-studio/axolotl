@@ -59,6 +59,7 @@ const generateFiles = (options: ProjectOptions) => {
   });
   const generationMessage = `Models in path "${options.models}" have been generated.`;
   console.log(chalk.greenBright(generationMessage));
+  superGraphSchema = superGraphSchema || readFileSync(options.schema, 'utf-8');
   if (options.zeus?.length) {
     options.zeus.forEach((z) => {
       generateZeusSchema(z.schema ? readFileSync(z.schema, 'utf-8') : superGraphSchema, z.generationPath, {
