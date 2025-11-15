@@ -5,8 +5,12 @@ type Todo{
 }
 
 type TodoOps{
-	markDone: Boolean
+	markDone: Boolean @resolver
 }
+
+scalar Secret
+
+directive @resolver on FIELD_DEFINITION
 
 type User{
 	_id: String!
@@ -16,25 +20,30 @@ type User{
 type AuthorizedUserMutation{
 	createTodo(
 		content: String!
-	): String!
+		secret: Secret
+	): String! @resolver
 	todoOps(
 		_id: String!
-	): TodoOps!
+	): TodoOps! @resolver
 	changePassword(
 		newPassword: String!
 	): Boolean
 }
 
 type AuthorizedUserQuery{
-	todos: [Todo!]
+	todos: [Todo!] @resolver
 	todo(
 		_id: String!
-	): Todo!
+	): Todo! @resolver
 	me: User!
 }
 
+type Query{
+	user: AuthorizedUserQuery @resolver
+}
+
 type Mutation{
-	user: AuthorizedUserMutation!
+	user: AuthorizedUserMutation @resolver
 	login(
 		username: String!
 		password: String!
@@ -49,10 +58,6 @@ type Subscription{
 	countdown(
 		from: Int!
 	): Int!
-}
-
-type Query{
-	user: AuthorizedUserQuery!
 }
 
 schema{

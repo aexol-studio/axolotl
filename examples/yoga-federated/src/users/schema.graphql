@@ -1,25 +1,44 @@
-type User {
+type User{
 	_id: String!
 	username: String!
 }
 
 type Mutation{
-	user: AuthorizedUserMutation!
-	login(username:String!, password:String!): String!
-	register(username:String!, password: String!): String!
-}
-
-type Subscription{
-	countdown(from: Int!): Int!
+	user: AuthorizedUserMutation! @resolver
+	login(
+		username: String!
+		password: String!
+	): String! @resolver
+	register(
+		username: String!
+		password: String!
+	): String! @resolver
 }
 
 type Query{
-	user: AuthorizedUserQuery!
+	user: AuthorizedUserQuery! @resolver
 }
 
 type AuthorizedUserMutation{
-	changePassword(newPassword:String!): Boolean
+	changePassword(
+		newPassword: String!
+	): Boolean @resolver
 }
+
 type AuthorizedUserQuery{
-	me: User!
+	me: User! @resolver
+}
+
+directive @resolver on FIELD_DEFINITION
+
+schema{
+	query: Query
+	mutation: Mutation
+	subscription: Subscription
+}
+
+type Subscription{
+	countdown(
+		from: Int
+	): Int @resolver
 }

@@ -1066,6 +1066,7 @@ export const $ = <Type extends GraphQLVariableType, Name extends string>(name: N
 };
 type ZEUS_INTERFACES = never
 export type ScalarCoders = {
+	Secret?: ScalarResolver;
 	ID?: ScalarResolver;
 }
 type ZEUS_UNIONS = never
@@ -1083,6 +1084,7 @@ export type ValueTypes = {
 		__typename?: boolean | `@${string}`,
 	['...on TodoOps']?: Omit<ValueTypes["TodoOps"], "...on TodoOps">
 }>;
+	["Secret"]:unknown;
 	["User"]: AliasType<{
 	_id?:boolean | `@${string}`,
 	username?:boolean | `@${string}`,
@@ -1090,7 +1092,7 @@ export type ValueTypes = {
 	['...on User']?: Omit<ValueTypes["User"], "...on User">
 }>;
 	["AuthorizedUserMutation"]: AliasType<{
-createTodo?: [{	content: string | Variable<any, string>},boolean | `@${string}`],
+createTodo?: [{	content: string | Variable<any, string>,	secret?: ValueTypes["Secret"] | undefined | null | Variable<any, string>},boolean | `@${string}`],
 todoOps?: [{	_id: string | Variable<any, string>},ValueTypes["TodoOps"]],
 changePassword?: [{	newPassword: string | Variable<any, string>},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`,
@@ -1103,6 +1105,11 @@ todo?: [{	_id: string | Variable<any, string>},ValueTypes["Todo"]],
 		__typename?: boolean | `@${string}`,
 	['...on AuthorizedUserQuery']?: Omit<ValueTypes["AuthorizedUserQuery"], "...on AuthorizedUserQuery">
 }>;
+	["Query"]: AliasType<{
+	user?:ValueTypes["AuthorizedUserQuery"],
+		__typename?: boolean | `@${string}`,
+	['...on Query']?: Omit<ValueTypes["Query"], "...on Query">
+}>;
 	["Mutation"]: AliasType<{
 	user?:ValueTypes["AuthorizedUserMutation"],
 login?: [{	username: string | Variable<any, string>,	password: string | Variable<any, string>},boolean | `@${string}`],
@@ -1114,11 +1121,6 @@ register?: [{	username: string | Variable<any, string>,	password: string | Varia
 countdown?: [{	from: number | Variable<any, string>},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`,
 	['...on Subscription']?: Omit<ValueTypes["Subscription"], "...on Subscription">
-}>;
-	["Query"]: AliasType<{
-	user?:ValueTypes["AuthorizedUserQuery"],
-		__typename?: boolean | `@${string}`,
-	['...on Query']?: Omit<ValueTypes["Query"], "...on Query">
 }>;
 	["ID"]:unknown
   }
@@ -1134,13 +1136,14 @@ export type ResolverInputTypes = {
 	markDone?:boolean | `@${string}`,
 		__typename?: boolean | `@${string}`
 }>;
+	["Secret"]:unknown;
 	["User"]: AliasType<{
 	_id?:boolean | `@${string}`,
 	username?:boolean | `@${string}`,
 		__typename?: boolean | `@${string}`
 }>;
 	["AuthorizedUserMutation"]: AliasType<{
-createTodo?: [{	content: string},boolean | `@${string}`],
+createTodo?: [{	content: string,	secret?: ResolverInputTypes["Secret"] | undefined | null},boolean | `@${string}`],
 todoOps?: [{	_id: string},ResolverInputTypes["TodoOps"]],
 changePassword?: [{	newPassword: string},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`
@@ -1151,6 +1154,10 @@ todo?: [{	_id: string},ResolverInputTypes["Todo"]],
 	me?:ResolverInputTypes["User"],
 		__typename?: boolean | `@${string}`
 }>;
+	["Query"]: AliasType<{
+	user?:ResolverInputTypes["AuthorizedUserQuery"],
+		__typename?: boolean | `@${string}`
+}>;
 	["Mutation"]: AliasType<{
 	user?:ResolverInputTypes["AuthorizedUserMutation"],
 login?: [{	username: string,	password: string},boolean | `@${string}`],
@@ -1159,10 +1166,6 @@ register?: [{	username: string,	password: string},boolean | `@${string}`],
 }>;
 	["Subscription"]: AliasType<{
 countdown?: [{	from: number},boolean | `@${string}`],
-		__typename?: boolean | `@${string}`
-}>;
-	["Query"]: AliasType<{
-	user?:ResolverInputTypes["AuthorizedUserQuery"],
 		__typename?: boolean | `@${string}`
 }>;
 	["schema"]: AliasType<{
@@ -1183,6 +1186,7 @@ export type ModelTypes = {
 	["TodoOps"]: {
 		markDone?: boolean | undefined | null
 };
+	["Secret"]:any;
 	["User"]: {
 		_id: string,
 	username: string
@@ -1197,16 +1201,16 @@ export type ModelTypes = {
 	todo: ModelTypes["Todo"],
 	me: ModelTypes["User"]
 };
+	["Query"]: {
+		user?: ModelTypes["AuthorizedUserQuery"] | undefined | null
+};
 	["Mutation"]: {
-		user: ModelTypes["AuthorizedUserMutation"],
+		user?: ModelTypes["AuthorizedUserMutation"] | undefined | null,
 	login: string,
 	register: string
 };
 	["Subscription"]: {
 		countdown: number
-};
-	["Query"]: {
-		user: ModelTypes["AuthorizedUserQuery"]
 };
 	["schema"]: {
 	query?: ModelTypes["Query"] | undefined | null,
@@ -1229,6 +1233,7 @@ export type GraphQLTypes = {
 	markDone?: boolean | undefined | null,
 	['...on TodoOps']: Omit<GraphQLTypes["TodoOps"], "...on TodoOps">
 };
+	["Secret"]: "scalar" & { name: "Secret" };
 	["User"]: {
 	__typename: "User",
 	_id: string,
@@ -1249,9 +1254,14 @@ export type GraphQLTypes = {
 	me: GraphQLTypes["User"],
 	['...on AuthorizedUserQuery']: Omit<GraphQLTypes["AuthorizedUserQuery"], "...on AuthorizedUserQuery">
 };
+	["Query"]: {
+	__typename: "Query",
+	user?: GraphQLTypes["AuthorizedUserQuery"] | undefined | null,
+	['...on Query']: Omit<GraphQLTypes["Query"], "...on Query">
+};
 	["Mutation"]: {
 	__typename: "Mutation",
-	user: GraphQLTypes["AuthorizedUserMutation"],
+	user?: GraphQLTypes["AuthorizedUserMutation"] | undefined | null,
 	login: string,
 	register: string,
 	['...on Mutation']: Omit<GraphQLTypes["Mutation"], "...on Mutation">
@@ -1261,15 +1271,11 @@ export type GraphQLTypes = {
 	countdown: number,
 	['...on Subscription']: Omit<GraphQLTypes["Subscription"], "...on Subscription">
 };
-	["Query"]: {
-	__typename: "Query",
-	user: GraphQLTypes["AuthorizedUserQuery"],
-	['...on Query']: Omit<GraphQLTypes["Query"], "...on Query">
-};
 	["ID"]: "scalar" & { name: "ID" }
     }
 
 
 type ZEUS_VARIABLES = {
+	["Secret"]: ValueTypes["Secret"];
 	["ID"]: ValueTypes["ID"];
 }

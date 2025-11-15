@@ -32,3 +32,16 @@ type AuthorizedUserQuery{
 scalar Secret
 
 directive @resolver on FIELD_DEFINITION
+
+type Query{
+	user: AuthorizedUserQuery @resolver
+}
+
+schema{
+	query: Query
+	mutation: Mutation
+}
+
+type Mutation{
+	user: AuthorizedUserMutation @resolver
+}

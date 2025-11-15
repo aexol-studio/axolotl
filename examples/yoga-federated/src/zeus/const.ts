@@ -1,9 +1,10 @@
 /* eslint-disable */
 
 export const AllTypesProps: Record<string,any> = {
+	Secret: `scalar.Secret` as const,
 	AuthorizedUserMutation:{
 		createTodo:{
-
+			secret:"Secret"
 		},
 		todoOps:{
 
@@ -42,6 +43,10 @@ export const ReturnTypes: Record<string,any> = {
 	TodoOps:{
 		markDone:"Boolean"
 	},
+	Secret: `scalar.Secret` as const,
+	resolver:{
+
+	},
 	User:{
 		_id:"String",
 		username:"String"
@@ -56,6 +61,9 @@ export const ReturnTypes: Record<string,any> = {
 		todo:"Todo",
 		me:"User"
 	},
+	Query:{
+		user:"AuthorizedUserQuery"
+	},
 	Mutation:{
 		user:"AuthorizedUserMutation",
 		login:"String",
@@ -63,9 +71,6 @@ export const ReturnTypes: Record<string,any> = {
 	},
 	Subscription:{
 		countdown:"Int"
-	},
-	Query:{
-		user:"AuthorizedUserQuery"
 	},
 	ID: `scalar.ID` as const
 }
