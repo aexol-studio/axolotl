@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { chaos, generateModels, inspectResolvers, createSuperGraph } from '@aexol/axolotl-core';
+import { chaos, generateModels, inspectResolvers, createSuperGraph, generateResolvers } from '@aexol/axolotl-core';
 import { createApp } from './create/index.js';
 import { watch } from 'chokidar';
 import chalk from 'chalk';
-import { mkdir, readFileSync, writeFile, writeFileSync } from 'node:fs';
+import { existsSync, mkdir, readFileSync, writeFile, writeFileSync } from 'node:fs';
 import { config, ProjectOptions } from '@aexol/axolotl-config';
 import * as path from 'node:path';
 import { TranslateGraphQL, TranslateOptions } from 'graphql-zeus-core';
@@ -204,6 +204,91 @@ program
       fragmentsPerType: Number(options.fragments) || 2,
     });
   });
+const generateResolversForSchema = (schemaPath: string, outputBaseDir: string): void => {
+  // Read schema file
+  const schemaContent = readFileSync(schemaPath, 'utf-8');
+
+  // Generate resolver files
+  const files = generateResolvers(schemaContent);
+
+  if (files.length === 0) {
+    console.log(chalk.yellowBright(`  No @resolver directives found in ${schemaPath}`));
+    return;
+  }
+
+  // Process each generated file
+  files.forEach((file) => {
+    const fullPath = path.join(outputBaseDir, file.name);
+    const shouldWrite = file.replace || !existsSync(fullPath);
+
+    if (shouldWrite) {
+      writeFileRecursive(path.dirname(fullPath), path.basename(fullPath), file.content);
+      console.log(chalk.greenBright(`  ✓ ${file.replace ? 'Updated' : 'Created'}: ${fullPath}`));
+    } else {
+      console.log(chalk.gray(`  ⊘ Skipped (exists): ${fullPath}`));
+    }
+  });
+};
+
+program
+  .command('resolvers')
+  .description('Generate resolver boilerplate files from schema with @resolver directives')
+  .action(async () => {
+    try {
+      // Load axolotl config
+      const cfg = await config.get();
+
+      if (!cfg) {
+        console.log(chalk.red('Error: No axolotl.json config found'));
+        process.exit(1);
+      }
+
+      // Check for federation
+      if (cfg.federation?.length) {
+        console.log(chalk.blueBright('Federation detected - generating resolvers for each schema\n'));
+
+        // Process each federated schema
+        cfg.federation.forEach((fed) => {
+          if (!existsSync(fed.schema)) {
+            console.log(chalk.red(`  Schema not found: ${fed.schema}`));
+            return;
+          }
+
+          // Extract base directory from models path
+          const outputBaseDir = path.dirname(fed.models);
+
+          console.log(chalk.bold(`Processing: ${fed.schema}`));
+          generateResolversForSchema(fed.schema, outputBaseDir);
+          console.log('');
+        });
+      } else {
+        // Non-federated mode
+        const schemaPath = cfg.schema;
+
+        if (!schemaPath || !existsSync(schemaPath)) {
+          console.log(chalk.red(`Schema not found: ${schemaPath || 'undefined'}`));
+          process.exit(1);
+        }
+
+        if (!cfg.models) {
+          console.log(chalk.red('Error: models path not defined in axolotl.json'));
+          process.exit(1);
+        }
+
+        // Extract base directory from models path
+        const outputBaseDir = path.dirname(cfg.models);
+
+        console.log(chalk.blueBright('Generating resolvers for schema\n'));
+        generateResolversForSchema(schemaPath, outputBaseDir);
+      }
+
+      console.log(chalk.greenBright('✓ Resolver generation complete'));
+    } catch (error) {
+      console.log(chalk.red(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`));
+      process.exit(1);
+    }
+  });
+
 createApp(program);
 
 program.parse();

@@ -9,24 +9,26 @@ type User{
 }
 
 type TodoOps{
-	markDone: Boolean
+	markDone: Boolean @resolver
 }
 
 type AuthorizedUserMutation{
 	createTodo(
 		content: String!
 		secret: Secret
-	): String!
+	): String! @resolver
 	todoOps(
 		_id: String!
-	): TodoOps!
+	): TodoOps! @resolver
 }
 
 type AuthorizedUserQuery{
-	todos: [Todo!]
+	todos: [Todo!] @resolver
 	todo(
 		_id: String!
-	): Todo!
+	): Todo! @resolver
 }
 
 scalar Secret
+
+directive @resolver on FIELD_DEFINITION

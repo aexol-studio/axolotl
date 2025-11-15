@@ -111,3 +111,4 @@ export * from '@/gen.js';
 export * from '@/inspect.js';
 export * from '@/federation.js';
 export * from '@/subscription.js';
+export * from '@/resolversGenerator.js';
