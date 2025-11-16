@@ -88,7 +88,7 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
   ['Subscription']: {
     countdown: {
       args: {
-        from: number;
+        from?: number | undefined | null;
       };
     };
   };
@@ -131,5 +131,5 @@ export interface Mutation<S extends { [P in keyof Scalars]: any } = { [P in keyo
   register: string;
 }
 export interface Subscription<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
-  countdown: number;
+  countdown?: number | undefined | null;
 }

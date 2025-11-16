@@ -29,13 +29,6 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
       };
     };
   };
-  ['Subscription']: {
-    countdown: {
-      args: {
-        from: number;
-      };
-    };
-  };
   ['Query']: {
     user: {
       args: Record<string, never>;
@@ -53,9 +46,20 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
       args: Record<string, never>;
     };
   };
+  ['Subscription']: {
+    countdown: {
+      args: {
+        from?: number | undefined | null;
+      };
+    };
+  };
 };
 
-export type Directives<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> = unknown;
+export type Directives<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> = {
+  resolver: {
+    args: Record<string, never>;
+  };
+};
 
 export interface User<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   _id: string;
@@ -66,9 +70,6 @@ export interface Mutation<S extends { [P in keyof Scalars]: any } = { [P in keyo
   login: string;
   register: string;
 }
-export interface Subscription<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
-  countdown: number;
-}
 export interface Query<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   user: AuthorizedUserQuery;
 }
@@ -77,4 +78,7 @@ export interface AuthorizedUserMutation<S extends { [P in keyof Scalars]: any } 
 }
 export interface AuthorizedUserQuery<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   me: User;
+}
+export interface Subscription<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
+  countdown?: number | undefined | null;
 }

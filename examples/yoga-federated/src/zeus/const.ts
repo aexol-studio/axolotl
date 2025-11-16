@@ -44,9 +44,6 @@ export const ReturnTypes: Record<string,any> = {
 		markDone:"Boolean"
 	},
 	Secret: `scalar.Secret` as const,
-	resolver:{
-
-	},
 	User:{
 		_id:"String",
 		username:"String"
@@ -60,6 +57,9 @@ export const ReturnTypes: Record<string,any> = {
 		todos:"Todo",
 		todo:"Todo",
 		me:"User"
+	},
+	resolver:{
+
 	},
 	Query:{
 		user:"AuthorizedUserQuery"

@@ -1118,7 +1118,7 @@ register?: [{	username: string | Variable<any, string>,	password: string | Varia
 	['...on Mutation']?: Omit<ValueTypes["Mutation"], "...on Mutation">
 }>;
 	["Subscription"]: AliasType<{
-countdown?: [{	from: number | Variable<any, string>},boolean | `@${string}`],
+countdown?: [{	from?: number | undefined | null | Variable<any, string>},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`,
 	['...on Subscription']?: Omit<ValueTypes["Subscription"], "...on Subscription">
 }>;
@@ -1165,7 +1165,7 @@ register?: [{	username: string,	password: string},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`
 }>;
 	["Subscription"]: AliasType<{
-countdown?: [{	from: number},boolean | `@${string}`],
+countdown?: [{	from?: number | undefined | null},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`
 }>;
 	["schema"]: AliasType<{
@@ -1210,7 +1210,7 @@ export type ModelTypes = {
 	register: string
 };
 	["Subscription"]: {
-		countdown: number
+		countdown?: number | undefined | null
 };
 	["schema"]: {
 	query?: ModelTypes["Query"] | undefined | null,
@@ -1268,7 +1268,7 @@ export type GraphQLTypes = {
 };
 	["Subscription"]: {
 	__typename: "Subscription",
-	countdown: number,
+	countdown?: number | undefined | null,
 	['...on Subscription']: Omit<GraphQLTypes["Subscription"], "...on Subscription">
 };
 	["ID"]: "scalar" & { name: "ID" }
