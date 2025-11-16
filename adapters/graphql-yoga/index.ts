@@ -11,18 +11,9 @@ export type SchemaMapper = (
   schema: GraphQLSchemaWithContext<YogaInitialContext>,
   getDirective: typeof getDirectiveFn,
 ) => SchemaMapperInitial;
-type UnwrapValue<T> = T extends (...args: any[]) => infer R ? (R extends Promise<infer PR> ? PR : R) : T;
-type ResolveContext<T> = { [K in keyof T]: UnwrapValue<T[K]> };
-type ContextDefinition<Ctx> = {
-  [K in keyof Ctx]: Ctx[K] | ((initial: YogaInitialContext) => Ctx[K] | Promise<Ctx[K]>);
-};
 
-export const graphqlYogaWithContextAdapter = <
-  Ctx extends Record<string, any>,
-  ResolvedCtx extends Record<string, any> = ResolveContext<Ctx>,
-  Context = YogaInitialContext & Omit<ResolvedCtx, keyof YogaInitialContext>,
->(
-  customContext?: ContextDefinition<Ctx>,
+export const graphqlYogaWithContextAdapter = <Context extends YogaInitialContext = YogaInitialContext>(
+  customContext?: (initial: YogaInitialContext) => Promise<Context> | Context,
 ) =>
   AxolotlAdapter<[any, any, Context], SchemaMapper>()(
     (
@@ -87,29 +78,25 @@ export const graphqlYogaWithContextAdapter = <
         });
       }
 
-      const yoga = createYoga({
+      const yoga = createYoga<Context>({
         ...options?.yoga,
-        schema: yogaSchema,
+        schema: yogaSchema as any,
         // Build a fresh context per request so users can attach DataLoaders, request-scoped caches, etc.
         context: async (initial) => {
           const extra = options?.context ? await options.context(initial) : {};
-          const hydratedCustomContext = Object.entries(customContext || {}).length
-            ? Object.fromEntries(
-                await Promise.all(
-                  Object.entries(customContext || {}).map(async ([key, value]) => {
-                    if (typeof value === 'function') {
-                      const resolvedValue = await (value as (ctx: YogaInitialContext) => any)(initial);
-                      return [key, resolvedValue];
-                    }
-                    return [key, value];
-                  }),
-                ),
-              )
-            : null;
-          // Merge order: initial (from Yoga) <- customContext (static) <- extra (dynamic)
+
+          // Check if customContext is a function (full context builder)
+          if (customContext) {
+            const fullContext = await customContext(initial);
+            return {
+              ...fullContext,
+              ...extra,
+            } as Context;
+          }
+
+          // No custom context, just return initial + extra
           return {
             ...initial,
-            ...(hydratedCustomContext || {}),
             ...extra,
           } as Context;
         },
@@ -120,4 +107,4 @@ export const graphqlYogaWithContextAdapter = <
     },
   );
 
-export const graphqlYogaAdapter = graphqlYogaWithContextAdapter({});
+export const graphqlYogaAdapter = graphqlYogaWithContextAdapter();
