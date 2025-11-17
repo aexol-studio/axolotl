@@ -70,6 +70,24 @@ const remapPackages = async () => {
       `Updated "${packageJSON.name}" from "${packageJSON.version}" to "${mainVersionJSON.version}" and it's internal dependencies`,
     );
   }
+
+  // Sync docs package.json version
+  const docsPackagePath = path.join(process.cwd(), 'docs', 'package.json');
+  try {
+    const docsPackageString = await fs.readFile(docsPackagePath, 'utf-8');
+    const docsPackageJSON = JSON.parse(docsPackageString) as PackageJSON;
+    if (docsPackageJSON.version !== mainVersionJSON.version) {
+      docsPackageJSON.version = mainVersionJSON.version;
+      await fs.writeFile(docsPackagePath, JSON.stringify(docsPackageJSON, null, 2) + '\n');
+      console.log(`Updated docs version to "${mainVersionJSON.version}"`);
+    }
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    if (err.code !== 'ENOENT') {
+      throw err;
+    }
+    console.warn('docs/package.json not found, skipping version sync');
+  }
 };
 
 remapPackages();
