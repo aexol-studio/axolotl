@@ -1,6 +1,6 @@
 # Data Loaders
 
-DataLoaders batch and cache backend fetches during a single request. Axolotl’s Yoga adapter now supports per‑request context building so you can attach DataLoader instances safely for every request.
+DataLoaders batch and cache backend fetches during a single request. Axolotl's Yoga adapter supports per‑request context building so you can attach DataLoader instances safely for every request.
 
 > Install DataLoader in your project:
 
@@ -10,70 +10,220 @@ npm i dataloader
 
 ## Quick Start (Yoga)
 
-1) Expose loaders in per‑request context using the Yoga adapter `context` option.
+1. Create a context builder function with DataLoader instances.
 
 ```ts filename="src/axolotl.ts"
+import { Models } from '@/src/models.js';
 import { Axolotl } from '@aexol/axolotl-core';
 import { graphqlYogaWithContextAdapter } from '@aexol/axolotl-graphql-yoga';
+import { YogaInitialContext } from 'graphql-yoga';
 import DataLoader from 'dataloader';
+import { PrismaClient } from '@prisma/client';
 
-// Example backend fetcher
+const db = new PrismaClient();
+
+// Example batch function that fetches users by IDs
 async function batchUsers(ids: readonly string[]) {
-  // Replace with DB call that returns users in the same order as ids
-  const rows = await db.users.findMany({ where: { id: { $in: ids as string[] } } });
+  // Replace with your DB call that returns users in the same order as ids
+  const rows = await db.user.findMany({
+    where: { id: { in: ids as string[] } },
+  });
   const byId = new Map(rows.map((u) => [u.id, u]));
   return ids.map((id) => byId.get(id) || null);
 }
 
-export const { applyMiddleware, createResolvers, createDirectives, adapter } = Axolotl(
-  graphqlYogaWithContextAdapter<{ loaders: { userById: DataLoader<string, any> } }>(),
-)();
+// Define your context type with loaders
+type AppContext = YogaInitialContext & {
+  db: PrismaClient;
+  loaders: {
+    userById: DataLoader<string, User | null>;
+  };
+};
 
-export const server = adapter({
-  resolvers: {/* ... */},
-}).server;
+// Build context per request (DataLoaders are created fresh for each request)
+async function buildContext(initial: YogaInitialContext): Promise<AppContext> {
+  return {
+    ...initial, // ✅ Must spread initial context
+    db,
+    loaders: {
+      userById: new DataLoader(batchUsers),
+    },
+  };
+}
 
-// When starting server, pass context builder via adapter options
-// (e.g., in src/index.ts):
-//
-// adapter({ resolvers, /* directives/scalars */ }, {
-//   context: () => ({
-//     loaders: {
-//       userById: new DataLoader(batchUsers),
-//     },
-//   }),
-// }).server.listen(4000)
+// Pass buildContext function to graphqlYogaWithContextAdapter
+export const { createResolvers, createDirectives, createScalars, adapter } = Axolotl(
+  graphqlYogaWithContextAdapter<AppContext>(buildContext),
+)<Models>();
 ```
 
-2) Use loaders in resolvers via `context`.
+2. Use loaders in resolvers via context (`input[2]`).
 
 ```ts filename="src/resolvers.ts"
 import { createResolvers } from '@/src/axolotl.js';
 
 export default createResolvers({
   Query: {
-    user: async (input, args) => {
-      return input[2].loaders.userById.load(args.id);
+    user: async ([, , ctx], { id }) => {
+      // Use DataLoader to batch and cache user lookups
+      return ctx.loaders.userById.load(id);
     },
   },
   Post: {
-    author: (input) => input[2].loaders.userById.load(input.source.authorId),
+    // Nested resolver - prevent N+1 queries when fetching post authors
+    author: ([source, , ctx]) => {
+      return ctx.loaders.userById.load(source.authorId);
+    },
   },
 });
 ```
 
-## Notes
-- Scope loaders per request. Do not share DataLoader instances globally.
-- Compose multiple loaders in the `context` option. The Yoga adapter now builds context per request to support this pattern.
-- You can still pass static values via the first generic argument to `graphqlYogaWithContextAdapter<Ctx>()`. The `context` builder merges with those values on each request.
-- The Axolotl repo ships only the Yoga adapter today. Historical Apollo examples no longer apply.
+## Complete Example
 
-## Example DB Patterns
-- Ensure your batch function returns results in the same order as input keys.
-- Prefer fetching using a single query with `$in` logic and map the results.
-- Return `null` for missing records to preserve order.
+Here's a full working example with multiple loaders:
+
+```ts filename="src/axolotl.ts"
+import { Models } from '@/src/models.js';
+import { Axolotl } from '@aexol/axolotl-core';
+import { graphqlYogaWithContextAdapter } from '@aexol/axolotl-graphql-yoga';
+import { YogaInitialContext } from 'graphql-yoga';
+import DataLoader from 'dataloader';
+import { PrismaClient } from '@prisma/client';
+
+const db = new PrismaClient();
+
+// Batch function for users
+async function batchUsers(ids: readonly string[]) {
+  const users = await db.user.findMany({ where: { id: { in: ids as string[] } } });
+  const userMap = new Map(users.map((u) => [u.id, u]));
+  return ids.map((id) => userMap.get(id) || null);
+}
+
+// Batch function for posts
+async function batchPosts(ids: readonly string[]) {
+  const posts = await db.post.findMany({ where: { id: { in: ids as string[] } } });
+  const postMap = new Map(posts.map((p) => [p.id, p]));
+  return ids.map((id) => postMap.get(id) || null);
+}
+
+// Batch function for posts by author ID
+async function batchPostsByAuthor(authorIds: readonly string[]) {
+  const posts = await db.post.findMany({
+    where: { authorId: { in: authorIds as string[] } },
+  });
+  const postsByAuthor = new Map<string, Post[]>();
+  posts.forEach((post) => {
+    if (!postsByAuthor.has(post.authorId)) {
+      postsByAuthor.set(post.authorId, []);
+    }
+    postsByAuthor.get(post.authorId)!.push(post);
+  });
+  return authorIds.map((id) => postsByAuthor.get(id) || []);
+}
+
+type AppContext = YogaInitialContext & {
+  db: PrismaClient;
+  userId: string | null;
+  loaders: {
+    userById: DataLoader<string, User | null>;
+    postById: DataLoader<string, Post | null>;
+    postsByAuthorId: DataLoader<string, Post[]>;
+  };
+};
+
+async function buildContext(initial: YogaInitialContext): Promise<AppContext> {
+  // Extract user from auth token
+  const token = initial.request.headers.get('authorization');
+  const userId = token ? await verifyToken(token) : null;
+
+  return {
+    ...initial,
+    db,
+    userId,
+    loaders: {
+      userById: new DataLoader(batchUsers),
+      postById: new DataLoader(batchPosts),
+      postsByAuthorId: new DataLoader(batchPostsByAuthor),
+    },
+  };
+}
+
+export const { createResolvers, createDirectives, createScalars, adapter } = Axolotl(
+  graphqlYogaWithContextAdapter<AppContext>(buildContext),
+)<Models>();
+```
+
+```ts filename="src/resolvers.ts"
+import { createResolvers } from '@/src/axolotl.js';
+
+export default createResolvers({
+  Query: {
+    user: async ([, , ctx], { id }) => {
+      return ctx.loaders.userById.load(id);
+    },
+    post: async ([, , ctx], { id }) => {
+      return ctx.loaders.postById.load(id);
+    },
+  },
+  User: {
+    posts: ([source, , ctx]) => {
+      // Batch load all posts for this user
+      return ctx.loaders.postsByAuthorId.load(source.id);
+    },
+  },
+  Post: {
+    author: ([source, , ctx]) => {
+      // Batch load the author
+      return ctx.loaders.userById.load(source.authorId);
+    },
+  },
+});
+```
+
+## Key Points
+
+- **Per-Request Loaders**: DataLoader instances are created fresh for each request inside `buildContext`. This ensures caching is scoped to a single request.
+- **Batch Functions**: Must return results in the same order as input keys. Use a Map to reorder results.
+- **Context Access**: Loaders are accessed via `ctx.loaders` (the third element `input[2]` of the resolver tuple).
+- **Type Safety**: Define your `AppContext` type to get full TypeScript support for loaders.
+
+## Example Batch Function Patterns
+
+### Single Record Lookup
+
+```ts
+async function batchUsers(ids: readonly string[]): Promise<(User | null)[]> {
+  const users = await db.user.findMany({
+    where: { id: { in: ids as string[] } },
+  });
+  const userMap = new Map(users.map((u) => [u.id, u]));
+  // ✅ Return in same order as input, null for missing records
+  return ids.map((id) => userMap.get(id) || null);
+}
+```
+
+### Multiple Records Lookup (One-to-Many)
+
+```ts
+async function batchPostsByAuthor(authorIds: readonly string[]): Promise<Post[][]> {
+  const posts = await db.post.findMany({
+    where: { authorId: { in: authorIds as string[] } },
+  });
+  const postsByAuthor = new Map<string, Post[]>();
+  posts.forEach((post) => {
+    if (!postsByAuthor.has(post.authorId)) {
+      postsByAuthor.set(post.authorId, []);
+    }
+    postsByAuthor.get(post.authorId)!.push(post);
+  });
+  // ✅ Return array of arrays, empty array for authors with no posts
+  return authorIds.map((id) => postsByAuthor.get(id) || []);
+}
+```
 
 ## Troubleshooting
-- “Context is reused across requests”: verify you’re using the adapter `context` option (a function), not a shared object.
-- “N+1 still happening”: confirm all resolvers use the loader access path from context, not direct DB reads.
-- “Types don’t match”: declare your context shape in `graphqlYogaWithContextAdapter<Ctx>()` so TypeScript knows where loaders live.
+
+- **"Context is reused across requests"**: Verify you're passing `buildContext` function to `graphqlYogaWithContextAdapter`, not calling it with empty parentheses `()`.
+- **"N+1 still happening"**: Confirm all nested resolvers use loaders from context (`ctx.loaders`), not direct DB queries.
+- **"Types don't match"**: Define your `AppContext` type that extends `YogaInitialContext` and pass it to `graphqlYogaWithContextAdapter<AppContext>(buildContext)`.
+- **"Wrong order returned"**: Ensure your batch function returns results in the exact same order as the input keys using a Map to reorder.

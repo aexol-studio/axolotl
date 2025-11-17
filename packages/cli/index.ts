@@ -137,37 +137,26 @@ export default resolvers
   )
   .action(async (options) => {
     const schemaPath = options.schema || './schema.graphql';
-    const resolversPath = options.resolvers || './src/resolvers.ts';
+    const resolversPath = options.resolvers || './lib/resolvers.js';
+
     const unImplemented = await inspectResolvers(resolversPath, schemaPath);
-    const unImplementedScalarsBuiltIn = unImplemented.filter((ui) => !!ui[3]);
-    const unImplementedTypes = unImplemented.filter((ui) => !ui[3]);
-    console.log(chalk.bold(chalk.blue('Unimplemented scalar fields:\n')));
-    unImplementedScalarsBuiltIn.forEach(([type, field, compiled]) => {
-      console.log(
-        `${chalk.magenta(type)}.${chalk.blueBright(field)} of type: ${chalk.magentaBright(
-          compiled,
-        )} is not implemented inside axolotl resolvers.`,
-      );
-    });
-    console.log(chalk.bold(chalk.magentaBright('\n\nUnimplemented type fields:\n')));
-    if (unImplementedTypes.length === 0) {
-      console.log(chalk.greenBright('All type fields implemented 🎊'));
+
+    if (unImplemented.length === 0) {
+      console.log(chalk.greenBright('✓ All @resolver directive fields are implemented!'));
+      process.exit(0);
     }
-    unImplementedTypes.forEach(([type, field, compiled]) => {
-      console.log(
-        `${chalk.magenta(type)}.${chalk.blueBright(field)} of type: ${chalk.magentaBright(
-          compiled,
-        )} is not implemented inside axolotl resolvers.`,
-      );
+
+    console.log(chalk.bold(chalk.yellowBright('Resolvers that need implementation:\n')));
+
+    unImplemented.forEach(([type, field, status]) => {
+      const statusIcon = status === 'missing' ? '❌' : '⚠️';
+      const statusText = status === 'missing' ? 'not found' : 'throws "Not implemented"';
+      console.log(`${statusIcon} ${chalk.cyan(type)}.${chalk.magenta(field)} - ${chalk.gray(statusText)}`);
     });
-    console.log(
-      chalk.greenBright(
-        `\nFinished checking resolvers. ${chalk.yellow(
-          `${unImplementedTypes.length} type resolvers not implemented\n${unImplementedScalarsBuiltIn.length} scalar fields resolvers not implemented`,
-        )}. Remember that in GraphQL you don't need to implement resolver for every field.`,
-      ),
-    );
-    process.exit();
+
+    console.log(chalk.white(`\nTotal: ${unImplemented.length} resolver(s) to implement`));
+
+    process.exit(1);
   });
 program
   .command('chaos')

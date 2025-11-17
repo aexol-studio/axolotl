@@ -730,8 +730,43 @@ npx @aexol/axolotl build --cwd path/to/project
 # Generate resolver boilerplate from @resolver directives
 npx @aexol/axolotl resolvers
 
-# Inspect resolvers (find missing/extra resolvers)
-npx @aexol/axolotl inspect -s schema.graphql -r src/resolvers.ts
+
+# Inspect resolvers (find unimplemented @resolver fields)
+npx @aexol/axolotl inspect -s schema.graphql -r lib/resolvers.js
+```
+
+### Inspect Command
+
+The `inspect` command identifies which resolvers marked with `@resolver` directive are not yet implemented:
+
+```bash
+npx @aexol/axolotl inspect -s ./schema.graphql -r ./lib/resolvers.js
+```
+
+**What it does:**
+- Finds all fields marked with `@resolver` directive in your schema
+- Checks if resolvers are missing or still contain stub implementations
+- Reports only unimplemented resolvers (not all schema fields)
+
+**Example output:**
+```
+Resolvers that need implementation:
+
+⚠️ Query.users - throws "Not implemented"
+❌ Mutation.login - not found
+❌ Mutation.register - not found
+
+Total: 3 resolver(s) to implement
+```
+
+**Status indicators:**
+- ✅ All implemented - Command exits with code 0
+- ⚠️ Stub - Resolver exists but throws "Not implemented" error
+- ❌ Missing - No resolver function exists for this field
+
+**Tip:** Use `npx @aexol/axolotl resolvers` to generate stubs, then use `inspect` to track implementation progress.
+
+---
 ```
 
 ---

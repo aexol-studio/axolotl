@@ -1,0 +1,475 @@
+# AI-Assisted Development with Axolotl
+
+Axolotl is designed from the ground up to work seamlessly with AI coding assistants. Its clear patterns, explicit types, and predictable structure make it the perfect framework for AI-assisted GraphQL development.
+
+## Why Axolotl Works Great with AI
+
+### 1. Schema as Source of Truth
+
+AI assistants understand GraphQL schemas naturally. When your schema is the single source of truth, AI tools can generate perfect, type-safe code every time.
+
+```graphql
+type Query {
+  user(id: ID!): User @resolver
+  posts(authorId: ID!, limit: Int = 10): [Post!]! @resolver
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+}
+
+type Post {
+  id: ID!
+  title: String!
+  content: String!
+  author: User!
+}
+```
+
+AI assistants can analyze this schema and generate complete, type-safe resolvers with proper error handling, validation, and best practices.
+
+### 2. Predictable Patterns
+
+Axolotl's resolver signature is consistent and explicit:
+
+```typescript
+createResolvers({
+  Query: {
+    user: async ([source, args, context], { id }) => {
+      // AI knows exactly what's available
+      // - source: parent value
+      // - args: field arguments (typed!)
+      // - context: request context
+      return db.users.findById(id);
+    },
+  },
+});
+```
+
+This consistency helps AI tools learn and replicate patterns across your codebase.
+
+### 3. Full Type Safety
+
+Generated types mean AI assistants always have perfect type information:
+
+```typescript
+// AI knows `id` is string, `limit` is number
+// No guessing, no mistakes
+posts: async ([, , ctx], { authorId, limit }) => {
+  return db.posts.findMany({
+    where: { authorId },
+    take: limit,
+  });
+};
+```
+
+## Working with Popular AI Tools
+
+### GitHub Copilot
+
+GitHub Copilot excels with Axolotl because:
+
+- Schema files provide clear context
+- Generated types give perfect autocomplete
+- Resolver patterns are consistent
+
+**Tip**: Keep your schema file open in a tab when writing resolvers. Copilot will use it for better suggestions.
+
+### Cursor
+
+Cursor's AI works brilliantly with Axolotl:
+
+- Use `Cmd+K` to generate entire resolvers from schema
+- Ask Cursor to "implement all @resolver fields"
+- Reference schema in prompts for accurate results
+
+**Example prompt**:
+
+```
+Implement the user resolver that:
+1. Validates the id parameter
+2. Fetches from database using Prisma
+3. Handles not found errors
+4. Returns User type matching schema
+```
+
+### ChatGPT / Claude
+
+When asking ChatGPT or Claude for help:
+
+1. **Provide your schema**:
+
+```
+I have this GraphQL schema:
+[paste schema]
+
+Help me implement the user resolver with Axolotl
+```
+
+2. **Share your context type**:
+
+```typescript
+type AppContext = YogaInitialContext & {
+  userId: string | null;
+  db: PrismaClient;
+};
+```
+
+3. **Be specific about requirements**:
+
+- Authentication needed?
+- What database are you using?
+- Any specific error handling?
+- Performance requirements?
+
+## Example Prompts Library
+
+### Creating Resolvers
+
+**Basic CRUD**:
+
+```
+Create Axolotl resolvers for a Todo type with:
+- createTodo mutation (title, description)
+- updateTodo mutation (id, title, description)
+- deleteTodo mutation (id)
+- todos query (list all)
+- todo query (get by id)
+
+Use Prisma for database access and include error handling.
+```
+
+**With Authentication**:
+
+```
+Implement the createPost resolver that:
+1. Checks if user is authenticated (ctx.userId)
+2. Validates title and content
+3. Creates post in database
+4. Returns the created post
+5. Throws GraphQLError if not authenticated
+```
+
+**With DataLoader**:
+
+```
+Create a User.posts resolver using DataLoader to:
+1. Batch fetch posts by user ID
+2. Cache results per request
+3. Return empty array if no posts
+4. Handle database errors gracefully
+```
+
+### Adding Features
+
+**Pagination**:
+
+```
+Add pagination to the posts query:
+- cursor-based pagination
+- limit parameter (default 10, max 100)
+- return connection with edges and pageInfo
+- include hasNextPage and endCursor
+```
+
+**Filtering & Sorting**:
+
+```
+Enhance the users query with:
+- filter by role (input type)
+- search by name or email
+- sort by createdAt (ASC/DESC)
+- support multiple filters
+```
+
+**File Upload**:
+
+```
+Create an uploadAvatar mutation that:
+- accepts a File scalar
+- validates file type (jpg, png)
+- uploads to S3
+- updates user record with URL
+- returns updated user
+```
+
+## Best Practices for AI-Assisted Development
+
+### 1. Structure Your Prompts
+
+Good prompt structure:
+
+```
+Context: [Describe your schema and setup]
+Task: [What you want to build]
+Requirements: [Specific needs]
+Constraints: [Limitations or preferences]
+```
+
+### 2. Iterate with AI
+
+Start simple, then enhance:
+
+1. Generate basic resolver
+2. Add error handling
+3. Add validation
+4. Add tests
+5. Optimize performance
+
+### 3. Review AI-Generated Code
+
+Always review AI suggestions:
+
+- ✅ Check type safety
+- ✅ Verify error handling
+- ✅ Ensure security (auth checks)
+- ✅ Test edge cases
+- ✅ Follow project patterns
+
+### 4. Provide Good Context
+
+Help AI help you:
+
+- Keep schema files well-documented
+- Use clear type names
+- Add JSDoc comments
+- Maintain consistent patterns
+- Document custom patterns in your codebase
+
+## Common AI Workflows
+
+### Workflow 1: Schema-First Development
+
+```
+1. Design your schema in schema.graphql
+2. Run: npx @aexol/axolotl build
+3. Ask AI: "Implement all @resolver fields"
+4. Review and test generated code
+5. Iterate on edge cases
+```
+
+### Workflow 2: Feature Addition
+
+```
+1. Update schema with new types/fields
+2. Run: npx @aexol/axolotl build
+3. Ask AI: "Implement [new field] with [requirements]"
+4. Add tests with AI assistance
+5. Update documentation
+```
+
+### Workflow 3: Refactoring
+
+```
+1. Describe current code to AI
+2. Ask: "Refactor this to use DataLoader"
+3. Review changes
+4. Run tests
+5. Deploy incrementally
+```
+
+## Advanced AI Techniques
+
+### Using AI for Testing
+
+```
+Generate tests for the createPost resolver:
+- Test successful creation
+- Test authentication failure
+- Test validation errors
+- Test database errors
+- Use Node's test runner
+```
+
+### Using AI for Documentation
+
+```
+Document this resolver with JSDoc:
+- Describe what it does
+- List parameters
+- Describe return value
+- Add usage example
+- Note any side effects
+```
+
+### Using AI for Optimization
+
+```
+Optimize this resolver for performance:
+- Current: makes 3 DB queries
+- Goal: reduce to 1 query
+- Use: Prisma include
+- Maintain: same return type
+```
+
+## Axolotl-Specific AI Tips
+
+### 1. Reference the Resolver Signature
+
+When asking AI for help, mention:
+
+```
+In Axolotl, resolvers use this signature:
+(input, args) where input = [source, args, context]
+```
+
+### 2. Explain Context Type
+
+Share your context type:
+
+```typescript
+type AppContext = YogaInitialContext & {
+  userId: string | null;
+  db: PrismaClient;
+  loaders: {
+    userById: DataLoader<string, User>;
+  };
+};
+```
+
+### 3. Show Example Patterns
+
+Give AI an example from your codebase:
+
+```typescript
+// Example pattern we use:
+Query: {
+  user: async ([, , ctx], { id }) => {
+    if (!ctx.userId) throw new GraphQLError('Unauthorized');
+    return ctx.db.user.findUnique({ where: { id } });
+  };
+}
+```
+
+## Troubleshooting AI Suggestions
+
+### AI Suggests Wrong Syntax
+
+**Problem**: AI uses old GraphQL Yoga patterns
+
+**Solution**: Remind AI you're using Axolotl:
+
+```
+I'm using Axolotl with graphqlYogaAdapter.
+Please use createResolvers from axolotl.ts
+```
+
+### AI Doesn't Use Generated Types
+
+**Problem**: AI suggests manual type definitions
+
+**Solution**: Point to your models:
+
+```
+Types are generated in src/models.ts
+Import from there, don't create manual types
+```
+
+### AI Forgets Context Type
+
+**Problem**: AI doesn't use context correctly
+
+**Solution**: Share your axolotl.ts setup:
+
+```typescript
+// Our setup in axolotl.ts
+export const { createResolvers } = Axolotl(graphqlYogaWithContextAdapter<AppContext>(buildContext))<
+  Models<Scalars>,
+  Directives
+>();
+```
+
+## Real-World Example
+
+Let's build a complete feature with AI assistance:
+
+### 1. Define Schema
+
+```graphql
+type Query {
+  post(id: ID!): Post @resolver
+  posts(filter: PostFilter, pagination: Pagination): PostConnection! @resolver
+}
+
+type Mutation {
+  createPost(input: CreatePostInput!): Post! @resolver
+  updatePost(id: ID!, input: UpdatePostInput!): Post! @resolver
+  deletePost(id: ID!): Boolean! @resolver
+}
+
+type Post {
+  id: ID!
+  title: String!
+  content: String!
+  author: User! @resolver
+  createdAt: String!
+  updatedAt: String!
+}
+
+input CreatePostInput {
+  title: String!
+  content: String!
+}
+
+input UpdatePostInput {
+  title: String
+  content: String
+}
+
+input PostFilter {
+  authorId: ID
+  search: String
+}
+
+input Pagination {
+  limit: Int = 10
+  offset: Int = 0
+}
+
+type PostConnection {
+  edges: [Post!]!
+  totalCount: Int!
+}
+```
+
+### 2. Prompt for AI
+
+```
+Implement all @resolver fields for the Post feature:
+
+Context:
+- Using Prisma with User and Post models
+- AppContext has userId and db
+- Need authentication for mutations
+- Use DataLoader for Post.author
+
+Requirements:
+- Validate inputs
+- Check auth on mutations
+- Handle not found errors
+- Use GraphQLError for errors
+- Include JSDoc comments
+```
+
+### 3. AI Generates Code
+
+AI will generate complete, type-safe resolvers following Axolotl patterns.
+
+### 4. Review & Test
+
+Review the generated code, add tests, and deploy.
+
+## Conclusion
+
+Axolotl and AI assistants are a perfect match:
+
+- **Clear patterns** → Better AI suggestions
+- **Full type safety** → Fewer errors
+- **Schema-first** → AI understands intent
+- **Consistent structure** → AI learns quickly
+
+Start with simple prompts, provide good context, and iterate. AI can handle the boilerplate while you focus on business logic.
+
+[Get Started →](/getting-started) | [See Examples →](/from-examples) | [Best Practices →](/best-practices)

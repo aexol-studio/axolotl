@@ -4,11 +4,10 @@ We offer carefully crafted starter templates with all the necessary configuratio
 
 ## 📁 Available templates
 
-| Prefix        | Default directory | Documentation                                              |
-| ------------- | ----------------- | ---------------------------------------------------------- |
-| create-yoga   | axolotl-starter-yoga      | [Yoga GraphQL](https://github.com/dotansimha/graphql-yoga) |
-| create-federation-yoga   | axolotl-starter-federation-yoga      | [Yoga GraphQL](https://github.com/dotansimha/graphql-yoga) |
-| create-deno-yoga   | axolotl-starter-deno-yoga      | [Yoga GraphQL](https://github.com/dotansimha/graphql-yoga) · [Deno](https://docs.deno.com) |
+| Prefix                 | Default directory               | Documentation                                                                    |
+| ---------------------- | ------------------------------- | -------------------------------------------------------------------------------- |
+| create-new             | axolotl-starter-new             | [Yoga GraphQL](https://github.com/dotansimha/graphql-yoga)                       |
+| create-federation-yoga | axolotl-starter-federation-yoga | [Yoga GraphQL](https://github.com/dotansimha/graphql-yoga) with micro-federation |
 
 ## 🛫 Installation
 
@@ -20,16 +19,28 @@ The `dir` argument is optional and represents the directory where the project wi
 npx @aexol/axolotl [prefix] [dir]
 ```
 
-For example 
+For example
 
 ```sh
-npx @aexol/axolotl create-yoga my-project
+npx @aexol/axolotl create-new my-project
 ```
 
 Will create the axolotl project using the GraphQL Yoga engine inside `my-project`
 directory — **simple**!
 
 ### 🦕 Deno
+
+This is just a scaffold command but you can run it with deno to :D
+
+```
+deno run --allow-env --allow-write --allow-read npm:@aexol/axolotl [prefix] [dir]
+```
+
+Will create the axolotl project using the GraphQL Yoga engine inside `my-project`
+directory — **simple**!
+
+### 🦕 Deno
+
 This is just a scaffold command but you can run it with deno to :D
 
 ```

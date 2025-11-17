@@ -1,0 +1,534 @@
+# Recipes
+
+Common patterns and solutions for building GraphQL APIs with Axolotl.
+
+## Authentication & Authorization
+
+### JWT Authentication
+
+```typescript
+// src/utils/auth.ts
+import jwt from 'jsonwebtoken';
+import { GraphQLError } from 'graphql';
+
+export function verifyToken(token: string): { userId: string; roles: string[] } | null {
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    return { userId: decoded.userId, roles: decoded.roles || [] };
+  } catch {
+    return null;
+  }
+}
+
+export function generateToken(userId: string, roles: string[]): string {
+  return jwt.sign({ userId, roles }, process.env.JWT_SECRET!, {
+    expiresIn: '7d',
+  });
+}
+
+// src/context.ts
+import { YogaInitialContext } from 'graphql-yoga';
+
+export async function buildContext(initial: YogaInitialContext) {
+  const authHeader = initial.request.headers.get('authorization');
+  const token = authHeader?.replace('Bearer ', '');
+  const auth = token ? verifyToken(token) : null;
+
+  return {
+    ...initial,
+    userId: auth?.userId || null,
+    userRoles: auth?.roles || [],
+  };
+}
+```
+
+### Login/Register Resolvers
+
+```typescript
+import { createResolvers } from '@/src/axolotl.js';
+import { GraphQLError } from 'graphql';
+import bcrypt from 'bcrypt';
+
+export default createResolvers({
+  Mutation: {
+    register: async ([, , ctx], { input }) => {
+      // Validate
+      if (input.password.length < 8) {
+        throw new GraphQLError('Password must be at least 8 characters');
+      }
+
+      // Check existing
+      const existing = await ctx.db.user.findUnique({
+        where: { email: input.email },
+      });
+
+      if (existing) {
+        throw new GraphQLError('Email already registered', {
+          extensions: { code: 'CONFLICT' },
+        });
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(input.password, 10);
+
+      // Create user
+      const user = await ctx.db.user.create({
+        data: {
+          email: input.email,
+          username: input.username,
+          password: hashedPassword,
+        },
+      });
+
+      // Generate token
+      const token = generateToken(user.id, ['USER']);
+
+      return { user, token };
+    },
+
+    login: async ([, , ctx], { email, password }) => {
+      const user = await ctx.db.user.findUnique({
+        where: { email },
+      });
+
+      if (!user) {
+        throw new GraphQLError('Invalid credentials', {
+          extensions: { code: 'UNAUTHORIZED' },
+        });
+      }
+
+      const valid = await bcrypt.compare(password, user.password);
+
+      if (!valid) {
+        throw new GraphQLError('Invalid credentials', {
+          extensions: { code: 'UNAUTHORIZED' },
+        });
+      }
+
+      const token = generateToken(user.id, user.roles);
+
+      return { user, token };
+    },
+  },
+});
+```
+
+## File Upload
+
+```typescript
+// Schema
+type Mutation {
+  uploadAvatar(file: Upload!): String!
+}
+
+// Resolver
+import { createResolvers } from '@/src/axolotl.js';
+import { writeFile } from 'fs/promises';
+import path from 'path';
+
+export default createResolvers({
+  Mutation: {
+    uploadAvatar: async ([, , ctx], { file }) => {
+      if (!ctx.userId) throw unauthorized();
+
+      const { createReadStream, filename, mimetype } = await file;
+
+      // Validate file type
+      if (!['image/jpeg', 'image/png'].includes(mimetype)) {
+        throw new GraphQLError('Only JPG and PNG files are allowed');
+      }
+
+      // Generate unique filename
+      const ext = path.extname(filename);
+      const newFilename = `${ctx.userId}-${Date.now()}${ext}`;
+      const filepath = path.join('uploads', newFilename);
+
+      // Save file
+      const stream = createReadStream();
+      const chunks = [];
+      for await (const chunk of stream) {
+        chunks.push(chunk);
+      }
+      await writeFile(filepath, Buffer.concat(chunks));
+
+      // Update user record
+      await ctx.db.user.update({
+        where: { id: ctx.userId },
+        data: { avatarUrl: `/uploads/${newFilename}` }
+      });
+
+      return `/uploads/${newFilename}`;
+    }
+  }
+});
+```
+
+## Pagination
+
+### Cursor-Based Pagination
+
+```typescript
+createResolvers({
+  Query: {
+    posts: async ([, , ctx], { after, limit = 10 }) => {
+      const posts = await ctx.db.post.findMany({
+        take: limit + 1, // Fetch one extra
+        ...(after && {
+          cursor: { id: after },
+          skip: 1,
+        }),
+        orderBy: { createdAt: 'desc' },
+      });
+
+      const hasNextPage = posts.length > limit;
+      const edges = hasNextPage ? posts.slice(0, -1) : posts;
+
+      return {
+        edges: edges.map((post) => ({
+          node: post,
+          cursor: post.id,
+        })),
+        pageInfo: {
+          hasNextPage,
+          endCursor: edges[edges.length - 1]?.id || null,
+        },
+      };
+    },
+  },
+});
+```
+
+### Offset-Based Pagination
+
+```typescript
+createResolvers({
+  Query: {
+    users: async ([, , ctx], { offset = 0, limit = 10 }) => {
+      const [users, totalCount] = await Promise.all([
+        ctx.db.user.findMany({
+          skip: offset,
+          take: limit,
+        }),
+        ctx.db.user.count(),
+      ]);
+
+      return {
+        edges: users,
+        pageInfo: {
+          totalCount,
+          hasNextPage: offset + limit < totalCount,
+          hasPreviousPage: offset > 0,
+        },
+      };
+    },
+  },
+});
+```
+
+## Filtering & Sorting
+
+```typescript
+createResolvers({
+  Query: {
+    posts: async ([, , ctx], { filter, sort }) => {
+      const where: any = {};
+
+      // Build filter
+      if (filter?.authorId) {
+        where.authorId = filter.authorId;
+      }
+
+      if (filter?.search) {
+        where.OR = [
+          { title: { contains: filter.search, mode: 'insensitive' } },
+          { content: { contains: filter.search, mode: 'insensitive' } },
+        ];
+      }
+
+      if (filter?.status) {
+        where.status = filter.status;
+      }
+
+      // Build sort
+      const orderBy: any = {};
+      if (sort?.field === 'CREATED_AT') {
+        orderBy.createdAt = sort.direction === 'ASC' ? 'asc' : 'desc';
+      } else if (sort?.field === 'TITLE') {
+        orderBy.title = sort.direction === 'ASC' ? 'asc' : 'desc';
+      }
+
+      return ctx.db.post.findMany({ where, orderBy });
+    },
+  },
+});
+```
+
+## Subscriptions (Real-time)
+
+```typescript
+import { createPubSub } from 'graphql-yoga';
+
+const pubsub = createPubSub();
+
+export default createResolvers({
+  Mutation: {
+    createPost: async ([, , ctx], { input }) => {
+      const post = await ctx.db.post.create({ data: input });
+
+      // Publish event
+      pubsub.publish('POST_CREATED', { postCreated: post });
+
+      return post;
+    },
+  },
+
+  Subscription: {
+    postCreated: {
+      subscribe: () => pubsub.subscribe('POST_CREATED'),
+    },
+  },
+});
+```
+
+## Background Jobs
+
+```typescript
+import { Queue } from 'bullmq';
+
+const emailQueue = new Queue('email', {
+  connection: { host: 'localhost', port: 6379 },
+});
+
+createResolvers({
+  Mutation: {
+    sendWelcomeEmail: async ([, , ctx], { userId }) => {
+      // Add job to queue
+      await emailQueue.add('welcome', {
+        userId,
+        template: 'welcome',
+      });
+
+      return true;
+    },
+  },
+});
+
+// Worker (separate process)
+import { Worker } from 'bullmq';
+
+const worker = new Worker(
+  'email',
+  async (job) => {
+    const { userId, template } = job.data;
+
+    // Send email
+    await sendEmail(userId, template);
+  },
+  {
+    connection: { host: 'localhost', port: 6379 },
+  },
+);
+```
+
+## Soft Deletes
+
+```typescript
+createResolvers({
+  Query: {
+    posts: async ([, , ctx], { includeDeleted = false }) => {
+      return ctx.db.post.findMany({
+        where: includeDeleted ? undefined : { deletedAt: null },
+      });
+    },
+  },
+
+  Mutation: {
+    deletePost: async ([, , ctx], { id }) => {
+      // Soft delete
+      await ctx.db.post.update({
+        where: { id },
+        data: { deletedAt: new Date() },
+      });
+
+      return true;
+    },
+
+    permanentlyDeletePost: async ([, , ctx], { id }) => {
+      // Hard delete
+      await ctx.db.post.delete({ where: { id } });
+      return true;
+    },
+  },
+});
+```
+
+## Audit Logging
+
+```typescript
+async function logAction(ctx: AppContext, action: string, details: any) {
+  await ctx.db.auditLog.create({
+    data: {
+      userId: ctx.userId,
+      action,
+      details: JSON.stringify(details),
+      ipAddress: ctx.request.headers.get('x-forwarded-for'),
+      userAgent: ctx.request.headers.get('user-agent'),
+      timestamp: new Date(),
+    },
+  });
+}
+
+createResolvers({
+  Mutation: {
+    updateUser: async ([, , ctx], { id, input }) => {
+      const user = await ctx.db.user.update({
+        where: { id },
+        data: input,
+      });
+
+      await logAction(ctx, 'UPDATE_USER', { userId: id, changes: input });
+
+      return user;
+    },
+  },
+});
+```
+
+## Batch Operations
+
+```typescript
+createResolvers({
+  Mutation: {
+    deletePosts: async ([, , ctx], { ids }) => {
+      const result = await ctx.db.post.deleteMany({
+        where: {
+          id: { in: ids },
+          authorId: ctx.userId, // Ensure ownership
+        },
+      });
+
+      return result.count;
+    },
+
+    updatePostsStatus: async ([, , ctx], { ids, status }) => {
+      await ctx.db.post.updateMany({
+        where: {
+          id: { in: ids },
+          authorId: ctx.userId,
+        },
+        data: { status },
+      });
+
+      return true;
+    },
+  },
+});
+```
+
+## Webhooks
+
+```typescript
+import fetch from 'node-fetch';
+
+createResolvers({
+  Mutation: {
+    createPost: async ([, , ctx], { input }) => {
+      const post = await ctx.db.post.create({ data: input });
+
+      // Trigger webhooks
+      const webhooks = await ctx.db.webhook.findMany({
+        where: { event: 'POST_CREATED', active: true },
+      });
+
+      for (const webhook of webhooks) {
+        fetch(webhook.url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event: 'POST_CREATED',
+            data: post,
+            timestamp: new Date().toISOString(),
+          }),
+        }).catch((err) => console.error('Webhook failed:', err));
+      }
+
+      return post;
+    },
+  },
+});
+```
+
+## Caching with Redis
+
+```typescript
+import Redis from 'ioredis';
+
+const redis = new Redis(process.env.REDIS_URL);
+
+createResolvers({
+  Query: {
+    popularPosts: async ([, , ctx]) => {
+      const cacheKey = 'popular-posts';
+
+      // Check cache
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        return JSON.parse(cached);
+      }
+
+      // Fetch from DB
+      const posts = await ctx.db.post.findMany({
+        take: 10,
+        orderBy: { views: 'desc' },
+      });
+
+      // Cache for 5 minutes
+      await redis.setex(cacheKey, 300, JSON.stringify(posts));
+
+      return posts;
+    },
+  },
+});
+```
+
+## Search with Elasticsearch
+
+```typescript
+import { Client } from '@elastic/elasticsearch';
+
+const es = new Client({ node: process.env.ELASTICSEARCH_URL });
+
+createResolvers({
+  Query: {
+    searchPosts: async ([, , ctx], { query, limit = 10 }) => {
+      const { body } = await es.search({
+        index: 'posts',
+        body: {
+          query: {
+            multi_match: {
+              query,
+              fields: ['title^2', 'content'],
+            },
+          },
+          size: limit,
+        },
+      });
+
+      const postIds = body.hits.hits.map((hit: any) => hit._id);
+
+      return ctx.db.post.findMany({
+        where: { id: { in: postIds } },
+      });
+    },
+  },
+});
+```
+
+## Related Resources
+
+- [Best Practices](/best-practices) for production patterns
+- [Data Loaders](/data-loaders) for performance
+- [Directives](/directives) for cross-cutting concerns
+- [Tests](/tests) for testing strategies
+
+[← Best Practices](/best-practices) | [Tests →](/tests)

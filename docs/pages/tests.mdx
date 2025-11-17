@@ -1,36 +1,462 @@
 # Testing
 
-Axolotl encourages testing resolvers directly. You can reuse the same
-type‑safe resolvers in tests and run them with your preferred framework.
+Testing is essential for reliable GraphQL APIs. Axolotl's functional approach makes testing straightforward—resolvers are just functions!
 
-Below we split the backend into small units and test with Node’s built‑in
-`node:test` runner.
+## Why Test Axolotl Resolvers?
 
-```ts filename="setup.ts"
-export const axolotl = Axolotl(yourAdapter)<Models>();
-```
+- **Pure functions**: Resolvers have no hidden dependencies
+- **Type safety**: TypeScript catches many errors at compile time
+- **Easy mocking**: Context, database, and services are easily mocked
+- **Fast**: Unit tests run in milliseconds
+- **Confident refactoring**: Tests ensure changes don't break functionality
 
-```ts filename="resolvers.ts"
-import { axolotl } from './setup.js'
-export const resolvers = axolotl.createResolvers({
-  Query: {
-    hello: () => "World"
-  },
-});
-```
+## Testing Strategies
 
-So in this file we test
+### 1. Unit Tests (Resolver Level)
 
-```ts filename="index.test.ts"
-import test from 'node:test';
+Test individual resolvers in isolation:
+
+```typescript
+import { test } from 'node:test';
 import assert from 'node:assert';
-import { resolvers } from './resolvers.js';
+import resolvers from './resolvers.js';
 
 test('Query.hello returns World', () => {
-  const result = resolvers.Query.hello();
+  const result = resolvers.Query.hello([null, {}, {}], {});
   assert.equal(result, 'World');
+});
+
+test('Query.user fetches user by id', async () => {
+  const mockDb = {
+    user: {
+      findUnique: async ({ where }: any) => ({
+        id: where.id,
+        name: 'John Doe',
+        email: 'john@example.com',
+      }),
+    },
+  };
+
+  const result = await resolvers.Query.user([null, {}, { db: mockDb }], { id: '123' });
+
+  assert.equal(result.id, '123');
+  assert.equal(result.name, 'John Doe');
+});
+
+test('Mutation.createPost requires authentication', async () => {
+  const ctx = { userId: null, db: mockDb };
+
+  await assert.rejects(
+    () => resolvers.Mutation.createPost([null, {}, ctx], { input: { title: 'Test', content: 'Content' } }),
+    { message: /Not authenticated/ },
+  );
 });
 ```
 
-For end‑to‑end testing, start your Yoga server and run full GraphQL queries
-using your HTTP test client of choice.
+### 2. Integration Tests (With Real Database)
+
+Test with a real database:
+
+```typescript
+import { test, before, after } from 'node:test';
+import assert from 'node:assert';
+import { PrismaClient } from '@prisma/client';
+import resolvers from './resolvers.js';
+
+let db: PrismaClient;
+
+before(async () => {
+  db = new PrismaClient();
+  // Seed test data
+  await db.user.create({
+    data: { id: 'user-1', username: 'testuser', email: 'test@example.com' },
+  });
+});
+
+after(async () => {
+  // Cleanup
+  await db.user.deleteMany();
+  await db.$disconnect();
+});
+
+test('creates post successfully', async () => {
+  const result = await resolvers.Mutation.createPost([null, {}, { db, userId: 'user-1' }], {
+    input: { title: 'Test Post', content: 'Test content' },
+  });
+
+  assert.ok(result.id);
+  assert.equal(result.title, 'Test Post');
+  assert.equal(result.authorId, 'user-1');
+
+  // Verify in database
+  const post = await db.post.findUnique({ where: { id: result.id } });
+  assert.ok(post);
+});
+
+test('updates post with correct ownership', async () => {
+  // Create post
+  const post = await db.post.create({
+    data: {
+      title: 'Original',
+      content: 'Content',
+      authorId: 'user-1',
+    },
+  });
+
+  // Update as owner
+  const updated = await resolvers.Mutation.updatePost([null, {}, { db, userId: 'user-1' }], {
+    id: post.id,
+    input: { title: 'Updated' },
+  });
+
+  assert.equal(updated.title, 'Updated');
+
+  // Try to update as different user
+  await assert.rejects(
+    () =>
+      resolvers.Mutation.updatePost([null, {}, { db, userId: 'user-2' }], { id: post.id, input: { title: 'Hacked' } }),
+    { message: /Forbidden/ },
+  );
+});
+```
+
+### 3. E2E Tests (Full GraphQL Queries)
+
+Test complete GraphQL operations:
+
+```typescript
+import { test, before, after } from 'node:test';
+import assert from 'node:assert';
+import { adapter } from './axolotl.js';
+import resolvers from './resolvers.js';
+
+let server: any;
+let url: string;
+
+before(async () => {
+  const { server: s } = adapter({ resolvers });
+  server = s;
+  await new Promise((resolve) => server.listen(0, resolve));
+  const address = server.address();
+  url = `http://localhost:${address.port}/graphql`;
+});
+
+after(async () => {
+  await server.close();
+});
+
+test('registers and logs in user', async () => {
+  // Register
+  const registerRes = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: `
+        mutation Register($input: RegisterInput!) {
+          register(input: $input) {
+            user { id username }
+            token
+          }
+        }
+      `,
+      variables: {
+        input: {
+          username: 'newuser',
+          email: 'new@example.com',
+          password: 'password123',
+        },
+      },
+    }),
+  });
+
+  const registerData = await registerRes.json();
+  assert.ok(registerData.data.register.token);
+  assert.equal(registerData.data.register.user.username, 'newuser');
+
+  // Login
+  const loginRes = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: `
+        mutation Login($email: String!, $password: String!) {
+          login(email: $email, password: $password) {
+            token
+          }
+        }
+      `,
+      variables: {
+        email: 'new@example.com',
+        password: 'password123',
+      },
+    }),
+  });
+
+  const loginData = await loginRes.json();
+  assert.ok(loginData.data.login.token);
+});
+
+test('protected query requires authentication', async () => {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: '{ me { id } }',
+    }),
+  });
+
+  const data = await res.json();
+  assert.ok(data.errors);
+  assert.match(data.errors[0].message, /Not authenticated/);
+});
+```
+
+## Testing Patterns
+
+### Mock Database
+
+```typescript
+function createMockDb() {
+  const users = new Map();
+  const posts = new Map();
+
+  return {
+    user: {
+      findUnique: async ({ where }: any) => users.get(where.id) || null,
+      findMany: async () => Array.from(users.values()),
+      create: async ({ data }: any) => {
+        const user = { ...data, id: `user-${users.size + 1}` };
+        users.set(user.id, user);
+        return user;
+      },
+      update: async ({ where, data }: any) => {
+        const user = users.get(where.id);
+        if (!user) throw new Error('Not found');
+        Object.assign(user, data);
+        return user;
+      },
+    },
+    post: {
+      findMany: async ({ where }: any) => {
+        const allPosts = Array.from(posts.values());
+        if (!where) return allPosts;
+        return allPosts.filter((p) => p.authorId === where.authorId);
+      },
+      create: async ({ data }: any) => {
+        const post = { ...data, id: `post-${posts.size + 1}` };
+        posts.set(post.id, post);
+        return post;
+      },
+    },
+  };
+}
+
+test('uses mock database', async () => {
+  const db = createMockDb();
+
+  const user = await resolvers.Mutation.register([null, {}, { db }], {
+    input: { username: 'test', email: 'test@example.com', password: 'pass' },
+  });
+
+  assert.ok(user.id);
+});
+```
+
+### Test Context Builder
+
+```typescript
+function createTestContext(overrides = {}) {
+  return {
+    userId: null,
+    userRoles: [],
+    db: createMockDb(),
+    request: {
+      headers: new Map(),
+    },
+    ...overrides,
+  };
+}
+
+test('authenticated user can create post', async () => {
+  const ctx = createTestContext({ userId: 'user-1' });
+
+  const post = await resolvers.Mutation.createPost([null, {}, ctx], { input: { title: 'Test', content: 'Content' } });
+
+  assert.equal(post.authorId, 'user-1');
+});
+```
+
+### Test Data Builders
+
+```typescript
+function buildUser(overrides = {}) {
+  return {
+    id: `user-${Math.random()}`,
+    username: 'testuser',
+    email: 'test@example.com',
+    createdAt: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+function buildPost(overrides = {}) {
+  return {
+    id: `post-${Math.random()}`,
+    title: 'Test Post',
+    content: 'Test content',
+    authorId: 'user-1',
+    createdAt: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+test('uses test data builders', () => {
+  const user = buildUser({ username: 'custom' });
+  const post = buildPost({ authorId: user.id });
+
+  assert.equal(post.authorId, user.id);
+});
+```
+
+## Testing Directives
+
+```typescript
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { graphql } from 'graphql';
+
+test('auth directive blocks unauthenticated users', async () => {
+  const typeDefs = `
+    directive @auth on FIELD_DEFINITION
+    
+    type Query {
+      public: String!
+      protected: String! @auth
+    }
+  `;
+
+  const resolvers = {
+    Query: {
+      public: () => 'public data',
+      protected: () => 'protected data',
+    },
+  };
+
+  let schema = makeExecutableSchema({ typeDefs, resolvers });
+  schema = authDirective(schema);
+
+  // Unauthenticated request
+  const result = await graphql({
+    schema,
+    source: '{ protected }',
+    contextValue: { userId: null },
+  });
+
+  assert.ok(result.errors);
+  assert.match(result.errors[0].message, /Not authenticated/);
+
+  // Authenticated request
+  const result2 = await graphql({
+    schema,
+    source: '{ protected }',
+    contextValue: { userId: 'user-1' },
+  });
+
+  assert.equal(result2.data?.protected, 'protected data');
+});
+```
+
+## CI/CD Integration
+
+### GitHub Actions
+
+```.github/workflows/test.yml
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - run: npm install
+
+      - run: npm run build
+
+      - run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+
+      - run: npm test
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+          JWT_SECRET: test-secret
+```
+
+## Coverage
+
+Track test coverage:
+
+```json
+// package.json
+{
+  "scripts": {
+    "test": "node --test --experimental-test-coverage",
+    "test:coverage": "node --test --experimental-test-coverage"
+  }
+}
+```
+
+## Best Practices
+
+1. **Test behavior, not implementation** - Test what resolvers do, not how
+2. **Use descriptive test names** - `test('creates post successfully')` not `test('test 1')`
+3. **Keep tests isolated** - Each test should be independent
+4. **Mock external services** - Don't call real APIs in tests
+5. **Test error cases** - Not just happy paths
+6. **Use test data builders** - For consistent test data
+7. **Clean up after tests** - Delete test data
+8. **Run tests in CI/CD** - Automate testing
+
+## Performance Testing
+
+```typescript
+import { test } from 'node:test';
+import assert from 'node:assert';
+
+test('query completes within time limit', async () => {
+  const start = Date.now();
+
+  await resolvers.Query.posts([null, {}, { db }], { limit: 100 });
+
+  const duration = Date.now() - start;
+  assert.ok(duration < 100, `Query took ${duration}ms, expected < 100ms`);
+});
+```
+
+## Next Steps
+
+- See [Best Practices](/best-practices) for testing strategies
+- Learn about [Recipes](/recipes) for common test patterns
+- Check [CI/CD examples](/deploy) for deployment pipelines
+
+[← Recipes](/recipes) | [Deploy →](/deploy)

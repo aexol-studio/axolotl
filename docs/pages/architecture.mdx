@@ -1,0 +1,524 @@
+# Architecture
+
+Understanding how Axolotl works under the hood will help you build better GraphQL APIs. This guide covers the core concepts and architecture decisions.
+
+## Overview
+
+Axolotl follows a **schema-first** approach where your GraphQL schema is the single source of truth. Everything else—types, resolvers, and runtime—is generated or configured based on that schema.
+
+```
+┌─────────────────┐
+│  schema.graphql │  ← Single source of truth
+└────────┬────────┘
+         │
+         ↓
+┌────────────────────┐
+│  axolotl build     │  ← Code generation
+└────────┬───────────┘
+         │
+         ↓
+┌────────────────────┐
+│  src/models.ts     │  ← Generated TypeScript types
+└────────┬───────────┘
+         │
+         ↓
+┌────────────────────┐
+│  src/axolotl.ts    │  ← Framework initialization
+└────────┬───────────┘
+         │
+         ↓
+┌────────────────────┐
+│  src/resolvers.ts  │  ← Type-safe resolvers
+└────────┬───────────┘
+         │
+         ↓
+┌────────────────────┐
+│  GraphQL Server    │  ← Runtime (Yoga, etc.)
+└────────────────────┘
+```
+
+## Core Components
+
+### 1. Schema (schema.graphql)
+
+Your GraphQL schema defines your API contract:
+
+```graphql
+type User {
+  id: ID!
+  name: String!
+  posts: [Post!]!
+}
+
+type Query {
+  user(id: ID!): User @resolver
+}
+```
+
+**Why schema-first?**
+
+- Clear API contract for frontend and backend
+- AI tools understand schemas better than code
+- Easy to generate documentation
+- Client types can be generated from the same schema
+- Schema evolution is explicit and trackable
+
+### 2. Code Generator (axolotl build)
+
+The CLI reads your schema and generates TypeScript types:
+
+```bash
+npx @aexol/axolotl build
+```
+
+**What it generates:**
+
+- Type definitions for all GraphQL types
+- Argument types for fields
+- Return types for resolvers
+- Directive types
+- Scalar mappings
+
+**Generated code example:**
+
+```typescript
+export type Models = {
+  ['Query']: {
+    user: {
+      args: {
+        id: string;
+      };
+    };
+  };
+};
+```
+
+### 3. Framework Core (axolotl-core)
+
+The core package provides:
+
+- Type-safe resolver creation
+- Directive system
+- Scalar handling
+- Adapter interface
+
+**Key exports:**
+
+- `Axolotl()` - Main initialization function
+- `createResolvers()` - Type-safe resolver builder
+- `createDirectives()` - Directive builder
+- `createScalars()` - Scalar builder
+- `mergeAxolotls()` - Combine multiple resolver sets
+
+### 4. Adapters
+
+Adapters connect Axolotl to GraphQL servers:
+
+```typescript
+import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
+
+export const { adapter, createResolvers } = Axolotl(graphqlYogaAdapter)<Models>();
+```
+
+**Current adapters:**
+
+- `@aexol/axolotl-graphql-yoga` - Node.js (GraphQL Yoga)
+- `@aexol/axolotl-deno-yoga` - Deno (GraphQL Yoga)
+
+**Adapter responsibilities:**
+
+- Map framework requests to Axolotl resolver signature
+- Handle context building
+- Configure server options
+- Start/stop server
+
+## How Type Safety Works
+
+### Schema to TypeScript
+
+When you define a field in GraphQL:
+
+```graphql
+type Query {
+  user(id: ID!, includeDeleted: Boolean): User
+}
+```
+
+Axolotl generates:
+
+```typescript
+type Models = {
+  ['Query']: {
+    user: {
+      args: {
+        id: string; // ID! → string
+        includeDeleted?: boolean; // Boolean → boolean | undefined
+      };
+    };
+  };
+};
+```
+
+### Resolver Type Inference
+
+When you create resolvers:
+
+```typescript
+createResolvers({
+  Query: {
+    user: async ([, , ctx], args) => {
+      // TypeScript knows:
+      // args.id is string
+      // args.includeDeleted is boolean | undefined
+      // Return type must match User from schema
+    },
+  },
+});
+```
+
+The `createResolvers` function is generic and infers types from your `Models` type.
+
+### Context Typing
+
+Custom context is typed through the adapter:
+
+```typescript
+type AppContext = YogaInitialContext & {
+  userId: string | null;
+  db: PrismaClient;
+};
+
+const { createResolvers } = Axolotl(graphqlYogaWithContextAdapter<AppContext>(buildContext))<Models>();
+
+// Now all resolvers have typed context:
+createResolvers({
+  Query: {
+    me: ([, , ctx]) => {
+      // ctx.userId: string | null ✅
+      // ctx.db: PrismaClient ✅
+    },
+  },
+});
+```
+
+## The Resolver Signature
+
+Axolotl uses a unique resolver signature:
+
+```typescript
+(input, args) => ReturnType;
+```
+
+Where `input` is `[source, args, context]`.
+
+**Why this signature?**
+
+1. **Consistency** - Same pattern everywhere
+2. **Type safety** - Tuple types work perfectly with TypeScript
+3. **AI-friendly** - Easy for AI to learn and replicate
+4. **Flexibility** - Destructure what you need
+
+**Comparison with standard GraphQL:**
+
+```typescript
+// Standard GraphQL
+(parent, args, context, info) => result
+
+// Axolotl
+(input, args) => result
+// where input = [parent, args, context]
+// info is rarely needed, so we omit it by default
+```
+
+## Configuration System
+
+### axolotl.json
+
+The config file stores paths and options:
+
+```json
+{
+  "schema": "schema.graphql",
+  "models": "src/models.ts",
+  "federation": [
+    {
+      "schema": "src/users/schema.graphql",
+      "models": "src/users/models.ts"
+    }
+  ]
+}
+```
+
+**Config flow:**
+
+1. CLI reads `axolotl.json`
+2. Finds all schema files
+3. Generates types for each
+4. Merges federated schemas if configured
+
+### Runtime Configuration
+
+Server options are passed to the adapter:
+
+```typescript
+adapter(
+  { resolvers, directives, scalars },
+  {
+    yoga: {
+      graphiql: true,
+      cors: { origin: '*' },
+      maskedErrors: false,
+    },
+  },
+);
+```
+
+## Micro-Federation Architecture
+
+Federation allows splitting one schema into multiple modules:
+
+```
+Project
+├── schema.graphql           (merged supergraph)
+├── src/
+│   ├── users/
+│   │   ├── schema.graphql  (users subgraph)
+│   │   ├── models.ts       (generated)
+│   │   ├── axolotl.ts      (user module init)
+│   │   └── resolvers.ts
+│   └── posts/
+│       ├── schema.graphql  (posts subgraph)
+│       ├── models.ts       (generated)
+│       ├── axolotl.ts      (posts module init)
+│       └── resolvers.ts
+```
+
+**Benefits:**
+
+- Team ownership of modules
+- Independent type generation
+- Clear boundaries
+- Easy to extract to microservices later
+
+**How it works:**
+
+1. Each module has its own schema and types
+2. Each module exports resolvers
+3. Main file merges all resolvers with `mergeAxolotls()`
+4. CLI merges all schemas into supergraph
+
+See [Micro-Federation](/micro-federation) for details.
+
+## Adapter System
+
+Adapters are the bridge between Axolotl and GraphQL servers.
+
+### Adapter Interface
+
+```typescript
+interface AxolotlAdapter {
+  // Convert framework types to Axolotl types
+  resolver: (fn: AxolotlResolver) => FrameworkResolver;
+
+  // Initialize server
+  initialize: (config: Config) => Server;
+}
+```
+
+### How Adapters Work
+
+1. **Receive framework request** (e.g., from GraphQL Yoga)
+2. **Extract** source, args, context
+3. **Convert to tuple** `[source, args, context]`
+4. **Call Axolotl resolver** with tuple
+5. **Return result** to framework
+
+### Writing Custom Adapters
+
+You can write adapters for any GraphQL server:
+
+```typescript
+import { AxolotlAdapter } from '@aexol/axolotl-core';
+
+export const myFrameworkAdapter: AxolotlAdapter = {
+  resolver: (axolotlResolver) => {
+    return (parent, args, context, info) => {
+      // Convert to Axolotl signature
+      return axolotlResolver([parent, args, context], args);
+    };
+  },
+
+  initialize: (config) => {
+    // Set up your GraphQL server
+    return createServer(config);
+  },
+};
+```
+
+## Data Flow
+
+### Request Flow
+
+```
+1. GraphQL Request
+   ↓
+2. Server (GraphQL Yoga)
+   ↓
+3. Adapter (converts signature)
+   ↓
+4. Axolotl Resolver
+   ↓
+5. Your Code (business logic)
+   ↓
+6. Database/External API
+   ↓
+7. Return Response
+   ↓
+8. Type Validation
+   ↓
+9. GraphQL Response
+```
+
+### Build-Time Flow
+
+```
+1. Edit schema.graphql
+   ↓
+2. Run: axolotl build
+   ↓
+3. CLI reads schema
+   ↓
+4. Generate TypeScript types
+   ↓
+5. Write to models.ts
+   ↓
+6. TypeScript compiler picks up changes
+   ↓
+7. Your IDE updates autocomplete
+```
+
+## Performance Considerations
+
+### Type Generation
+
+- **Fast**: Happens at build time, not runtime
+- **Cached**: Only regenerates when schema changes
+- **Minimal**: Only generates types, not runtime code
+
+### Runtime
+
+- **Zero overhead**: Types are erased at runtime
+- **Direct function calls**: No proxies or wrappers
+- **Efficient**: Resolvers are plain JavaScript functions
+
+### Optimization Tips
+
+1. **Use DataLoaders** for N+1 queries
+2. **Enable caching** with directives
+3. **Batch database queries** in resolvers
+4. **Use field-level resolvers** only when needed
+5. **Profile with GraphQL tools** to find bottlenecks
+
+## Design Decisions
+
+### Why Schema-First?
+
+**Pros:**
+
+- ✅ Clear contract for all stakeholders
+- ✅ Better for AI assistance
+- ✅ Easy to generate client types
+- ✅ Schema is self-documenting
+- ✅ Frontend can work in parallel
+
+**Cons:**
+
+- ❌ Extra step to update schema
+- ❌ Can't generate schema from code
+- ❌ Two files to keep in sync (schema + resolvers)
+
+**Our take**: The pros heavily outweigh the cons, especially with AI tools that can help keep schema and code in sync.
+
+### Why Tuple Input?
+
+**Standard GraphQL:**
+
+```typescript
+(parent, args, context, info) => result;
+```
+
+**Axolotl:**
+
+```typescript
+([parent, args, context], args) => result;
+```
+
+**Reasons:**
+
+1. **Consistency** - Same pattern everywhere
+2. **Flexibility** - Destructure what you need
+3. **Type safety** - Tuples work great with TypeScript
+4. **AI-friendly** - Simpler for AI to learn
+
+### Why Adapters?
+
+Adapters allow Axolotl to work with any GraphQL server:
+
+- **Flexibility**: Choose your server
+- **Future-proof**: Add new servers without breaking changes
+- **Testability**: Mock adapters for testing
+- **Simplicity**: Core stays clean and focused
+
+## Comparison with Other Frameworks
+
+### vs Code-First (Nexus, Pothos, TypeGraphQL)
+
+**Axolotl (Schema-First):**
+
+```graphql
+type User {
+  id: ID!
+  name: String!
+}
+```
+
+- ✅ Readable by everyone (including AI)
+- ✅ Can generate client types
+- ✅ Clear API contract
+- ✅ Self-documenting
+
+**Code-First:**
+
+```typescript
+const User = objectType({
+  /* ... */
+});
+```
+
+- ❌ Only developers can read
+- ❌ Harder for AI to understand
+- ❌ Schema hidden in code
+- ❌ Need decorators or builders
+
+### vs Apollo Server
+
+**Axolotl:**
+
+- ✅ Automatic type generation
+- ✅ Zero manual type definitions
+- ✅ Compile-time type safety
+
+**Apollo Server:**
+
+- ❌ Manual type definitions
+- ❌ Runtime type checking only
+- ❌ Easy to have type drift
+
+## Next Steps
+
+- Learn about [Best Practices](/best-practices) for production apps
+- Explore [Recipes](/recipes) for common patterns
+- Check out [Micro-Federation](/micro-federation) for scaling
+- Read the [AI Guide](/ai) for AI-assisted development
+
+[← Resolvers](/resolvers) | [Best Practices →](/best-practices)

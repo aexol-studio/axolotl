@@ -1,38 +1,526 @@
 # Directives
 
-Use the Yoga adapters (Node.js or Deno) to implement schema directives.
+Directives are a powerful way to add cross-cutting concerns to your GraphQL schema. Use them for authentication, authorization, caching, rate limiting, and more.
 
-```ts filename="directives.ts"
+Axolotl supports directives through the GraphQL Yoga adapter using `@graphql-tools/schema`.
+
+## Basic Directive Example
+
+```ts filename="src/directives.ts"
 import { createDirectives } from '@/src/axolotl.js';
-import { defaultFieldResolver } from 'graphql';
+import { MapperKind, getDirective, mapSchema } from '@graphql-tools/utils';
+import { defaultFieldResolver, GraphQLError } from 'graphql';
 import { YogaInitialContext } from 'graphql-yoga';
 
 export default createDirectives({
-  auth: (schema, getDirective) => ({
-    'MapperKind.OBJECT_FIELD': (fieldConfig) => {
-      const directive = getDirective(schema, fieldConfig, 'auth');
-      if (directive) {
-        return ((fieldConfig) => {
-          const directive = getDirective(schema, fieldConfig, 'auth');
-          if (directive) {
-            const { resolve = defaultFieldResolver } = fieldConfig;
-            return {
-              ...fieldConfig,
-              resolve: async (source, args, context: YogaInitialContext, info) => {
-                const headerValue = context.request.headers.get('Auth');
-                if (headerValue !== 'password') {
-                  throw new Error('You are not authorized');
-                }
-                return resolve(source, args, context, info);
-              },
-            };
-          }
-        })(fieldConfig);
-      }
-    },
-  }),
-});
+  auth: (schema) => {
+    return mapSchema(schema, {
+      [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
+        const authDirective = getDirective(schema, fieldConfig, 'auth')?.[0];
 
+        if (authDirective) {
+          const { resolve = defaultFieldResolver } = fieldConfig;
+
+          return {
+            ...fieldConfig,
+            resolve: async (source, args, context: YogaInitialContext, info) => {
+              // Check authentication
+              const token = context.request.headers.get('authorization');
+
+              if (!token) {
+                throw new GraphQLError('Not authenticated', {
+                  extensions: { code: 'UNAUTHORIZED' },
+                });
+              }
+
+              // Call original resolver
+              return resolve(source, args, context, info);
+            },
+          };
+        }
+
+        return fieldConfig;
+      },
+    });
+  },
+});
 ```
 
-Directives leverage helpers from `@graphql-tools`.
+### Using the Directive in Schema
+
+```graphql filename="schema.graphql"
+directive @auth on FIELD_DEFINITION
+
+type Query {
+  publicData: String!
+  protectedData: String! @auth
+}
+```
+
+### Wiring Up Directives
+
+```ts filename="src/index.ts"
+import { adapter } from '@/src/axolotl.js';
+import resolvers from '@/src/resolvers.js';
+import directives from '@/src/directives.js';
+
+adapter({
+  resolvers,
+  directives, // ✅ Add directives here
+}).server.listen(4000);
+```
+
+## Common Directive Patterns
+
+### 1. Authentication Directive
+
+Check if user is logged in:
+
+```ts
+import { createDirectives } from '@/src/axolotl.js';
+import { MapperKind, getDirective, mapSchema } from '@graphql-tools/utils';
+import { defaultFieldResolver, GraphQLError } from 'graphql';
+
+export default createDirectives({
+  auth: (schema) => {
+    return mapSchema(schema, {
+      [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
+        const authDirective = getDirective(schema, fieldConfig, 'auth')?.[0];
+
+        if (authDirective) {
+          const { resolve = defaultFieldResolver } = fieldConfig;
+
+          return {
+            ...fieldConfig,
+            resolve: async (source, args, context, info) => {
+              if (!context.userId) {
+                throw new GraphQLError('Not authenticated', {
+                  extensions: { code: 'UNAUTHORIZED' },
+                });
+              }
+
+              return resolve(source, args, context, info);
+            },
+          };
+        }
+
+        return fieldConfig;
+      },
+    });
+  },
+});
+```
+
+Usage:
+
+```graphql
+type Query {
+  me: User! @auth
+  myPosts: [Post!]! @auth
+}
+
+type Mutation {
+  createPost(input: CreatePostInput!): Post! @auth
+}
+```
+
+### 2. Role-Based Authorization
+
+Check if user has required role:
+
+```ts
+export default createDirectives({
+  hasRole: (schema) => {
+    return mapSchema(schema, {
+      [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
+        const roleDirective = getDirective(schema, fieldConfig, 'hasRole')?.[0];
+
+        if (roleDirective) {
+          const { role } = roleDirective;
+          const { resolve = defaultFieldResolver } = fieldConfig;
+
+          return {
+            ...fieldConfig,
+            resolve: async (source, args, context, info) => {
+              if (!context.userId) {
+                throw new GraphQLError('Not authenticated', {
+                  extensions: { code: 'UNAUTHORIZED' },
+                });
+              }
+
+              if (!context.userRoles?.includes(role)) {
+                throw new GraphQLError('Insufficient permissions', {
+                  extensions: {
+                    code: 'FORBIDDEN',
+                    requiredRole: role,
+                  },
+                });
+              }
+
+              return resolve(source, args, context, info);
+            },
+          };
+        }
+
+        return fieldConfig;
+      },
+    });
+  },
+});
+```
+
+Schema:
+
+```graphql
+directive @hasRole(role: String!) on FIELD_DEFINITION
+
+type Mutation {
+  deleteUser(id: ID!): Boolean! @hasRole(role: "ADMIN")
+  banUser(id: ID!): Boolean! @hasRole(role: "MODERATOR")
+}
+```
+
+### 3. Rate Limiting
+
+Limit requests per user:
+
+```ts
+import { createDirectives } from '@/src/axolotl.js';
+import { MapperKind, getDirective, mapSchema } from '@graphql-tools/utils';
+import { defaultFieldResolver, GraphQLError } from 'graphql';
+
+// Simple in-memory store (use Redis in production)
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+
+export default createDirectives({
+  rateLimit: (schema) => {
+    return mapSchema(schema, {
+      [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
+        const rateLimitDirective = getDirective(schema, fieldConfig, 'rateLimit')?.[0];
+
+        if (rateLimitDirective) {
+          const { limit = 10, window = 60 } = rateLimitDirective; // requests per window (seconds)
+          const { resolve = defaultFieldResolver } = fieldConfig;
+
+          return {
+            ...fieldConfig,
+            resolve: async (source, args, context, info) => {
+              const userId = context.userId || context.request.headers.get('x-forwarded-for') || 'anonymous';
+              const key = `${info.fieldName}:${userId}`;
+              const now = Date.now();
+
+              let record = rateLimitStore.get(key);
+
+              if (!record || now > record.resetAt) {
+                record = {
+                  count: 0,
+                  resetAt: now + window * 1000,
+                };
+              }
+
+              record.count++;
+              rateLimitStore.set(key, record);
+
+              if (record.count > limit) {
+                const resetInSeconds = Math.ceil((record.resetAt - now) / 1000);
+                throw new GraphQLError('Rate limit exceeded', {
+                  extensions: {
+                    code: 'RATE_LIMIT_EXCEEDED',
+                    limit,
+                    resetInSeconds,
+                  },
+                });
+              }
+
+              return resolve(source, args, context, info);
+            },
+          };
+        }
+
+        return fieldConfig;
+      },
+    });
+  },
+});
+```
+
+Schema:
+
+```graphql
+directive @rateLimit(limit: Int = 10, window: Int = 60) on FIELD_DEFINITION
+
+type Mutation {
+  sendEmail(to: String!, subject: String!): Boolean! @rateLimit(limit: 5, window: 3600)
+  createPost(input: CreatePostInput!): Post! @rateLimit(limit: 10, window: 60)
+}
+```
+
+### 4. Field-Level Caching
+
+Cache resolver results:
+
+```ts
+import { createDirectives } from '@/src/axolotl.js';
+import { MapperKind, getDirective, mapSchema } from '@graphql-tools/utils';
+import { defaultFieldResolver } from 'graphql';
+
+const cache = new Map<string, { value: any; expiresAt: number }>();
+
+export default createDirectives({
+  cache: (schema) => {
+    return mapSchema(schema, {
+      [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
+        const cacheDirective = getDirective(schema, fieldConfig, 'cache')?.[0];
+
+        if (cacheDirective) {
+          const { ttl = 60 } = cacheDirective; // TTL in seconds
+          const { resolve = defaultFieldResolver } = fieldConfig;
+
+          return {
+            ...fieldConfig,
+            resolve: async (source, args, context, info) => {
+              const key = `${info.fieldName}:${JSON.stringify(args)}`;
+              const now = Date.now();
+
+              // Check cache
+              const cached = cache.get(key);
+              if (cached && now < cached.expiresAt) {
+                return cached.value;
+              }
+
+              // Resolve and cache
+              const result = await resolve(source, args, context, info);
+              cache.set(key, {
+                value: result,
+                expiresAt: now + ttl * 1000,
+              });
+
+              return result;
+            },
+          };
+        }
+
+        return fieldConfig;
+      },
+    });
+  },
+});
+```
+
+Schema:
+
+```graphql
+directive @cache(ttl: Int = 60) on FIELD_DEFINITION
+
+type Query {
+  expensiveQuery: [Result!]! @cache(ttl: 300)
+  userStats(userId: ID!): UserStats! @cache(ttl: 60)
+}
+```
+
+### 5. Input Validation
+
+Validate field arguments:
+
+```ts
+export default createDirectives({
+  validate: (schema) => {
+    return mapSchema(schema, {
+      [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
+        const validateDirective = getDirective(schema, fieldConfig, 'validate')?.[0];
+
+        if (validateDirective) {
+          const { pattern, minLength, maxLength } = validateDirective;
+          const { resolve = defaultFieldResolver } = fieldConfig;
+
+          return {
+            ...fieldConfig,
+            resolve: async (source, args, context, info) => {
+              // Validate based on directive args
+              for (const [key, value] of Object.entries(args)) {
+                if (typeof value === 'string') {
+                  if (minLength && value.length < minLength) {
+                    throw new GraphQLError(`${key} must be at least ${minLength} characters`);
+                  }
+                  if (maxLength && value.length > maxLength) {
+                    throw new GraphQLError(`${key} must be at most ${maxLength} characters`);
+                  }
+                  if (pattern && !new RegExp(pattern).test(value)) {
+                    throw new GraphQLError(`${key} format is invalid`);
+                  }
+                }
+              }
+
+              return resolve(source, args, context, info);
+            },
+          };
+        }
+
+        return fieldConfig;
+      },
+    });
+  },
+});
+```
+
+## Combining Multiple Directives
+
+You can use multiple directives on the same field:
+
+```graphql
+type Mutation {
+  createPost(input: CreatePostInput!): Post!
+    @auth
+    @rateLimit(limit: 10, window: 60)
+    @validate(minLength: 10, maxLength: 1000)
+}
+```
+
+Create all directives in one file:
+
+```ts filename="src/directives.ts"
+import { createDirectives } from '@/src/axolotl.js';
+import { MapperKind, getDirective, mapSchema } from '@graphql-tools/utils';
+
+export default createDirectives({
+  auth: (schema) => {
+    /* ... */
+  },
+  hasRole: (schema) => {
+    /* ... */
+  },
+  rateLimit: (schema) => {
+    /* ... */
+  },
+  cache: (schema) => {
+    /* ... */
+  },
+  validate: (schema) => {
+    /* ... */
+  },
+});
+```
+
+## When to Use Directives vs Resolvers
+
+### Use Directives For:
+
+- ✅ Cross-cutting concerns (auth, logging, caching)
+- ✅ Reusable logic across many fields
+- ✅ Schema-level metadata
+- ✅ Validation rules
+
+### Use Resolvers For:
+
+- ✅ Business logic
+- ✅ Data fetching
+- ✅ Field-specific transformations
+- ✅ Complex operations
+
+## Testing Directives
+
+Test directives by creating a test schema:
+
+```ts
+import { test } from 'node:test';
+import assert from 'node:assert';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { graphql } from 'graphql';
+import directives from './directives.js';
+
+test('auth directive blocks unauthenticated requests', async () => {
+  const typeDefs = `
+    directive @auth on FIELD_DEFINITION
+    type Query {
+      protected: String! @auth
+    }
+  `;
+
+  const resolvers = {
+    Query: {
+      protected: () => 'secret',
+    },
+  };
+
+  let schema = makeExecutableSchema({ typeDefs, resolvers });
+  schema = directives.auth(schema);
+
+  const result = await graphql({
+    schema,
+    source: '{ protected }',
+    contextValue: { userId: null },
+  });
+
+  assert(result.errors);
+  assert(result.errors[0].message.includes('Not authenticated'));
+});
+```
+
+## Best Practices
+
+1. **Keep directives simple** - Complex logic belongs in resolvers
+2. **Use clear names** - `@auth`, `@hasRole`, not `@check` or `@verify`
+3. **Add proper error codes** - Use `extensions.code` for client handling
+4. **Document directives** - Add comments to schema directive definitions
+5. **Test edge cases** - Especially auth and validation directives
+6. **Consider performance** - Directives run on every request
+7. **Use TypeScript** - Type your directive arguments and context
+
+## Production Considerations
+
+### Use Redis for Rate Limiting
+
+```ts
+import Redis from 'ioredis';
+
+const redis = new Redis(process.env.REDIS_URL);
+
+// In your rateLimit directive:
+const key = `ratelimit:${info.fieldName}:${userId}`;
+const count = await redis.incr(key);
+if (count === 1) {
+  await redis.expire(key, window);
+}
+if (count > limit) {
+  throw new GraphQLError('Rate limit exceeded');
+}
+```
+
+### Use Redis for Caching
+
+```ts
+// In your cache directive:
+const cached = await redis.get(key);
+if (cached) {
+  return JSON.parse(cached);
+}
+
+const result = await resolve(source, args, context, info);
+await redis.setex(key, ttl, JSON.stringify(result));
+return result;
+```
+
+### Log Directive Usage
+
+```ts
+// Add logging to directives
+console.log(`Directive @${directiveName} executed`, {
+  field: info.fieldName,
+  userId: context.userId,
+  args,
+});
+```
+
+## Resources
+
+- [GraphQL Tools Documentation](https://the-guild.dev/graphql/tools/docs/schema-directives)
+- [GraphQL Directive Spec](https://spec.graphql.org/June2018/#sec-Type-System.Directives)
+- [Axolotl Examples](https://github.com/aexol/axolotl/tree/main/examples)
+
+## Next Steps
+
+- Learn about [Data Loaders](/data-loaders) for performance
+- Explore [Recipes](/recipes) for common patterns
+- Check out [Best Practices](/best-practices) for production apps
+
+[← Resolvers](/resolvers) | [Micro-Federation →](/micro-federation)

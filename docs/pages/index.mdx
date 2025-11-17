@@ -1,101 +1,179 @@
 import { Callout, Tabs } from 'nextra/components';
-import {Home} from '../components/home'
+import { Home } from '../components/home';
 
 {<Home />}
 {
-  <div className="w-full flex  pt-8">
-    <img src="/axolotl-logo.png" className="w-1/2" />
-  </div>    
+
+<div className="w-full flex  pt-8">
+  <img src="/axolotl-logo.png" className="w-1/2" />
+</div>
 }
 
-From the [GraphQL Editor](https://graphqleditor.com/) and [Aexol Studio](http://aexol.com/) teams, comes a Framework ensuring **GraphQL** Resolvers and arguments **type-safety**. Written in TypeScript.
+# GraphQL Development Built for the AI Era
+
+From the [GraphQL Editor](https://graphqleditor.com/) and [Aexol Studio](http://aexol.com/) teams, comes a **type-safe, schema-first GraphQL framework** that works seamlessly with AI coding assistants. Write schemas, get perfect types—instantly.
 
 {
-  <div className="w-full flex pt-8 flex-wrap gap-2">
-      {
-        [
-          "axolotl",
-          "axolotl-core",
-          "axolotl-graphql-yoga"
-        ]
-        .map(p => `@aexol/${p}`)
-        .map(p => encodeURIComponent(p))
-        .map(p => <img key={p} alt="NPM Version" src={`https://img.shields.io/npm/v/${p}?style=flat-square&logoColor=%23333333&label=${p}&labelColor=%23333333&color=%23eeefee`} />)
-      }
-      <img alt="JSR Version" src="https://img.shields.io/jsr/v/%40aexol/axolotl-deno-yoga?style=flat-square&logoColor=%23333333&label=axolotl-deno-yoga&labelColor=%23333333&color=%23eeefee"/>
-  </div>
+
+<div className="w-full flex pt-8 flex-wrap gap-2">
+  {['axolotl', 'axolotl-core', 'axolotl-graphql-yoga']
+    .map((p) => `@aexol/${p}`)
+    .map((p) => encodeURIComponent(p))
+    .map((p) => (
+      <img
+        key={p}
+        alt="NPM Version"
+        src={`https://img.shields.io/npm/v/${p}?style=flat-square&logoColor=%23333333&label=${p}&labelColor=%23333333&color=%23eeefee`}
+      />
+    ))}
+  <img
+    alt="JSR Version"
+    src="https://img.shields.io/jsr/v/%40aexol/axolotl-deno-yoga?style=flat-square&logoColor=%23333333&label=axolotl-deno-yoga&labelColor=%23333333&color=%23eeefee"
+  />
+</div>
 }
 
+<br />
+
+## Why Axolotl?
+
+Axolotl eliminates the friction between your GraphQL schema and TypeScript types. No more manual type definitions, no more casting, no more guessing. Your schema is the source of truth, and everything else just works.
 
 <br />
 
-## 😮 Features
+### AI-Native Development
 
-Axolotl is a framework wrapper that lets you forget about type‑casting and
-schema spelunking. When there is no drama, only efficiency remains.
+Works flawlessly with **GitHub Copilot**, **Cursor**, **ChatGPT**, and **Claude**. AI assistants understand Axolotl's clear patterns and generate perfect, type-safe code every time.
 
-<br />
+### Zero Type Guessing
 
-- ⚙️ Generates models at runtime during development - which ensures type safety
-- 🏃 Ships with a GraphQL Yoga adapter for rapid schema-first development
-- 🤓 Lets you write your own adapters for various purposes
-- 🐙 Supports micro-federation! It allows to merge different schemas and resolvers inside one repository.
-- 🦕 Supports Deno from version 0.2.7. It works with Deno in production.
-- 😂 Is very easy to set up, start and integrate. You just need to `npx @aexol/axolotl create-yoga`
+Generate TypeScript types directly from your schema. AI tools get perfect type hints, your editor autocompletes everything, and TypeScript catches errors before runtime.
 
+### Instant Productivity
 
-<br />
+From schema to production-ready API in minutes. No boilerplate, no setup hell, just pure productivity.
 
+### Production-Ready
 
-## 🤔 Story
-
-Writing GraphQL for backend developers remains a complicated process when you want to take the schema-first approach instead of going code-first. I was in the type-safety rabbit hole while building [GraphQL Zeus](https://github.com/graphql-editor/graphql-zeus) (a GraphQL client with almost 1 million downloads). Maintaining Zeus and developing with the constantly-changing TypeScript proved to be really hard. \
-Over the years, I have come to understand that there was even more to it: we needed an **evolutionary** framework. I decided to write something simpler. Something that the community needed that integrated everything using the same knowledge. Something, ultimately, much more powerful.
-
-This is how Axolotl was born.
+Battle-tested by teams at GraphQL Editor and Aexol Studio. Ships with everything you need: adapters, micro-federation, DataLoaders, and deployment guides.
 
 <br />
 
-## 😇 How It Works
+## Key Features
 
-Axolotl provides type‑safety and lets you choose the adapter (or write your
-own). You develop your GraphQL project quickly, and the adapter handles the
-runtime details for your chosen server.
-
-<br />
-
-## Repository
-
-
-|Element|Description|
-|:---|:---| 
-| Adapters      | To develop adapters for popular nodejs frameworks | 
-| Examples      | To experiment with axolotl and its packages      |
-| Micro-federation | To use the micro-federation feature in axolotl <br /> <br /> - Micro-federation means that all the modules are located within one project or one monorepo **or** are distributed as npm packages <br /> - The axolotl projects are merged to the supergraph later|
-| Docs      | Documentation site and agent guide (`docs/agent-guide.md`)      |
+- **Automatic type generation** - Never write GraphQL types by hand again
+- **Schema-first workflow** - Your GraphQL schema is the single source of truth
+- **Full type safety** - Catch errors at compile time, not runtime
+- **GraphQL Yoga adapter** - Production-ready server out of the box
+- **Micro-federation** - Compose multiple schemas into one supergraph
+- **Deno support** - Works seamlessly with both Node.js and Deno
+- **Custom adapters** - Write your own adapter for any GraphQL server
+- **Easy setup** - Get started with `npx @aexol/axolotl create-yoga`
 
 <br />
 
-## Development
+## Quick Start
 
->[!IMPORTANT]
->To start developing you need to know a few things.
+```bash
+# Create a new project
+npx @aexol/axolotl create-yoga my-api
+
+# Navigate to project
+cd my-api
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+Your type-safe GraphQL API is now running at `http://localhost:4000` 🚀
+
+[Get Started →](/getting-started) | [See Examples →](/from-examples) | [AI Guide →](/ai)
 
 <br />
 
-This is an npm workspaces monorepo.
+## The Axolotl Advantage
 
-<br />
+### Schema-First = AI-First
 
-Build workspaces in order:
-```sh
- npm run build --ws --if-present
+```graphql
+# Write your schema
+type Query {
+  user(id: ID!): User @resolver
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+}
+```
+
+```typescript
+// Get perfect types automatically
+export default createResolvers({
+  Query: {
+    user: async ([, , ctx], { id }) => {
+      // ✅ TypeScript knows everything
+      // ✅ AI assistants generate perfect code
+      // ✅ No casting, no guessing
+      return db.users.findById(id);
+    },
+  },
+});
 ```
 
 <br />
 
+## Why Schema-First Matters in 2025
 
-Run an example:
+**Clear Contracts** - Your API shape is explicit and documented  
+**Better Collaboration** - Frontend and backend teams work from the same source of truth  
+**AI-Friendly** - AI tools understand schemas better than code-first approaches  
+**Type Safety** - One schema generates types for both server and client  
+**Future-Proof** - Schema evolution is explicit and trackable
+
+<br />
+
+## How It Works
+
+Axolotl provides full type safety while letting you choose the adapter (or write your own). You develop your GraphQL API quickly, and the adapter handles runtime details for your chosen server.
+
+The workflow is simple:
+
+1. **Write your schema** - Define your GraphQL API in `.graphql` files
+2. **Generate types** - Run `axolotl build` to create TypeScript types
+3. **Write resolvers** - Implement type-safe resolvers with full autocomplete
+4. **Deploy** - Use built-in adapters or create your own
+
+[Learn more about the architecture →](/architecture)
+
+<br />
+
+## Community & Support
+
+- **GitHub**: [github.com/aexol/axolotl](https://github.com/aexol/axolotl)
+- **Examples**: Check out the [examples directory](/from-examples) for complete projects
+- **Issues**: Report bugs or request features on GitHub
+- **Built by**: [Aexol Studio](http://aexol.com/) & [GraphQL Editor](https://graphqleditor.com/) teams
+
+<br />
+
+## Contributing
+
+This is an npm workspaces monorepo. To contribute:
+
 ```sh
+# Install dependencies
+npm install
+
+# Build all workspaces
+npm run build --ws --if-present
+
+# Run an example
 npm run start -w examples/yoga-federated
 ```
+
+See [Development](/development) for detailed contribution guidelines.

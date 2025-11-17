@@ -1,30 +1,577 @@
 # Resolvers
 
-Create a `resolvers.ts` file. Resolver arguments are type‑safe; you can also
-use the TypeScript `satisfies` operator with types from `models.ts` to validate
-responses.
+Resolvers are the heart of your GraphQL API. In Axolotl, all resolver arguments are fully type-safe, automatically inferred from your schema.
 
-```ts filename="resolvers.ts"
-import { BeerOrm } from '@/src/ormBeersFile.js';
-import { createResolvers } from '@/src/axolotl.js'
+## The Resolver Signature
 
-const Beer = BeerOrm();
+Axolotl resolvers use a consistent signature:
+
+```typescript
+(input, args) => ReturnType;
+```
+
+Where:
+
+- **`input`** is a tuple: `[source, args, context]`
+  - `input[0]` = **source** (parent value from parent resolver)
+  - `input[1]` = **args** (field arguments - same as second parameter)
+  - `input[2]` = **context** (request context with auth, db, etc.)
+- **`args`** is provided as a convenience (same as `input[1]`)
+
+## Basic Example
+
+```typescript
+import { createResolvers } from '@/src/axolotl.js';
 
 export default createResolvers({
   Query: {
-    beers: () => Beer.list(),
+    // Simple resolver returning a string
+    hello: () => 'World',
+
+    // Resolver with arguments
+    user: async ([, , ctx], { id }) => {
+      return ctx.db.user.findUnique({ where: { id } });
+    },
+
+    // Resolver accessing context
+    me: async ([, , ctx]) => {
+      if (!ctx.userId) {
+        throw new Error('Not authenticated');
+      }
+      return ctx.db.user.findUnique({
+        where: { id: ctx.userId },
+      });
+    },
   },
+
   Mutation: {
-    // the type of input and args is inferred 🥳 from createResolvers function
-    addBeer: (input, args) => {
-      return Beer.create(args.beer);
-    },
-    deleteBeer: (input, args) => {
-      return Beer.remove(args);
-    },
-    updateBeer: (input, args) => {
-      return Beer.update(args._id, args.beer);
+    createPost: async ([, , ctx], { title, content }) => {
+      if (!ctx.userId) {
+        throw new Error('Not authenticated');
+      }
+
+      return ctx.db.post.create({
+        data: {
+          title,
+          content,
+          authorId: ctx.userId,
+        },
+      });
     },
   },
 });
 ```
+
+## Destructuring Patterns
+
+### Pattern 1: Access Context Only
+
+When you don't need source or args:
+
+```typescript
+createResolvers({
+  Query: {
+    me: async ([, , context]) => {
+      return getUserById(context.userId);
+    },
+  },
+});
+```
+
+### Pattern 2: Access Source and Context
+
+For nested resolvers:
+
+```typescript
+createResolvers({
+  User: {
+    posts: async ([source, , context]) => {
+      return context.db.post.findMany({
+        where: { authorId: source.id },
+      });
+    },
+  },
+});
+```
+
+### Pattern 3: Use Convenience Args Parameter
+
+Most common pattern:
+
+```typescript
+createResolvers({
+  Mutation: {
+    createTodo: async ([, , ctx], { title, description }) => {
+      // args are typed automatically!
+      return ctx.db.todo.create({
+        data: { title, description, userId: ctx.userId },
+      });
+    },
+  },
+});
+```
+
+### Pattern 4: Use Underscores for Unused
+
+```typescript
+createResolvers({
+  Query: {
+    // Ignore source and args
+    currentTime: ([_, __]) => new Date().toISOString(),
+  },
+});
+```
+
+## Real-World Examples
+
+### Example 1: CRUD Operations
+
+```typescript
+import { createResolvers } from '@/src/axolotl.js';
+import { GraphQLError } from 'graphql';
+
+export default createResolvers({
+  Query: {
+    // Get single item
+    post: async ([, , ctx], { id }) => {
+      const post = await ctx.db.post.findUnique({
+        where: { id },
+      });
+
+      if (!post) {
+        throw new GraphQLError('Post not found', {
+          extensions: { code: 'NOT_FOUND' },
+        });
+      }
+
+      return post;
+    },
+
+    // List with filtering
+    posts: async ([, , ctx], { authorId, limit = 10 }) => {
+      return ctx.db.post.findMany({
+        where: authorId ? { authorId } : undefined,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      });
+    },
+  },
+
+  Mutation: {
+    // Create
+    createPost: async ([, , ctx], { input }) => {
+      if (!ctx.userId) {
+        throw new GraphQLError('Unauthorized', {
+          extensions: { code: 'UNAUTHORIZED' },
+        });
+      }
+
+      return ctx.db.post.create({
+        data: {
+          ...input,
+          authorId: ctx.userId,
+        },
+      });
+    },
+
+    // Update
+    updatePost: async ([, , ctx], { id, input }) => {
+      // Check ownership
+      const post = await ctx.db.post.findUnique({
+        where: { id },
+      });
+
+      if (!post) {
+        throw new GraphQLError('Post not found', {
+          extensions: { code: 'NOT_FOUND' },
+        });
+      }
+
+      if (post.authorId !== ctx.userId) {
+        throw new GraphQLError('Forbidden', {
+          extensions: { code: 'FORBIDDEN' },
+        });
+      }
+
+      return ctx.db.post.update({
+        where: { id },
+        data: input,
+      });
+    },
+
+    // Delete
+    deletePost: async ([, , ctx], { id }) => {
+      const post = await ctx.db.post.findUnique({
+        where: { id },
+      });
+
+      if (!post) {
+        return false;
+      }
+
+      if (post.authorId !== ctx.userId) {
+        throw new GraphQLError('Forbidden', {
+          extensions: { code: 'FORBIDDEN' },
+        });
+      }
+
+      await ctx.db.post.delete({ where: { id } });
+      return true;
+    },
+  },
+});
+```
+
+### Example 2: Authentication & Authorization
+
+```typescript
+import { createResolvers } from '@/src/axolotl.js';
+import { GraphQLError } from 'graphql';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+
+export default createResolvers({
+  Mutation: {
+    // Register
+    register: async ([, , ctx], { username, email, password }) => {
+      // Validate input
+      if (password.length < 8) {
+        throw new GraphQLError('Password must be at least 8 characters', {
+          extensions: { code: 'VALIDATION_ERROR' },
+        });
+      }
+
+      // Check if user exists
+      const existing = await ctx.db.user.findUnique({
+        where: { email },
+      });
+
+      if (existing) {
+        throw new GraphQLError('Email already registered', {
+          extensions: { code: 'CONFLICT' },
+        });
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create user
+      const user = await ctx.db.user.create({
+        data: {
+          username,
+          email,
+          password: hashedPassword,
+        },
+      });
+
+      // Generate token
+      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
+
+      return { user, token };
+    },
+
+    // Login
+    login: async ([, , ctx], { email, password }) => {
+      const user = await ctx.db.user.findUnique({
+        where: { email },
+      });
+
+      if (!user) {
+        throw new GraphQLError('Invalid credentials', {
+          extensions: { code: 'UNAUTHORIZED' },
+        });
+      }
+
+      const valid = await bcrypt.compare(password, user.password);
+
+      if (!valid) {
+        throw new GraphQLError('Invalid credentials', {
+          extensions: { code: 'UNAUTHORIZED' },
+        });
+      }
+
+      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
+
+      return { user, token };
+    },
+  },
+
+  Query: {
+    // Protected query
+    me: async ([, , ctx]) => {
+      if (!ctx.userId) {
+        throw new GraphQLError('Not authenticated', {
+          extensions: { code: 'UNAUTHORIZED' },
+        });
+      }
+
+      return ctx.db.user.findUnique({
+        where: { id: ctx.userId },
+      });
+    },
+  },
+});
+```
+
+### Example 3: Pagination
+
+```typescript
+import { createResolvers } from '@/src/axolotl.js';
+
+export default createResolvers({
+  Query: {
+    // Cursor-based pagination
+    posts: async ([, , ctx], { after, limit = 10 }) => {
+      const posts = await ctx.db.post.findMany({
+        take: limit + 1, // Fetch one extra to check if there's more
+        ...(after && {
+          cursor: { id: after },
+          skip: 1, // Skip the cursor
+        }),
+        orderBy: { createdAt: 'desc' },
+      });
+
+      const hasNextPage = posts.length > limit;
+      const edges = hasNextPage ? posts.slice(0, -1) : posts;
+
+      return {
+        edges: edges.map((post) => ({
+          node: post,
+          cursor: post.id,
+        })),
+        pageInfo: {
+          hasNextPage,
+          endCursor: edges[edges.length - 1]?.id || null,
+        },
+      };
+    },
+
+    // Offset-based pagination
+    users: async ([, , ctx], { offset = 0, limit = 10 }) => {
+      const [users, totalCount] = await Promise.all([
+        ctx.db.user.findMany({
+          skip: offset,
+          take: limit,
+          orderBy: { createdAt: 'desc' },
+        }),
+        ctx.db.user.count(),
+      ]);
+
+      return {
+        edges: users,
+        pageInfo: {
+          totalCount,
+          hasNextPage: offset + limit < totalCount,
+          hasPreviousPage: offset > 0,
+        },
+      };
+    },
+  },
+});
+```
+
+### Example 4: Nested Resolvers with DataLoader
+
+```typescript
+import { createResolvers } from '@/src/axolotl.js';
+
+export default createResolvers({
+  Post: {
+    // Efficiently load author using DataLoader
+    author: async ([source, , ctx]) => {
+      return ctx.loaders.userById.load(source.authorId);
+    },
+
+    // Load comments with batching
+    comments: async ([source, , ctx]) => {
+      return ctx.loaders.commentsByPostId.load(source.id);
+    },
+
+    // Computed field
+    excerpt: ([source]) => {
+      return source.content.substring(0, 100) + '...';
+    },
+
+    // Async computed field
+    likeCount: async ([source, , ctx]) => {
+      return ctx.db.like.count({
+        where: { postId: source.id },
+      });
+    },
+  },
+
+  User: {
+    // Nested resolver
+    posts: async ([source, , ctx], { limit = 10 }) => {
+      return ctx.db.post.findMany({
+        where: { authorId: source.id },
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      });
+    },
+  },
+});
+```
+
+## Error Handling
+
+Always use `GraphQLError` from the `graphql` package for proper error handling:
+
+```typescript
+import { GraphQLError } from 'graphql';
+
+// Good: Structured errors with codes
+throw new GraphQLError('Post not found', {
+  extensions: {
+    code: 'NOT_FOUND',
+    postId: id,
+  },
+});
+
+// Good: Authentication errors
+throw new GraphQLError('Not authenticated', {
+  extensions: { code: 'UNAUTHORIZED' },
+});
+
+// Good: Validation errors
+throw new GraphQLError('Invalid input', {
+  extensions: {
+    code: 'VALIDATION_ERROR',
+    field: 'email',
+    message: 'Email format is invalid',
+  },
+});
+```
+
+## Performance Tips
+
+### 1. Use DataLoaders
+
+Prevent N+1 queries by using DataLoaders for relationships:
+
+```typescript
+Post: {
+  author: ([source, , ctx]) => ctx.loaders.userById.load(source.authorId);
+}
+```
+
+See [Data Loaders](/data-loaders) for more details.
+
+### 2. Batch Database Queries
+
+```typescript
+// Bad: Multiple queries
+const post = await db.post.findUnique({ where: { id } });
+const author = await db.user.findUnique({ where: { id: post.authorId } });
+
+// Good: Single query with include
+const post = await db.post.findUnique({
+  where: { id },
+  include: { author: true },
+});
+```
+
+### 3. Select Only Needed Fields
+
+```typescript
+// Only select fields you need
+const user = await db.user.findUnique({
+  where: { id },
+  select: {
+    id: true,
+    username: true,
+    email: true,
+    // Don't select password!
+  },
+});
+```
+
+## Testing Resolvers
+
+Resolvers are just functions, so they're easy to test:
+
+```typescript
+import { test } from 'node:test';
+import assert from 'node:assert';
+import resolvers from './resolvers.js';
+
+test('Query.hello returns World', () => {
+  const result = resolvers.Query.hello([null, {}, {}], {});
+  assert.equal(result, 'World');
+});
+
+test('Mutation.createPost requires authentication', async () => {
+  const ctx = { userId: null, db: mockDb };
+
+  await assert.rejects(
+    () =>
+      resolvers.Mutation.createPost([null, {}, ctx], {
+        input: { title: 'Test', content: 'Content' },
+      }),
+    { message: /Not authenticated/ },
+  );
+});
+```
+
+See [Testing](/tests) for comprehensive testing strategies.
+
+## Organizing Large Resolver Files
+
+For larger projects, split resolvers by type:
+
+```
+src/
+  resolvers/
+    Query/
+      user.ts
+      posts.ts
+      resolvers.ts   # Combines Query resolvers
+    Mutation/
+      auth.ts
+      posts.ts
+      resolvers.ts   # Combines Mutation resolvers
+    Post/
+      resolvers.ts   # Post type resolvers
+    User/
+      resolvers.ts   # User type resolvers
+    resolvers.ts     # Root file that merges all
+```
+
+Use `mergeAxolotls` to combine:
+
+```typescript
+// src/resolvers/resolvers.ts
+import { mergeAxolotls } from '@aexol/axolotl-core';
+import QueryResolvers from './Query/resolvers.js';
+import MutationResolvers from './Mutation/resolvers.js';
+import PostResolvers from './Post/resolvers.js';
+import UserResolvers from './User/resolvers.js';
+
+export default mergeAxolotls(QueryResolvers, MutationResolvers, PostResolvers, UserResolvers);
+```
+
+Or use the CLI to generate this structure automatically:
+
+```bash
+npx @aexol/axolotl resolvers
+```
+
+## Best Practices
+
+1. **Always validate input** - Check args before using them
+2. **Use GraphQLError** - For consistent error handling
+3. **Check authentication** - Before accessing protected resources
+4. **Use DataLoaders** - For relationships to prevent N+1 queries
+5. **Handle edge cases** - Null checks, empty arrays, etc.
+6. **Keep resolvers thin** - Move business logic to separate functions
+7. **Type your context** - For better DX and type safety
+8. **Test your resolvers** - They're just functions!
+
+## Next Steps
+
+- Learn about [Directives](/directives) for cross-cutting concerns
+- Set up [Data Loaders](/data-loaders) for performance
+- Explore [Recipes](/recipes) for common patterns
+- Check out [Best Practices](/best-practices) for project organization
+
+[← Getting Started](/getting-started) | [Directives →](/directives)

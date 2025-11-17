@@ -1,0 +1,577 @@
+# Best Practices
+
+Build production-ready GraphQL APIs with these proven patterns and recommendations.
+
+## Project Structure
+
+### Recommended Structure
+
+```
+my-api/
+├── src/
+│   ├── axolotl.ts              # Framework initialization
+│   ├── models.ts               # Generated types (don't edit)
+│   ├── index.ts                # Server entry point
+│   ├── context.ts              # Context builder
+│   ├── resolvers/
+│   │   ├── Query/
+│   │   │   ├── user.ts
+│   │   │   ├── posts.ts
+│   │   │   └── resolvers.ts    # Combines Query resolvers
+│   │   ├── Mutation/
+│   │   │   ├── auth.ts
+│   │   │   ├── posts.ts
+│   │   │   └── resolvers.ts
+│   │   ├── Post/
+│   │   │   └── resolvers.ts    # Post type resolvers
+│   │   └── resolvers.ts        # Root combiner
+│   ├── directives/
+│   │   ├── auth.ts
+│   │   ├── rateLimit.ts
+│   │   └── index.ts
+│   ├── scalars/
+│   │   ├── DateTime.ts
+│   │   └── index.ts
+│   ├── loaders/
+│   │   ├── userLoader.ts
+│   │   └── index.ts
+│   ├── services/              # Business logic
+│   │   ├── auth.service.ts
+│   │   ├── user.service.ts
+│   │   └── post.service.ts
+│   └── utils/
+│       ├── errors.ts
+│       └── validation.ts
+├── schema.graphql
+├── axolotl.json
+├── .env
+├── .env.example
+└── package.json
+```
+
+### Use the CLI Generator
+
+Generate resolver structure automatically:
+
+```bash
+npx @aexol/axolotl resolvers
+```
+
+## Code Organization
+
+### 1. Keep Resolvers Thin
+
+Move business logic to services:
+
+```typescript
+// ❌ Bad: Logic in resolver
+Query: {
+  user: async ([, , ctx], { id }) => {
+    const user = await ctx.db.user.findUnique({ where: { id } });
+    if (!user) throw new Error('Not found');
+    if (user.deletedAt) throw new Error('Deleted');
+    return user;
+  };
+}
+
+// ✅ Good: Logic in service
+Query: {
+  user: async ([, , ctx], { id }) => {
+    return userService.findById(id, ctx.db);
+  };
+}
+```
+
+### 2. Organize by Feature
+
+Group related files:
+
+```
+src/
+  features/
+    users/
+      user.schema.graphql
+      user.resolvers.ts
+      user.service.ts
+      user.loader.ts
+      user.test.ts
+    posts/
+      post.schema.graphql
+      post.resolvers.ts
+      post.service.ts
+```
+
+### 3. Share Common Patterns
+
+Create utilities for repeated code:
+
+```typescript
+// src/utils/errors.ts
+import { GraphQLError } from 'graphql';
+
+export const notFound = (resource: string, id: string) =>
+  new GraphQLError(`${resource} not found`, {
+    extensions: { code: 'NOT_FOUND', id },
+  });
+
+export const unauthorized = () =>
+  new GraphQLError('Not authenticated', {
+    extensions: { code: 'UNAUTHORIZED' },
+  });
+
+// Usage
+if (!user) throw notFound('User', id);
+if (!ctx.userId) throw unauthorized();
+```
+
+## Type Safety
+
+### 1. Type Your Context
+
+```typescript
+// src/context.ts
+import { YogaInitialContext } from 'graphql-yoga';
+import { PrismaClient } from '@prisma/client';
+
+export type AppContext = YogaInitialContext & {
+  userId: string | null;
+  userRoles: string[];
+  db: PrismaClient;
+  loaders: {
+    userById: DataLoader<string, User>;
+    postsByUserId: DataLoader<string, Post[]>;
+  };
+};
+
+export async function buildContext(initial: YogaInitialContext): Promise<AppContext> {
+  const token = initial.request.headers.get('authorization');
+  const user = token ? await verifyToken(token) : null;
+
+  return {
+    ...initial,
+    userId: user?.id || null,
+    userRoles: user?.roles || [],
+    db: prisma,
+    loaders: createLoaders(),
+  };
+}
+```
+
+### 2. Use Type Guards
+
+```typescript
+function isAuthenticated(ctx: AppContext): asserts ctx is AppContext & { userId: string } {
+  if (!ctx.userId) {
+    throw unauthorized();
+  }
+}
+
+// Usage
+Query: {
+  me: async ([, , ctx]) => {
+    isAuthenticated(ctx);
+    // Now ctx.userId is string, not string | null
+    return ctx.db.user.findUnique({ where: { id: ctx.userId } });
+  };
+}
+```
+
+### 3. Type Your Services
+
+```typescript
+// src/services/user.service.ts
+import { PrismaClient, User } from '@prisma/client';
+
+export class UserService {
+  async findById(id: string, db: PrismaClient): Promise<User> {
+    const user = await db.user.findUnique({ where: { id } });
+    if (!user) throw notFound('User', id);
+    return user;
+  }
+
+  async create(data: CreateUserInput, db: PrismaClient): Promise<User> {
+    return db.user.create({ data });
+  }
+}
+
+export const userService = new UserService();
+```
+
+## Security
+
+### 1. Always Validate Input
+
+```typescript
+Mutation: {
+  createPost: async ([, , ctx], { input }) => {
+    // Validate
+    if (!input.title || input.title.length < 3) {
+      throw new GraphQLError('Title must be at least 3 characters');
+    }
+
+    if (input.content.length > 10000) {
+      throw new GraphQLError('Content too long');
+    }
+
+    // Sanitize
+    const sanitized = {
+      title: input.title.trim(),
+      content: sanitizeHtml(input.content),
+    };
+
+    return postService.create(sanitized, ctx);
+  };
+}
+```
+
+### 2. Check Authorization
+
+```typescript
+Mutation: {
+  deletePost: async ([, , ctx], { id }) => {
+    if (!ctx.userId) throw unauthorized();
+
+    const post = await ctx.db.post.findUnique({ where: { id } });
+    if (!post) throw notFound('Post', id);
+
+    // Check ownership
+    if (post.authorId !== ctx.userId && !ctx.userRoles.includes('ADMIN')) {
+      throw new GraphQLError('Forbidden', {
+        extensions: { code: 'FORBIDDEN' },
+      });
+    }
+
+    await ctx.db.post.delete({ where: { id } });
+    return true;
+  };
+}
+```
+
+### 3. Never Expose Sensitive Data
+
+```typescript
+// ❌ Bad: Returns password
+user: async ([, , ctx], { id }) => {
+  return ctx.db.user.findUnique({ where: { id } });
+};
+
+// ✅ Good: Selects only safe fields
+user: async ([, , ctx], { id }) => {
+  return ctx.db.user.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      createdAt: true,
+      // password: false (never select)
+    },
+  });
+};
+```
+
+### 4. Rate Limit Sensitive Operations
+
+```graphql
+type Mutation {
+  sendEmail: Boolean! @rateLimit(limit: 5, window: 3600)
+  resetPassword: Boolean! @rateLimit(limit: 3, window: 3600)
+}
+```
+
+## Performance
+
+### 1. Use DataLoaders
+
+```typescript
+// src/loaders/index.ts
+import DataLoader from 'dataloader';
+import { PrismaClient } from '@prisma/client';
+
+export function createLoaders(db: PrismaClient) {
+  return {
+    userById: new DataLoader(async (ids: readonly string[]) => {
+      const users = await db.user.findMany({
+        where: { id: { in: [...ids] } },
+      });
+
+      const userMap = new Map(users.map((u) => [u.id, u]));
+      return ids.map((id) => userMap.get(id) || null);
+    }),
+
+    postsByUserId: new DataLoader(async (userIds: readonly string[]) => {
+      const posts = await db.post.findMany({
+        where: { authorId: { in: [...userIds] } },
+      });
+
+      const grouped = new Map<string, Post[]>();
+      for (const post of posts) {
+        if (!grouped.has(post.authorId)) {
+          grouped.set(post.authorId, []);
+        }
+        grouped.get(post.authorId)!.push(post);
+      }
+
+      return userIds.map((id) => grouped.get(id) || []);
+    }),
+  };
+}
+```
+
+### 2. Batch Database Queries
+
+```typescript
+// ❌ Bad: Multiple queries
+const post = await db.post.findUnique({ where: { id } });
+const author = await db.user.findUnique({ where: { id: post.authorId } });
+
+// ✅ Good: Single query
+const post = await db.post.findUnique({
+  where: { id },
+  include: { author: true },
+});
+```
+
+### 3. Add Caching
+
+```graphql
+type Query {
+  popularPosts: [Post!]! @cache(ttl: 300)
+  stats: SiteStats! @cache(ttl: 60)
+}
+```
+
+### 4. Paginate Large Lists
+
+```typescript
+posts: async ([, , ctx], { after, limit = 10 }) => {
+  return ctx.db.post.findMany({
+    take: limit + 1,
+    ...(after && { cursor: { id: after }, skip: 1 }),
+    orderBy: { createdAt: 'desc' },
+  });
+};
+```
+
+## Error Handling
+
+### 1. Use Structured Errors
+
+```typescript
+import { GraphQLError } from 'graphql';
+
+// Good: Structured with codes
+throw new GraphQLError('Invalid input', {
+  extensions: {
+    code: 'VALIDATION_ERROR',
+    field: 'email',
+    message: 'Email format is invalid',
+  },
+});
+```
+
+### 2. Handle All Error Cases
+
+```typescript
+try {
+  return await someAsyncOperation();
+} catch (error) {
+  if (error instanceof PrismaClientKnownRequestError) {
+    if (error.code === 'P2002') {
+      throw new GraphQLError('Already exists', {
+        extensions: { code: 'CONFLICT' },
+      });
+    }
+  }
+
+  // Log unexpected errors
+  console.error('Unexpected error:', error);
+
+  throw new GraphQLError('Internal server error', {
+    extensions: { code: 'INTERNAL_SERVER_ERROR' },
+  });
+}
+```
+
+## Testing
+
+### 1. Test Resolvers as Functions
+
+```typescript
+import { test } from 'node:test';
+import assert from 'node:assert';
+import resolvers from './resolvers.js';
+
+test('Query.user returns user', async () => {
+  const mockDb = {
+    user: {
+      findUnique: async () => ({ id: '1', name: 'Test' }),
+    },
+  };
+
+  const result = await resolvers.Query.user([null, {}, { db: mockDb }], { id: '1' });
+
+  assert.equal(result.id, '1');
+});
+```
+
+### 2. Test with Real Database
+
+```typescript
+test('creates post successfully', async () => {
+  const db = await createTestDatabase();
+
+  const result = await resolvers.Mutation.createPost([null, {}, { db, userId: 'user-1' }], {
+    input: { title: 'Test', content: 'Content' },
+  });
+
+  assert.ok(result.id);
+  assert.equal(result.title, 'Test');
+
+  await cleanupDatabase(db);
+});
+```
+
+See [Testing](/tests) for comprehensive guide.
+
+## Environment Configuration
+
+### 1. Use Environment Variables
+
+```typescript
+// src/config.ts
+export const config = {
+  port: parseInt(process.env.PORT || '4000'),
+  databaseUrl: process.env.DATABASE_URL!,
+  jwtSecret: process.env.JWT_SECRET!,
+  corsOrigin: process.env.CORS_ORIGIN || '*',
+  nodeEnv: process.env.NODE_ENV || 'development',
+};
+
+// Validate on startup
+if (!config.databaseUrl) {
+  throw new Error('DATABASE_URL is required');
+}
+```
+
+### 2. Create .env.example
+
+```.env
+# Server
+PORT=4000
+NODE_ENV=development
+
+# Database
+DATABASE_URL=postgresql://user:pass@localhost:5432/db
+
+# Auth
+JWT_SECRET=your-secret-key-here
+
+# CORS
+CORS_ORIGIN=http://localhost:3000
+```
+
+## Deployment
+
+### 1. Production Checklist
+
+- ✅ Enable error masking
+- ✅ Disable GraphiQL in production
+- ✅ Set up monitoring
+- ✅ Configure CORS properly
+- ✅ Use HTTPS
+- ✅ Set rate limits
+- ✅ Enable query complexity limits
+- ✅ Use connection pooling
+
+### 2. Production Server Setup
+
+```typescript
+const { server } = adapter(
+  { resolvers, directives, scalars },
+  {
+    yoga: {
+      graphiql: config.nodeEnv !== 'production',
+      maskedErrors: config.nodeEnv === 'production',
+      cors: {
+        origin: config.corsOrigin,
+        credentials: true,
+      },
+    },
+  },
+);
+```
+
+## Documentation
+
+### 1. Document Your Schema
+
+```graphql
+"""
+Represents a user in the system
+"""
+type User {
+  """
+  Unique identifier
+  """
+  id: ID!
+
+  """
+  Display name
+  """
+  name: String!
+
+  """
+  Posts authored by this user
+  """
+  posts(
+    """
+    Maximum number of posts to return
+    """
+    limit: Int = 10
+  ): [Post!]!
+}
+```
+
+### 2. Add JSDoc to Resolvers
+
+```typescript
+/**
+ * Fetches a user by ID
+ * @throws {GraphQLError} NOT_FOUND if user doesn't exist
+ */
+user: async ([, , ctx], { id }) => {
+  return userService.findById(id, ctx.db);
+};
+```
+
+## Monitoring
+
+### 1. Add Logging
+
+```typescript
+Query: {
+  user: async ([, , ctx], { id }) => {
+    console.log('Fetching user', { id, userId: ctx.userId });
+
+    const start = Date.now();
+    const user = await userService.findById(id, ctx.db);
+    const duration = Date.now() - start;
+
+    console.log('User fetched', { id, duration });
+    return user;
+  };
+}
+```
+
+### 2. Track Metrics
+
+Use services like Sentry, DataDog, or New Relic.
+
+## Next Steps
+
+- Explore [Recipes](/recipes) for specific patterns
+- Read [Architecture](/architecture) to understand internals
+- Check [Deploy guides](/deploy) for production deployment
+
+[← Architecture](/architecture) | [Recipes →](/recipes)

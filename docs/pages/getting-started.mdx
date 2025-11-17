@@ -1,8 +1,28 @@
-# 🚀 Getting Started
+# Getting Started
 
-Want a ready‑to‑run template? Start with a starter: [/from-examples](/from-examples)
+Want a ready-to-run template? Start with a starter: [From Examples →](/from-examples)
 
 Prefer to understand how Axolotl works under the hood? Read on.
+
+## Why Choose Axolotl?
+
+Axolotl eliminates the manual work and type mismatches that plague GraphQL development:
+
+| Traditional GraphQL     | Axolotl                           |
+| ----------------------- | --------------------------------- |
+| Manual type definitions | **Automatic type generation**     |
+| Schema-code drift       | **Schema is the source of truth** |
+| Runtime type errors     | **Compile-time type safety**      |
+| Resolver type casting   | **Zero casting needed**           |
+| Complex setup           | **Simple, intuitive API**         |
+
+### Perfect for AI-Assisted Development
+
+Axolotl works seamlessly with **GitHub Copilot**, **Cursor**, **ChatGPT**, and **Claude**. Clear patterns and full type safety mean AI assistants generate perfect code every time.
+
+[Learn more about AI-assisted development →](/ai)
+
+<br />
 
 ## Installation
 
@@ -12,231 +32,487 @@ Install dependencies and the Yoga adapter:
 npm i @aexol/axolotl-core @aexol/axolotl-graphql-yoga graphql-yoga graphql
 ```
 
-Create a `schema.graphql` file (or point to a URL). Axolotl will generate
-type‑safe models from your schema.
+Or use the quick start command:
 
-Take a look at the following schema
-```graphql filename="schema.graphql"
-type Beer implements Node{
-	name: String!
-	price: Int!
-	_id: String!
-}
-
-type Query{
-	beers: [Beer!]
-	testAuth: String! @auth
-}
-
-type Mutation{
-	addBeer(
-		beer: CreateBeer!
-	): String
-	deleteBeer(
-		_id: String!
-	): Boolean
-	updateBeer(
-		beer: UpdateBeer!
-		_id: String!
-	): Boolean
-}
-
-input CreateBeer{
-	name: String!
-	price: Int!
-}
-
-interface Node{
-	_id: String!
-	createdAt: String!
-}
-
-input UpdateBeer{
-	name: String
-	price: Int
-}
-
-schema{
-    query: Query
-    mutation: Mutation
-}
-directive @auth on FIELD_DEFINITION
+```sh
+npx @aexol/axolotl create-new my-api
+cd my-api
+npm install
+npm run dev
 ```
-This simple schema will produce `models.ts` at the path you choose.
-Generate models:
+
+<br />
+
+## Step 1: Define Your Schema
+
+Create a `schema.graphql` file. This is your single source of truth.
+
+```graphql filename="schema.graphql"
+type User {
+  _id: String!
+  username: String!
+  email: String!
+  createdAt: String!
+}
+
+type Post {
+  _id: String!
+  title: String!
+  content: String!
+  author: User!
+  createdAt: String!
+}
+
+type Query {
+  user(id: String!): User @resolver
+  posts(authorId: String, limit: Int = 10): [Post!]! @resolver
+}
+
+type Mutation {
+  createPost(title: String!, content: String!): Post! @resolver
+}
+
+directive @resolver on FIELD_DEFINITION
+
+schema {
+  query: Query
+  mutation: Mutation
+}
+```
+
+The `@resolver` directive marks fields that need custom implementation.
+
+<br />
+
+## Step 2: Generate Types
+
+Run Axolotl's code generator:
 
 ```sh
 npx @aexol/axolotl build
 ```
-This generates type‑safe models for your Axolotl engine. Example output:
+
+This creates a `models.ts` file with TypeScript types for your entire schema:
+
 ```ts filename="src/models.ts"
-export interface CreateBeer {
-  name: string;
-  price: number;
-}
-export interface UpdateBeer {
-  name?: string | undefined;
-  price?: number | undefined;
-}
+// AUTO-GENERATED - DO NOT EDIT
 
 export type Models = {
-  ['Beer']: {
-    name: {
-      args: Record<string, never>;
-    };
-    price: {
-      args: Record<string, never>;
-    };
-    _id: {
-      args: Record<string, never>;
-    };
+  ['User']: {
+    _id: { args: Record<string, never> };
+    username: { args: Record<string, never> };
+    email: { args: Record<string, never> };
+    createdAt: { args: Record<string, never> };
+  };
+  ['Post']: {
+    _id: { args: Record<string, never> };
+    title: { args: Record<string, never> };
+    content: { args: Record<string, never> };
+    author: { args: Record<string, never> };
+    createdAt: { args: Record<string, never> };
   };
   ['Query']: {
-    beers: {
-      args: Record<string, never>;
+    user: {
+      args: {
+        id: string;
+      };
     };
-    testAuth: {
-      args: Record<string, never>;
+    posts: {
+      args: {
+        authorId?: string | undefined;
+        limit?: number | undefined;
+      };
     };
   };
   ['Mutation']: {
-    addBeer: {
+    createPost: {
       args: {
-        beer: CreateBeer;
-      };
-    };
-    deleteBeer: {
-      args: {
-        _id: string;
-      };
-    };
-    updateBeer: {
-      args: {
-        beer: UpdateBeer;
-        _id: string;
+        title: string;
+        content: string;
       };
     };
   };
 };
 
-export type Directives = {
-    auth: {
-      args: Record<string, never>;
-    };
-};
-
-export interface Beer {
-  name: string;
-  price: number;
+export interface User {
   _id: string;
+  username: string;
+  email: string;
+  createdAt: string;
 }
-export interface Query {
-  beers?: Array<Beer> | undefined;
-  testAuth: string;
+
+export interface Post {
+  _id: string;
+  title: string;
+  content: string;
+  author: User;
+  createdAt: string;
 }
-export interface Mutation {
-  addBeer?: string | undefined;
-  deleteBeer?: boolean | undefined;
-  updateBeer?: boolean | undefined;
+// ... more types
+```
+
+### Create Configuration File
+
+On first run, Axolotl creates `axolotl.json`:
+
+```json filename="axolotl.json"
+{
+  "schema": "schema.graphql",
+  "models": "src/models.ts"
 }
 ```
 
-`Models` and `Directives` types will be consumed by Axolotl engine. Below there
-types that you can use to check if the response is valid using TypeScript
-`satisfies` keyword.
+This config is used for all future builds. You can edit paths if needed.
 
+<br />
 
-Then create the `axolotl.ts` adapter entry:
+## Step 3: Initialize Axolotl
 
-```ts filename="axolotl.ts"
-import { Directives, Models } from '@/src/models.js';
+Create `axolotl.ts` to initialize the framework:
+
+```ts filename="src/axolotl.ts"
+import { Models } from '@/src/models.js';
 import { Axolotl } from '@aexol/axolotl-core';
 import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
 
-export const { applyMiddleware, createResolvers, createDirectives, adapter } = Axolotl(graphqlYogaAdapter)<
-  Models,
-  Directives
->();
+export const { createResolvers, createDirectives, createScalars, adapter } = Axolotl(graphqlYogaAdapter)<Models>();
 ```
 
-Now implement resolvers in `resolvers.ts`:
+This exports type-safe functions for building your API.
 
-```ts filename="resolvers.ts"
+### With Custom Context (Recommended)
+
+For real applications, you'll want custom context with database access, authentication, etc:
+
+```ts filename="src/axolotl.ts"
+import { Models } from '@/src/models.js';
+import { Axolotl } from '@aexol/axolotl-core';
+import { graphqlYogaWithContextAdapter } from '@aexol/axolotl-graphql-yoga';
+import { YogaInitialContext } from 'graphql-yoga';
+import { PrismaClient } from '@prisma/client';
+
+const db = new PrismaClient();
+
+// Define your context type
+type AppContext = YogaInitialContext & {
+  userId: string | null;
+  db: PrismaClient;
+};
+
+// Build context per request
+async function buildContext(initial: YogaInitialContext): Promise<AppContext> {
+  const token = initial.request.headers.get('authorization');
+  const userId = token ? await verifyToken(token) : null;
+
+  return {
+    ...initial, // ✅ Must spread initial context
+    userId,
+    db,
+  };
+}
+
+export const { createResolvers, createDirectives, createScalars, adapter } = Axolotl(
+  graphqlYogaWithContextAdapter<AppContext>(buildContext),
+)<Models>();
+```
+
+<br />
+
+## Step 4: Implement Resolvers
+
+Create `resolvers.ts` with type-safe resolver implementations:
+
+```ts filename="src/resolvers.ts"
 import { createResolvers } from '@/src/axolotl.js';
-import { Beer } from '@/src/models.js';
-
-const Beers: Beer[] = [
-  {
-    _id: '0',
-    createdAt: '2023-10-10T15:21:43.038Z',
-    name: 'Kumple',
-    price: 10,
-    info: 'Dobre piwko',
-  },
-  {
-    _id: '1',
-    createdAt: '2023-10-11T14:51:09.029Z',
-    name: 'Zubr',
-    price: 100,
-  },
-];
+import { GraphQLError } from 'graphql';
 
 export default createResolvers({
   Query: {
-    beers: () => Beers,
-    testAuth: () => 'TOP SECRET',
+    user: async ([, , ctx], { id }) => {
+      // ✅ `id` is typed as string
+      // ✅ `ctx` has your custom context type
+      const user = await ctx.db.user.findUnique({
+        where: { id },
+      });
+
+      if (!user) {
+        throw new GraphQLError('User not found');
+      }
+
+      return user;
+    },
+
+    posts: async ([, , ctx], { authorId, limit = 10 }) => {
+      // ✅ `authorId` is typed as string | undefined
+      // ✅ `limit` has default value from schema
+      return ctx.db.post.findMany({
+        where: authorId ? { authorId } : undefined,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      });
+    },
   },
+
   Mutation: {
-    addBeer: (input, args) => {
-      return Beers.push({ ...args.beer, _id: Beers.length + 1 + '', createdAt: new Date().toISOString() });
-    },
-    deleteBeer: (input, args) => {
-      return Beers.splice(Beers.findIndex((b) => b._id === args._id));
-    },
-    updateBeer: (input, args) => {
-      const oldElement = Beers.find((b) => b._id);
-      if (!oldElement) return false;
-      return Beers.splice(
-        Beers.findIndex((b) => b._id === args._id),
-        1,
-        {
-          ...oldElement,
-          ...args.beer,
+    createPost: async ([, , ctx], { title, content }) => {
+      // Check authentication
+      if (!ctx.userId) {
+        throw new GraphQLError('Not authenticated', {
+          extensions: { code: 'UNAUTHORIZED' },
+        });
+      }
+
+      // Create post
+      return ctx.db.post.create({
+        data: {
+          title,
+          content,
+          authorId: ctx.userId,
+          createdAt: new Date().toISOString(),
         },
-      );
+      });
+    },
+  },
+
+  Post: {
+    // Nested resolver for author field
+    author: async ([source, , ctx]) => {
+      return ctx.db.user.findUnique({
+        where: { id: source.authorId },
+      });
     },
   },
 });
 ```
 
-Here you can have every type safe resolver implementation.
+### Understanding the Resolver Signature
 
-Now we need to run the resolvers using prepared adapter. Write your `index.ts` file.
+```typescript
+(input, args) => ReturnType;
+```
 
-```ts filename="index.ts"
+- **`input`** is a tuple: `[source, args, context]`
+- **`args`** is provided as convenience (same as `input[1]`)
+
+Common patterns:
+
+```typescript
+// Access context only
+([, , ctx]) => { ... }
+
+// Access args via second parameter
+([, , ctx], { id }) => { ... }
+
+// Access source in nested resolvers
+([source, , ctx]) => { ... }
+```
+
+[Learn more about resolvers →](/resolvers)
+
+<br />
+
+## Step 5: Start the Server
+
+Create `index.ts` to start your GraphQL server:
+
+```ts filename="src/index.ts"
 import { adapter } from '@/src/axolotl.js';
 import resolvers from '@/src/resolvers.js';
 
-adapter({ resolvers }).server.listen(parseInt(process.env.PORT || '4000'), () => {
-  console.log('LISTENING to ' + process.env.PORT || '4000');
+const { server } = adapter(
+  { resolvers },
+  {
+    yoga: {
+      graphiql: true, // Enable GraphiQL UI
+      cors: {
+        origin: process.env.CORS_ORIGIN || '*',
+        credentials: true,
+      },
+    },
+  },
+);
+
+const PORT = parseInt(process.env.PORT || '4000');
+
+server.listen(PORT, () => {
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`📊 GraphiQL UI at http://localhost:${PORT}/graphql`);
 });
 ```
 
-Now if we build it and run the index.js using `node` command - we have the
-running server.
+### Run Your Server
+
+```sh
+# Development with auto-reload
+npm run dev
+
+# Production
+npm run build
+npm start
+```
+
+Visit `http://localhost:4000/graphql` to use GraphiQL and test your API!
+
+<br />
+
+## Project Structure
 
 Your file tree should look like this:
 
-import { FileTree } from 'nextra/components'
- 
-<FileTree>
-  <FileTree.Folder name="src" defaultOpen>
-    <FileTree.File name="axolotl.ts" />
-    <FileTree.File name="index.ts" />
-    <FileTree.File name="models.ts" />
-    <FileTree.File name="resolvers.ts" />
-  </FileTree.Folder>
-  <FileTree.File name="package.json" />
-  <FileTree.File name="schema.graphql" />
-  <FileTree.File name="tsconfig.json" />
-</FileTree>
+```
+my-api/
+├── src/
+│   ├── axolotl.ts       # Framework initialization
+│   ├── models.ts        # Generated types (auto-generated)
+│   ├── resolvers.ts     # Your resolver implementations
+│   └── index.ts         # Server entry point
+├── schema.graphql       # Your GraphQL schema
+├── axolotl.json         # Axolotl configuration
+├── package.json
+└── tsconfig.json
+```
+
+<br />
+
+## Common Gotchas
+
+### 1. Imports Must Use .js Extension
+
+Axolotl uses ESM, so imports need `.js` extensions:
+
+```typescript
+// ✅ Correct
+import { createResolvers } from './axolotl.js';
+
+// ❌ Wrong
+import { createResolvers } from './axolotl';
+```
+
+### 2. Regenerate Types After Schema Changes
+
+Always run `axolotl build` after changing your schema:
+
+```sh
+# 1. Edit schema.graphql
+# 2. Run build
+npx @aexol/axolotl build
+# 3. Update resolvers if needed
+```
+
+### 3. Never Edit models.ts Manually
+
+The `models.ts` file is auto-generated. Always edit the schema instead.
+
+### 4. Context Must Extend YogaInitialContext
+
+When using custom context:
+
+```typescript
+// ✅ Correct
+type AppContext = YogaInitialContext & { userId: string };
+
+// ❌ Wrong - missing YogaInitialContext
+type AppContext = { userId: string };
+```
+
+And always spread the initial context:
+
+```typescript
+// ✅ Correct
+return { ...initial, userId };
+
+// ❌ Wrong - missing spread
+return { userId };
+```
+
+<br />
+
+## Next Steps
+
+Now that you have a working GraphQL API, explore more features:
+
+### Add Features
+
+- **[Directives](/directives)** - Add @auth, @rateLimit, and custom logic
+- **[Data Loaders](/data-loaders)** - Prevent N+1 queries with batching
+- **[Custom Scalars](/scalars)** - Add DateTime, JSON, and custom types
+- **[Testing](/tests)** - Write tests for your resolvers
+
+### Scale Your API
+
+- **[Micro-Federation](/micro-federation)** - Split schema into modules
+- **[Best Practices](/best-practices)** - Project organization and patterns
+- **[Recipes](/recipes)** - Common patterns and solutions
+
+### Deploy
+
+- **[Deploy to Railway](/deploy/railway)**
+- **[Deploy to Fly.io](/deploy/flyio)**
+- **[Deploy with Docker](/deploy/docker)**
+
+### AI Assistance
+
+- **[AI-Assisted Development](/ai)** - Use Cursor, Copilot, ChatGPT with Axolotl
+
+<br />
+
+## Getting Help
+
+- **Documentation**: You're here!
+- **Examples**: Check [/from-examples](/from-examples) for complete projects
+- **GitHub Issues**: [Report bugs or request features](https://github.com/aexol/axolotl/issues)
+- **Agent Guide**: See `docs/agent-guide.md` for LLM integration tips
+
+<br />
+
+## Comparison with Other Frameworks
+
+### vs Apollo Server
+
+```typescript
+// Apollo Server - Manual type definitions
+type User = {
+  id: string;
+  name: string;
+};
+
+// Axolotl - Generated from schema
+// ✅ No manual types needed
+```
+
+### vs Nexus/Pothos (Code-First)
+
+```typescript
+// Nexus - Define types in code
+const User = objectType({
+  name: 'User',
+  definition(t) {
+    t.string('id');
+    t.string('name');
+  },
+});
+
+// Axolotl - Schema-first
+// ✅ Schema is readable by everyone (frontend, AI, tools)
+// ✅ Types generated automatically
+```
+
+### vs TypeGraphQL
+
+```typescript
+// TypeGraphQL - Decorators and classes
+@ObjectType()
+class User {
+  @Field()
+  id: string;
+}
+
+// Axolotl - Simple functions
+// ✅ No decorators needed
+// ✅ Pure functions are easier to test
+// ✅ Better with AI assistants
+```
+
+<br />
+
+**Ready to build?** [Explore examples →](/from-examples) | [Read the AI guide →](/ai)
