@@ -624,33 +624,70 @@ adapter({ resolvers, scalars });
 
 ### With Directives
 
+Directives add cross-cutting concerns like authentication, authorization, and logging to your schema fields.
+
 ```typescript
 import { createDirectives } from '@/src/axolotl.js';
 import { MapperKind } from '@graphql-tools/utils';
-import { defaultFieldResolver } from 'graphql';
+import { defaultFieldResolver, GraphQLError } from 'graphql';
 
 const directives = createDirectives({
-  auth: (schema, getDirective) => ({
-    [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
-      const hasDirective = getDirective(schema, fieldConfig, 'auth');
-      if (!hasDirective) return fieldConfig;
+  // Directive function signature: (schema, getDirective) => SchemaMapperConfig
+  auth: (schema, getDirective) => {
+    // Return mapper config object (NOT a schema!)
+    return {
+      [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
+        // Check if field has @auth directive
+        const authDirective = getDirective(schema, fieldConfig, 'auth')?.[0];
 
-      const { resolve = defaultFieldResolver } = fieldConfig as any;
-      return {
-        ...fieldConfig,
-        resolve: async (source, args, context, info) => {
-          if (!context.userId) {
-            throw new Error('Not authenticated');
-          }
-          return resolve(source, args, context, info);
-        },
-      } as any;
-    },
-  }),
+        if (!authDirective) {
+          return fieldConfig; // No directive, return unchanged
+        }
+
+        // Get original resolver
+        const { resolve = defaultFieldResolver } = fieldConfig;
+
+        // Return field with wrapped resolver for runtime behavior
+        return {
+          ...fieldConfig,
+          resolve: async (source, args, context, info) => {
+            // This runs on EVERY request to this field
+            if (!context.userId) {
+              throw new GraphQLError('Not authenticated', {
+                extensions: { code: 'UNAUTHORIZED' },
+              });
+            }
+
+            // Call original resolver
+            return resolve(source, args, context, info);
+          },
+        };
+      },
+    };
+  },
 });
 
 adapter({ resolvers, directives });
 ```
+
+**Schema:**
+
+```graphql
+directive @auth on FIELD_DEFINITION
+
+type Query {
+  publicData: String!
+  protectedData: String! @auth # Only authenticated users
+}
+```
+
+**Key Points:**
+
+- Directive function receives `(schema, getDirective)` parameters
+- Must return mapper config object `{ [MapperKind.X]: ... }`
+- Use `getDirective()` to check if field has the directive
+- Wrap `resolve` function to add runtime behavior per request
+- The adapter calls `mapSchema()` internally - don't call it in your directive
 
 ---
 
@@ -744,11 +781,13 @@ npx @aexol/axolotl inspect -s ./schema.graphql -r ./lib/resolvers.js
 ```
 
 **What it does:**
+
 - Finds all fields marked with `@resolver` directive in your schema
 - Checks if resolvers are missing or still contain stub implementations
 - Reports only unimplemented resolvers (not all schema fields)
 
 **Example output:**
+
 ```
 Resolvers that need implementation:
 
@@ -760,6 +799,7 @@ Total: 3 resolver(s) to implement
 ```
 
 **Status indicators:**
+
 - ✅ All implemented - Command exits with code 0
 - ⚠️ Stub - Resolver exists but throws "Not implemented" error
 - ❌ Missing - No resolver function exists for this field
@@ -767,7 +807,8 @@ Total: 3 resolver(s) to implement
 **Tip:** Use `npx @aexol/axolotl resolvers` to generate stubs, then use `inspect` to track implementation progress.
 
 ---
-```
+
+````
 
 ---
 
@@ -811,7 +852,7 @@ graphqlYogaWithContextAdapter<AppContext>(async (initial) => ({
 
 // ❌ WRONG - Passing object instead of function
 graphqlYogaWithContextAdapter<AppContext>({ userId: '123' });
-```
+````
 
 ### Resolver Patterns
 

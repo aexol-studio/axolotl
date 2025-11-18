@@ -1,10 +1,11 @@
 import { adapter } from '@/src/axolotl.js';
 import resolvers from '@/src/resolvers.js';
+import directives from './directives.js';
 
 // This is yoga specific
 
 adapter(
-  { resolvers },
+  { resolvers, directives },
   {
     yoga: {
       graphiql: {
