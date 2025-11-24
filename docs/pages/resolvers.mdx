@@ -413,6 +413,338 @@ export default createResolvers({
 });
 ```
 
+## Subscription Resolvers
+
+**CRITICAL:** All subscription resolvers **MUST** use `createSubscriptionHandler` from `@aexol/axolotl-core`.
+
+Subscriptions enable real-time updates by streaming data from server to client. In Axolotl, subscriptions are implemented using async generator functions wrapped with `createSubscriptionHandler`.
+
+### Basic Subscription Example
+
+```typescript
+import { createResolvers } from '@/src/axolotl.js';
+import { createSubscriptionHandler } from '@aexol/axolotl-core';
+import { setTimeout as setTimeout$ } from 'node:timers/promises';
+
+export default createResolvers({
+  Subscription: {
+    // Simple countdown that yields values over time
+    countdown: createSubscriptionHandler(async function* (input, { from }) {
+      for (let i = from || 10; i >= 0; i--) {
+        await setTimeout$(1000);
+        yield i;
+      }
+    }),
+  },
+});
+```
+
+**Schema:**
+
+```graphql
+type Subscription {
+  countdown(from: Int): Int @resolver
+}
+
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+```
+
+**Usage:**
+
+```graphql
+subscription {
+  countdown(from: 5)
+}
+```
+
+### Event-Based Subscriptions with PubSub
+
+For real-world applications, use a PubSub system to broadcast events:
+
+```typescript
+import { createResolvers } from '@/src/axolotl.js';
+import { createSubscriptionHandler } from '@aexol/axolotl-core';
+
+export default createResolvers({
+  Mutation: {
+    // Mutation publishes event
+    createPost: async ([, , ctx], { title, content }) => {
+      const post = await ctx.db.post.create({
+        data: { title, content, authorId: ctx.userId },
+      });
+
+      // Publish to subscribers
+      await ctx.pubsub.publish('POST_CREATED', post);
+
+      return post;
+    },
+  },
+
+  Subscription: {
+    // Subscription listens for events
+    postCreated: createSubscriptionHandler(async function* (input) {
+      const [, , ctx] = input;
+      const channel = ctx.pubsub.subscribe('POST_CREATED');
+
+      try {
+        for await (const post of channel) {
+          // Optional: filter based on user permissions
+          if (await ctx.canViewPost(post)) {
+            yield post;
+          }
+        }
+      } finally {
+        // Cleanup when client disconnects
+        await channel.unsubscribe();
+      }
+    }),
+
+    // Subscription with filters
+    postCreatedByAuthor: createSubscriptionHandler(async function* (input, { authorId }) {
+      const [, , ctx] = input;
+      const channel = ctx.pubsub.subscribe('POST_CREATED');
+
+      try {
+        for await (const post of channel) {
+          // Filter by author
+          if (post.authorId === authorId) {
+            yield post;
+          }
+        }
+      } finally {
+        await channel.unsubscribe();
+      }
+    }),
+  },
+});
+```
+
+**Schema:**
+
+```graphql
+type Post {
+  id: String!
+  title: String!
+  content: String!
+  authorId: String!
+}
+
+type Subscription {
+  postCreated: Post @resolver
+  postCreatedByAuthor(authorId: String!): Post @resolver
+}
+```
+
+### Real-Time Chat Example
+
+```typescript
+import { createResolvers } from '@/src/axolotl.js';
+import { createSubscriptionHandler } from '@aexol/axolotl-core';
+
+export default createResolvers({
+  Mutation: {
+    sendMessage: async ([, , ctx], { roomId, text }) => {
+      const message = {
+        id: crypto.randomUUID(),
+        roomId,
+        text,
+        userId: ctx.userId,
+        timestamp: new Date().toISOString(),
+      };
+
+      await ctx.db.message.create({ data: message });
+      await ctx.pubsub.publish(`ROOM_${roomId}`, message);
+
+      return message;
+    },
+  },
+
+  Subscription: {
+    // Subscribe to messages in a specific room
+    messageAdded: createSubscriptionHandler(async function* (input, { roomId }) {
+      const [, , ctx] = input;
+
+      if (!ctx.userId) {
+        throw new Error('Not authenticated');
+      }
+
+      // Check if user has access to room
+      const hasAccess = await ctx.db.roomMember.findUnique({
+        where: {
+          roomId_userId: { roomId, userId: ctx.userId },
+        },
+      });
+
+      if (!hasAccess) {
+        throw new Error('Not authorized to access this room');
+      }
+
+      const channel = ctx.pubsub.subscribe(`ROOM_${roomId}`);
+
+      try {
+        for await (const message of channel) {
+          yield message;
+        }
+      } finally {
+        await channel.unsubscribe();
+      }
+    }),
+  },
+});
+```
+
+### Live Updates Example
+
+```typescript
+import { createResolvers } from '@/src/axolotl.js';
+import { createSubscriptionHandler } from '@aexol/axolotl-core';
+
+export default createResolvers({
+  Subscription: {
+    // Monitor document changes in real-time
+    documentUpdated: createSubscriptionHandler(async function* (input, { documentId }) {
+      const [, , ctx] = input;
+
+      // Check permissions
+      const doc = await ctx.db.document.findUnique({
+        where: { id: documentId },
+      });
+
+      if (!doc || doc.ownerId !== ctx.userId) {
+        throw new Error('Not authorized');
+      }
+
+      const channel = ctx.pubsub.subscribe(`DOC_${documentId}`);
+
+      try {
+        for await (const update of channel) {
+          yield {
+            documentId,
+            content: update.content,
+            updatedBy: update.userId,
+            timestamp: update.timestamp,
+          };
+        }
+      } finally {
+        await channel.unsubscribe();
+      }
+    }),
+
+    // System status monitoring
+    systemStatus: createSubscriptionHandler(async function* (input) {
+      const [, , ctx] = input;
+
+      // Only admins can subscribe
+      if (!ctx.isAdmin) {
+        throw new Error('Admin access required');
+      }
+
+      const channel = ctx.pubsub.subscribe('SYSTEM_STATUS');
+
+      try {
+        for await (const status of channel) {
+          yield {
+            cpuUsage: status.cpu,
+            memoryUsage: status.memory,
+            activeConnections: status.connections,
+            timestamp: new Date().toISOString(),
+          };
+        }
+      } finally {
+        await channel.unsubscribe();
+      }
+    }),
+  },
+});
+```
+
+### Key Points About Subscriptions
+
+1. **Always use `createSubscriptionHandler`** - Wraps your async generator and handles protocol details
+2. **Use async generators** - Functions declared with `async function*` that `yield` values
+3. **Same signature as resolvers** - `(input, args) => AsyncGenerator` where `input = [source, args, context]`
+4. **Authentication/Authorization** - Check permissions before subscribing
+5. **Cleanup** - Use `try/finally` to unsubscribe when client disconnects
+6. **Filtering** - Apply filters inside the generator to only yield relevant data
+7. **Error handling** - Throw errors for auth/permission issues before entering the loop
+8. **Transport** - Works with GraphQL Yoga's SSE and WebSocket transports
+
+### PubSub Setup
+
+In your context, set up a PubSub system (example with a simple EventEmitter-based pubsub):
+
+```typescript
+// context.ts
+import { EventEmitter } from 'events';
+
+const eventEmitter = new EventEmitter();
+
+export const createPubSub = () => ({
+  publish: async (channel: string, data: any) => {
+    eventEmitter.emit(channel, data);
+  },
+  subscribe: (channel: string) => {
+    const queue: any[] = [];
+    const listeners: ((value: any) => void)[] = [];
+
+    const handler = (data: any) => {
+      if (listeners.length > 0) {
+        const listener = listeners.shift()!;
+        listener(data);
+      } else {
+        queue.push(data);
+      }
+    };
+
+    eventEmitter.on(channel, handler);
+
+    return {
+      [Symbol.asyncIterator]() {
+        return {
+          async next() {
+            if (queue.length > 0) {
+              return { value: queue.shift(), done: false };
+            }
+            return new Promise((resolve) => {
+              listeners.push((value) => resolve({ value, done: false }));
+            });
+          },
+          async return() {
+            eventEmitter.off(channel, handler);
+            return { value: undefined, done: true };
+          },
+        };
+      },
+      unsubscribe: async () => {
+        eventEmitter.off(channel, handler);
+      },
+    };
+  },
+});
+
+// axolotl.ts
+const pubsub = createPubSub();
+
+type AppContext = YogaInitialContext & {
+  userId: string | null;
+  pubsub: ReturnType<typeof createPubSub>;
+};
+
+async function buildContext(initial: YogaInitialContext): Promise<AppContext> {
+  return {
+    ...initial,
+    userId: /* auth logic */,
+    pubsub,
+  };
+}
+```
+
+For production, use Redis PubSub or a message queue system instead of EventEmitter.
+
 ## Error Handling
 
 Always use `GraphQLError` from the `graphql` package for proper error handling:

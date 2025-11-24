@@ -72,11 +72,16 @@ type Mutation {
   createPost(title: String!, content: String!): Post! @resolver
 }
 
+type Subscription {
+  countdown(from: Int): Int @resolver
+}
+
 directive @resolver on FIELD_DEFINITION
 
 schema {
   query: Query
   mutation: Mutation
+  subscription: Subscription
 }
 ```
 
@@ -282,7 +287,24 @@ export default createResolvers({
       });
     },
   },
+
+  Subscription: {
+    // Real-time countdown using createSubscriptionHandler
+    countdown: createSubscriptionHandler(async function* (input, { from }) {
+      for (let i = from || 10; i >= 0; i--) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        yield i;
+      }
+    }),
+  },
 });
+```
+
+**Note:** Subscription resolvers must use `createSubscriptionHandler` from `@aexol/axolotl-core`. Import it at the top:
+
+```typescript
+import { createResolvers } from '@/src/axolotl.js';
+import { createSubscriptionHandler } from '@aexol/axolotl-core';
 ```
 
 ### Understanding the Resolver Signature

@@ -577,7 +577,176 @@ export default mergeAxolotls(QueryResolvers, MutationResolvers);
 
 ---
 
-## STEP 6: Server Configuration
+## STEP 6: Subscriptions
+
+**Purpose:** Enable real-time updates via GraphQL Subscriptions.
+
+### Defining Subscriptions in Schema
+
+Add a `Subscription` type to your schema:
+
+```graphql
+type Subscription {
+  countdown(from: Int): Int @resolver
+  messageAdded: Message @resolver
+}
+
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+```
+
+### Creating Subscription Resolvers
+
+**CRITICAL:** All subscription resolvers **MUST** use `createSubscriptionHandler` from `@aexol/axolotl-core`.
+
+```typescript
+import { createResolvers, createSubscriptionHandler } from '@aexol/axolotl-core';
+import { setTimeout as setTimeout$ } from 'node:timers/promises';
+
+export default createResolvers({
+  Subscription: {
+    // Simple countdown subscription
+    countdown: createSubscriptionHandler(async function* (input, { from }) {
+      // input is [source, args, context] - same as regular resolvers
+      const [, , context] = input;
+
+      for (let i = from || 10; i >= 0; i--) {
+        await setTimeout$(1000);
+        yield i;
+      }
+    }),
+
+    // Event-based subscription with PubSub
+    messageAdded: createSubscriptionHandler(async function* (input) {
+      const [, , context] = input;
+      const channel = context.pubsub.subscribe('MESSAGE_ADDED');
+
+      for await (const message of channel) {
+        yield message;
+      }
+    }),
+  },
+});
+```
+
+### Key Points:
+
+1. **Always use `createSubscriptionHandler`** - It wraps your async generator function
+2. **Use async generators** - Functions with `async function*` that yield values
+3. **Return values directly** - The framework handles wrapping in the subscription field
+4. **Access context** - Same `[source, args, context]` signature as regular resolvers
+5. **Works with GraphQL Yoga** - Supports both SSE and WebSocket transports
+
+### Example: Real-Time Counter
+
+**Schema:**
+
+```graphql
+type Subscription {
+  countdown(from: Int = 10): Int @resolver
+}
+```
+
+**Resolver:**
+
+```typescript
+import { createResolvers, createSubscriptionHandler } from '@aexol/axolotl-core';
+import { setTimeout as setTimeout$ } from 'node:timers/promises';
+
+export default createResolvers({
+  Subscription: {
+    countdown: createSubscriptionHandler(async function* (input, { from }) {
+      console.log(`Starting countdown from ${from}`);
+
+      for (let i = from || 10; i >= 0; i--) {
+        await setTimeout$(1000);
+        yield i;
+      }
+
+      console.log('Countdown complete!');
+    }),
+  },
+});
+```
+
+**GraphQL Query:**
+
+```graphql
+subscription {
+  countdown(from: 5)
+}
+```
+
+### Example: PubSub Pattern
+
+```typescript
+import { createResolvers, createSubscriptionHandler } from '@aexol/axolotl-core';
+
+export default createResolvers({
+  Mutation: {
+    sendMessage: async ([, , ctx], { text }) => {
+      const message = {
+        id: crypto.randomUUID(),
+        text,
+        timestamp: new Date().toISOString(),
+      };
+
+      // Publish event
+      await ctx.pubsub.publish('MESSAGE_ADDED', message);
+
+      return message;
+    },
+  },
+
+  Subscription: {
+    messageAdded: createSubscriptionHandler(async function* (input) {
+      const [, , ctx] = input;
+      const channel = ctx.pubsub.subscribe('MESSAGE_ADDED');
+
+      try {
+        for await (const message of channel) {
+          yield message;
+        }
+      } finally {
+        // Cleanup on disconnect
+        await channel.unsubscribe();
+      }
+    }),
+  },
+});
+```
+
+### Federated Subscriptions
+
+In federated setups, each subscription field should only be defined in **one module**:
+
+```typescript
+// ✅ CORRECT: Define in one module only
+// users/schema.graphql
+type Subscription {
+  userStatusChanged(userId: String!): UserStatus @resolver
+}
+
+// ❌ WRONG: Multiple modules defining the same subscription
+// users/schema.graphql
+type Subscription {
+  statusChanged: Status @resolver
+}
+
+// todos/schema.graphql
+type Subscription {
+  statusChanged: Status @resolver  # Conflict!
+}
+```
+
+If multiple modules try to define the same subscription field, only the first one encountered will be used.
+
+---
+
+## STEP 7: Server Configuration
 
 **File: src/index.ts**
 
@@ -691,7 +860,7 @@ type Query {
 
 ---
 
-## STEP 7: Micro-Federation (Optional)
+## STEP 8: Micro-Federation (Optional)
 
 **Purpose:** Merge multiple GraphQL schemas and resolvers into one API.
 

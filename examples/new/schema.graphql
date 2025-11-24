@@ -1,0 +1,19 @@
+type Query {
+  hello: String!
+}
+
+type Mutation {
+  echo(message: String!): String!
+}
+
+type Subscription {
+  countdown(from: Int): Int @resolver
+}
+
+directive @resolver on FIELD_DEFINITION
+
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
