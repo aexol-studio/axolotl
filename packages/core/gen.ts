@@ -72,12 +72,12 @@ const generateModelsString = (fileContent: string) => {
   const { nodes } = Parser.parse(fileContent);
 
   const scalars = nodes.filter((n) => n.data.type === TypeDefinition.ScalarTypeDefinition);
-  const scalarNames = scalars.map((s) => s.name);
+  const scalarNames = ['ID', ...scalars.map((s) => s.name)];
   const scalarsString = scalars.map((s) => `export type ${s.name} = unknown;`).join('\n');
 
   const scalarsFullString = scalars.length
-    ? `export type Scalars = {\n${scalars.map((s) => `${TAB(1)}['${s.name}']: unknown;`).join('\n')}\n};`
-    : 'export type Scalars = unknown;';
+    ? `export type Scalars = {\n${TAB(1)}['ID']: unknown;\n${scalars.map((s) => `${TAB(1)}['${s.name}']: unknown;`).join('\n')}\n};`
+    : `export type Scalars = {\n${TAB(1)}['ID']: unknown;\n};`;
 
   const enums = nodes.filter((n) => n.data.type === TypeDefinition.EnumTypeDefinition);
   const enumsString = enums.map((s) => `export enum ${s.name} ${buildEnumArgs(s.args)}`).join('\n');

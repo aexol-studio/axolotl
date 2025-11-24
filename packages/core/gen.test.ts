@@ -52,3 +52,43 @@ test('resolveFieldType', (t, done) => {
   });
   done();
 });
+
+test('resolveFieldType with ID scalar', (t, done) => {
+  const possibleVariants = {
+    ["S['ID'] | undefined | null"]: resolveFieldType("S['ID']", {
+      type: Options.name,
+      name: "S['ID']",
+    }),
+    ["S['ID']"]: resolveFieldType("S['ID']", {
+      type: Options.required,
+      nest: {
+        type: Options.name,
+        name: "S['ID']",
+      },
+    }),
+    ["Array<S['ID'] | undefined | null> | undefined | null"]: resolveFieldType("S['ID']", {
+      type: Options.array,
+      nest: {
+        type: Options.name,
+        name: "S['ID']",
+      },
+    }),
+    ["Array<S['ID']>"]: resolveFieldType("S['ID']", {
+      type: Options.required,
+      nest: {
+        type: Options.array,
+        nest: {
+          type: Options.required,
+          nest: {
+            type: Options.name,
+            name: "S['ID']",
+          },
+        },
+      },
+    }),
+  };
+  Object.entries(possibleVariants).forEach(([k, v]) => {
+    assert.equal(k, v);
+  });
+  done();
+});

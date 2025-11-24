@@ -4,6 +4,7 @@
 export type Secret = unknown;
 
 export type Scalars = {
+  ['ID']: unknown;
   ['Secret']: unknown;
 };
 
