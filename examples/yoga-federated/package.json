@@ -30,9 +30,8 @@
   },
   "devDependencies": {
     "@aexol/axolotl": "^2.1.4",
-    "@types/node": "^18.7.18",
-    "nodemon": "^3.1.0",
     "@eslint/js": "^9.33.0",
+    "@types/node": "^18.7.18",
     "@typescript-eslint/eslint-plugin": "^8.39.1",
     "@typescript-eslint/parser": "^8.39.1",
     "eslint": "^9.33.0",
@@ -40,6 +39,7 @@
     "eslint-plugin-prettier": "^5.5.4",
     "globals": "^16.3.0",
     "jiti": "^2.5.1",
+    "nodemon": "^3.1.0",
     "playwright": "^1.54.2",
     "prettier": "^3.3.0",
     "ts-patch": "^3.3.0",
