@@ -39,7 +39,7 @@ export const apiSubscription = (options: chainOptions) => (query: string) => {
     throw new Error('No websockets implemented');
   }
 };
-export const apiSubscriptionSSE = (options: chainOptions) => (query: string) => {
+export const apiSubscriptionSSE = (options: chainOptions) => (query: string, variables?: Record<string, unknown>) => {
   const url = options[0];
   const fetchOptions = options[1] || {};
 
@@ -62,7 +62,7 @@ export const apiSubscriptionSSE = (options: chainOptions) => (query: string) => 
           'Cache-Control': 'no-cache',
           ...fetchOptions.headers,
         },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query, variables }),
         signal: abortController.signal,
         ...fetchOptions,
       });
@@ -322,7 +322,7 @@ export const SubscriptionThunder =
     o: Z & {
       [P in keyof Z]: P extends keyof ValueTypes[R] ? Z[P] : never;
     },
-    ops?: OperationOptions & { variables?: ExtractVariables<Z> },
+    ops?: OperationOptions & { variables?: Record<string, unknown> },
   ) => {
     const options = {
       ...thunderGraphQLOptions,
@@ -365,6 +365,7 @@ export type SubscriptionToGraphQLSSE<Z, T, SCLR extends ScalarDefinition> = {
   open: (fn?: () => void) => void;
   close: () => void;
 };
+
 export const SubscriptionThunderSSE =
   <SCLR extends ScalarDefinition>(fn: SubscriptionFunction, thunderGraphQLOptions?: ThunderGraphQLOptions<SCLR>) =>
   <O extends keyof typeof Ops, OVERRIDESCLR extends SCLR, R extends keyof ValueTypes = GenericOperation<O>>(
@@ -375,7 +376,7 @@ export const SubscriptionThunderSSE =
     o: Z & {
       [P in keyof Z]: P extends keyof ValueTypes[R] ? Z[P] : never;
     },
-    ops?: OperationOptions & { variables?: ExtractVariables<Z> },
+    ops?: OperationOptions & { variables?: Record<string, unknown> },
   ) => {
     const options = {
       ...thunderGraphQLOptions,
@@ -386,7 +387,7 @@ export const SubscriptionThunderSSE =
       Zeus(operation, o, {
         operationOptions: ops,
         scalars: options?.scalars,
-      }),
+      }), ops?.variables
     ) as SubscriptionToGraphQLSSE<Z, GraphQLTypes[R], CombinedSCLR>;
     if (returnedFunction?.on && options?.scalars) {
       const wrapped = returnedFunction.on;
@@ -602,7 +603,7 @@ export type fetchOptions = Parameters<typeof fetch>;
 type websocketOptions = typeof WebSocket extends new (...args: infer R) => WebSocket ? R : never;
 export type chainOptions = [fetchOptions[0], fetchOptions[1] & { websocket?: websocketOptions }] | [fetchOptions[0]];
 export type FetchFunction = (query: string, variables?: Record<string, unknown>) => Promise<any>;
-export type SubscriptionFunction = (query: string) => any;
+export type SubscriptionFunction = (query: string, variables?: Record<string, unknown>) => any;
 type NotUndefined<T> = T extends undefined ? never : T;
 export type ResolverType<F> = NotUndefined<F extends [infer ARGS, any] ? ARGS : undefined>;
 

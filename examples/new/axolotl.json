@@ -1,4 +1,4 @@
 {
-    "schema": "schema.graphql",
-    "models": "src/models.ts"
+  "schema": "schema.graphql",
+  "models": "src/models.ts"
 }

@@ -14,18 +14,12 @@
     "skipLibCheck": true,
     "strict": true,
     "outDir": "./lib",
-    "lib": [
-      "ESNext",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "rootDir": "./src",
     "baseUrl": "./",
     "composite": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     },
     "plugins": [
       {
@@ -37,9 +31,5 @@
       }
     ]
   },
-  "exclude": [
-    "lib",
-    "node_modules",
-    "jest.config.js"
-  ]
+  "exclude": ["lib", "node_modules", "jest.config.js", "frontend", "dist", "vite.config.ts"]
 }

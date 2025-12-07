@@ -1,21 +1,13 @@
 {
   "parser": "@typescript-eslint/parser",
-  "extends": [
-      "plugin:@typescript-eslint/recommended",
-      "plugin:prettier/recommended"
-  ],
+  "extends": ["plugin:@typescript-eslint/recommended", "plugin:prettier/recommended"],
   "parserOptions": {
-      "ecmaVersion": 2018,
-      "sourceType": "module"
+    "ecmaVersion": 2018,
+    "sourceType": "module"
   },
-  "ignorePatterns":[
-      "deno"
-  ],
-  "plugins": [
-      "@typescript-eslint",
-      "prettier"
-  ],
+  "ignorePatterns": ["deno"],
+  "plugins": ["@typescript-eslint", "prettier"],
   "rules": {
-      "@typescript-eslint/explicit-function-return-type": 0
+    "@typescript-eslint/explicit-function-return-type": 0
   }
 }

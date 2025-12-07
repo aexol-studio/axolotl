@@ -9,8 +9,11 @@
     "access": "restricted"
   },
   "scripts": {
-    "start": "node lib/index.js",
-    "build": "tspc",
+    "start": "NODE_ENV=production node lib/index.js",
+    "build": "tspc && npm run build:client && npm run build:server",
+    "build:backend": "tspc",
+    "build:client": "vite build",
+    "build:server": "vite build --ssr src/entry-server.tsx",
     "watch": "tspc --watch",
     "models": "axolotl build",
     "resolvers": "axolotl resolvers",
@@ -23,17 +26,25 @@
   "dependencies": {
     "@aexol/axolotl-core": "^2.1.5",
     "@aexol/axolotl-graphql-yoga": "^2.1.5",
+    "express": "^5.1.0",
     "graphql": "^16.9.0",
     "graphql-yoga": "^5.10.4",
     "node-fetch": "^3.2.10",
-    "ws": "^8.12.0"
+    "ws": "^8.12.0",
+    "compression": "^1.8.0",
+    "sirv": "^3.0.1"
   },
   "devDependencies": {
+    "@types/compression": "^1.7.5",
     "@aexol/axolotl": "^2.1.5",
     "@eslint/js": "^9.33.0",
+    "@types/express": "^5.0.3",
     "@types/node": "^18.7.18",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5",
     "@typescript-eslint/eslint-plugin": "^8.39.1",
     "@typescript-eslint/parser": "^8.39.1",
+    "@vitejs/plugin-react": "^4.5.2",
     "eslint": "^9.33.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
@@ -42,11 +53,16 @@
     "nodemon": "^3.1.0",
     "playwright": "^1.54.2",
     "prettier": "^3.3.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "tailwindcss": "^4.1.8",
+    "@tailwindcss/vite": "^4.1.8",
     "ts-patch": "^3.3.0",
     "tsx": "^4.20.3",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.39.1",
-    "typescript-transform-paths": "^3.5.5"
+    "typescript-transform-paths": "^3.5.5",
+    "vite": "^6.3.5"
   },
   "peerDependencies": {}
 }

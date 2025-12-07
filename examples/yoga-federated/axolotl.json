@@ -1,19 +1,19 @@
 {
-    "schema": "schema.graphql",
-    "models": "src/models.ts",
-    "federation": [
-        {
-            "schema": "src/todos/schema.graphql",
-            "models": "src/todos/models.ts"
-        },
-        {
-            "schema": "src/users/schema.graphql",
-            "models": "src/users/models.ts"
-        }
-    ],
-    "zeus": [
-        {
-            "generationPath": "src/"
-        }
-    ]
+  "schema": "schema.graphql",
+  "models": "src/models.ts",
+  "federation": [
+    {
+      "schema": "src/todos/schema.graphql",
+      "models": "src/todos/models.ts"
+    },
+    {
+      "schema": "src/users/schema.graphql",
+      "models": "src/users/models.ts"
+    }
+  ],
+  "zeus": [
+    {
+      "generationPath": "src/"
+    }
+  ]
 }
