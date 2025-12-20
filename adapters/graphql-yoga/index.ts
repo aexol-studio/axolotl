@@ -42,6 +42,7 @@ export const graphqlYogaWithContextAdapter = <Context extends YogaInitialContext
                       subscribe: (_: any, args: any, context: any) => {
                         return resolver.subscribe([_, args, context], args);
                       },
+                      resolve: <T>(payload: T) => payload, // <-- Add this
                     },
                   ];
                 }
