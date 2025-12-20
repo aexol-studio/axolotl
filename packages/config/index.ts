@@ -11,6 +11,8 @@ export type ProjectOptions = {
   zeus?: Array<{
     schema?: string;
     generationPath: string;
+    deno?: boolean;
+    esModule?: boolean;
   }>;
   prompt_info?: string;
   frontend_prompt_info?: string;

@@ -63,7 +63,8 @@ const generateFiles = (options: ProjectOptions) => {
   if (options.zeus?.length) {
     options.zeus.forEach((z) => {
       generateZeusSchema(z.schema ? readFileSync(z.schema, 'utf-8') : superGraphSchema, z.generationPath, {
-        deno: options.deno,
+        esModule: z.esModule,
+        deno: z.deno || options.deno,
       });
       console.log(chalk.greenBright(`Zeus schema ${z.schema ? z.schema : 'supergraph'} saved in ${z.generationPath}`));
     });
