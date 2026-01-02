@@ -1,0 +1,14 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: axolotl
+      POSTGRES_PASSWORD: axolotl
+      POSTGRES_DB: axolotl
+    ports:
+      - '5533:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

@@ -15,9 +15,7 @@
     "strict": true,
     "outDir": "./lib",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "rootDir": "./src",
     "baseUrl": "./",
-    "composite": true,
     "paths": {
       "@/*": ["./*"]
     },
@@ -31,5 +29,15 @@
       }
     ]
   },
-  "exclude": ["lib", "node_modules", "jest.config.js", "frontend", "dist", "vite.config.ts"]
+  "include": ["src/**/*"],
+  "exclude": [
+    "lib",
+    "node_modules",
+    "jest.config.js",
+    "frontend",
+    "dist",
+    "vite.config.ts",
+    "prisma.config.ts",
+    "mobile"
+  ]
 }

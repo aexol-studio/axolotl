@@ -54,10 +54,24 @@ type Mutation{
 	): String! @resolver
 }
 
+input AIChatMessage{
+	role: String!
+	content: String!
+}
+
+type AIChatChunk{
+	content: String!
+	done: Boolean!
+}
+
 type Subscription{
 	countdown(
 		from: Int
 	): Int @resolver
+	aiChat(
+		messages: [AIChatMessage!]!
+		system: String
+	): AIChatChunk! @resolver
 }
 
 schema{

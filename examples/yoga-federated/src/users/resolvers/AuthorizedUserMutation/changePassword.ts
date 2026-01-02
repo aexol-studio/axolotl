@@ -1,18 +1,20 @@
 import { createResolvers } from '../../axolotl.js';
-import { db, UserModel } from '../../db.js';
+import { prisma } from '@/src/db.js';
+import { User } from '../../models.js';
 
 export default createResolvers({
   AuthorizedUserMutation: {
-    changePassword: ([source], { newPassword }) => {
-      const src = source as UserModel;
-      const index = db.users.findIndex((u) => u._id === src._id);
+    changePassword: async ([source], { newPassword }) => {
+      const src = source as User;
       const token = Math.random().toString(16);
-      db.users.splice(index, 1, {
-        ...src,
-        password: newPassword,
-        token,
+      const user = await prisma.user.update({
+        where: { id: src._id },
+        data: {
+          password: newPassword,
+          token,
+        },
       });
-      return src;
+      return { _id: user.id, username: user.username };
     },
   },
 });

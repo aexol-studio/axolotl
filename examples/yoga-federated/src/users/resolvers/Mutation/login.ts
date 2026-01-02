@@ -1,10 +1,14 @@
 import { createResolvers } from '../../axolotl.js';
-import { db } from '../../db.js';
+import { prisma } from '@/src/db.js';
 
 export default createResolvers({
   Mutation: {
     login: async (_, { password, username }) => {
-      return db.users.find((u) => u.username === username && u.password === password)?.token;
+      const user = await prisma.user.findUnique({
+        where: { username },
+      });
+      if (!user || user.password !== password) return undefined;
+      return user.token;
     },
   },
 });

@@ -13,7 +13,10 @@ export default defineConfig(({ isSsrBuild }) => ({
   server: {
     // Proxy API requests to the backend during standalone Vite dev
     proxy: {
-      '/graphql': 'http://localhost:4002',
+      '/graphql': 'http://localhost:4103',
+    },
+    hmr: {
+      port: 24703,
     },
   },
 }));

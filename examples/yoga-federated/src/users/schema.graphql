@@ -1,44 +1,45 @@
-type User{
-	_id: String!
-	username: String!
+type User {
+  _id: String!
+  username: String!
 }
 
-type Mutation{
-	user: AuthorizedUserMutation! @resolver
-	login(
-		username: String!
-		password: String!
-	): String! @resolver
-	register(
-		username: String!
-		password: String!
-	): String! @resolver
+type Mutation {
+  user: AuthorizedUserMutation! @resolver
+  login(username: String!, password: String!): String! @resolver
+  register(username: String!, password: String!): String! @resolver
 }
 
-type Query{
-	user: AuthorizedUserQuery! @resolver
+type Query {
+  user: AuthorizedUserQuery! @resolver
 }
 
-type AuthorizedUserMutation{
-	changePassword(
-		newPassword: String!
-	): Boolean @resolver
+type AuthorizedUserMutation {
+  changePassword(newPassword: String!): Boolean @resolver
 }
 
-type AuthorizedUserQuery{
-	me: User! @resolver
+type AuthorizedUserQuery {
+  me: User! @resolver
+}
+
+input AIChatMessage {
+  role: String!
+  content: String!
+}
+
+type AIChatChunk {
+  content: String!
+  done: Boolean!
 }
 
 directive @resolver on FIELD_DEFINITION
 
-schema{
-	query: Query
-	mutation: Mutation
-	subscription: Subscription
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
 }
 
-type Subscription{
-	countdown(
-		from: Int
-	): Int @resolver
+type Subscription {
+  countdown(from: Int): Int @resolver
+  aiChat(messages: [AIChatMessage!]!, system: String): AIChatChunk! @resolver
 }

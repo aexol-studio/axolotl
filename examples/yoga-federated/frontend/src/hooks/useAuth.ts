@@ -1,25 +1,17 @@
-import { useState, useCallback, useEffect } from 'react';
-import { createGqlClient } from '../api';
-import type { User, AuthMode } from '../types';
-
-// SSR-safe localStorage access
-const isBrowser = typeof window !== 'undefined';
-const getStoredToken = () => (isBrowser ? localStorage.getItem('token') : null);
+import { useCallback, useEffect } from 'react';
+import { useAuthStore } from '../stores';
+import { query, mutation } from '../api';
+import type { AuthMode } from '../types';
 
 export function useAuth() {
-  const [token, setToken] = useState<string | null>(getStoredToken);
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { token, user, isLoading, error, setToken, setUser, setLoading, setError, logout } = useAuthStore();
 
-  const gql = useCallback(() => createGqlClient(token || undefined), [token]);
   const fetchUser = useCallback(async () => {
     if (!token) return null;
-    setIsLoading(true);
+    setLoading(true);
     setError(null);
-    console.log(token);
     try {
-      const data = await gql()('query')({
+      const data = await query()({
         user: {
           me: { _id: true, username: true },
         },
@@ -30,32 +22,29 @@ export function useAuth() {
       }
       return null;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch user');
-      if (err instanceof Error && err.message.includes('Unauthorized')) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch user';
+      setError(message);
+      if (message.includes('Unauthorized')) {
         logout();
       }
       return null;
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }, [gql]);
+  }, [token, setLoading, setError, setUser, logout]);
 
+  // Fetch user when token changes
   useEffect(() => {
-    if (!isBrowser) return;
-    if (token) {
-      localStorage.setItem('token', token);
+    if (token && !user) {
       fetchUser();
-    } else {
-      localStorage.removeItem('token');
-      setUser(null);
     }
-  }, [token]);
+  }, [token, user, fetchUser]);
 
   const login = async (username: string, password: string) => {
-    setIsLoading(true);
+    setLoading(true);
     setError(null);
     try {
-      const data = await gql()('mutation')({
+      const data = await mutation()({
         login: [{ username, password }, true],
       });
       setToken(data.login);
@@ -64,15 +53,15 @@ export function useAuth() {
       setError(err instanceof Error ? err.message : 'Login failed');
       return false;
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   const register = async (username: string, password: string) => {
-    setIsLoading(true);
+    setLoading(true);
     setError(null);
     try {
-      const data = await gql()('mutation')({
+      const data = await mutation()({
         register: [{ username, password }, true],
       });
       setToken(data.register);
@@ -81,7 +70,7 @@ export function useAuth() {
       setError(err instanceof Error ? err.message : 'Registration failed');
       return false;
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -90,11 +79,6 @@ export function useAuth() {
       return register(username, password);
     }
     return login(username, password);
-  };
-
-  const logout = () => {
-    setToken(null);
-    setUser(null);
   };
 
   const clearError = () => setError(null);
@@ -108,6 +92,5 @@ export function useAuth() {
     authenticate,
     logout,
     clearError,
-    gql,
   };
 }

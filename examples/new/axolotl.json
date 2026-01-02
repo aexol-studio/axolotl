@@ -1,4 +1,13 @@
 {
   "schema": "schema.graphql",
-  "models": "src/models.ts"
+  "models": "src/models.ts",
+  "zeus": [
+    {
+      "generationPath": "frontend/src",
+      "esModule": true
+    },
+    {
+      "generationPath": "mobile/"
+    }
+  ]
 }

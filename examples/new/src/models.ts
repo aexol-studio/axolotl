@@ -5,6 +5,11 @@ export type Scalars = {
   ['ID']: unknown;
 };
 
+export interface AIChatMessage<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
+  role: string;
+  content: string;
+}
+
 export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> = {
   ['Query']: {
     hello: {
@@ -18,10 +23,24 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
       };
     };
   };
+  ['AIChatChunk']: {
+    content: {
+      args: Record<string, never>;
+    };
+    done: {
+      args: Record<string, never>;
+    };
+  };
   ['Subscription']: {
     countdown: {
       args: {
         from?: number | undefined | null;
+      };
+    };
+    aiChat: {
+      args: {
+        messages: Array<AIChatMessage>;
+        system?: string | undefined | null;
       };
     };
   };
@@ -39,6 +58,11 @@ export interface Query<S extends { [P in keyof Scalars]: any } = { [P in keyof S
 export interface Mutation<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   echo: string;
 }
+export interface AIChatChunk<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
+  content: string;
+  done: boolean;
+}
 export interface Subscription<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   countdown?: number | undefined | null;
+  aiChat: AIChatChunk;
 }

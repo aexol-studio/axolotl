@@ -1,20 +1,20 @@
 import { useState, useCallback } from 'react';
-import { createGqlClient } from '../api';
+import { useAuthStore } from '../stores';
+import { query, mutation } from '../api';
 import type { Todo } from '../types';
 
-export function useTodos(token: string | null) {
+export function useTodos() {
+  const token = useAuthStore((state) => state.token);
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const gql = useCallback(() => createGqlClient(token || undefined), [token]);
 
   const fetchTodos = useCallback(async () => {
     if (!token) return;
     setIsLoading(true);
     setError(null);
     try {
-      const data = await gql()('query')({
+      const data = await query()({
         user: {
           todos: { _id: true, content: true, done: true },
         },
@@ -27,14 +27,14 @@ export function useTodos(token: string | null) {
     } finally {
       setIsLoading(false);
     }
-  }, [token, gql]);
+  }, [token]);
 
   const createTodo = async (content: string) => {
     if (!token || !content.trim()) return false;
     setIsLoading(true);
     setError(null);
     try {
-      await gql()('mutation')({
+      await mutation()({
         user: {
           createTodo: [{ content }, true],
         },
@@ -54,7 +54,7 @@ export function useTodos(token: string | null) {
     setIsLoading(true);
     setError(null);
     try {
-      await gql()('mutation')({
+      await mutation()({
         user: {
           todoOps: [{ _id: todoId }, { markDone: true }],
         },

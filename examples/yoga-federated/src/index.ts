@@ -15,7 +15,7 @@ const templateHtml = isProduction ? await fs.readFile(resolve(__dirname, '../dis
 
 async function startServer() {
   const app = express();
-  const port = parseInt(process.env.PORT || '4002', 10);
+  const port = parseInt(process.env.PORT || '4102', 10);
 
   // Create Axolotl/Yoga instance
   const { yoga } = adapter(
@@ -50,13 +50,23 @@ mutation Done{
 
 mutation Register{
   register(username: "user",password: "password")
-}`,
+}
+
+# AI Chat via GraphQL Subscription
+# Use the subscription below to stream AI responses:
+#
+# subscription AIChat {
+#   aiChat(messages: [{role: "user", content: "Hello!"}]) {
+#     content
+#     done
+#   }
+# }`,
         },
       },
     },
   );
 
-  // Mount GraphQL at /graphql
+  // Mount GraphQL at /graphql (includes AI chat via subscription)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   app.use('/graphql', yoga as any);
 
@@ -78,8 +88,8 @@ mutation Register{
 
   // Serve HTML with SSR
   app.use('*all', async (req, res, next) => {
-    // Skip GraphQL requests
-    if (req.originalUrl.startsWith('/graphql')) {
+    // Skip API requests
+    if (req.originalUrl.startsWith('/graphql') || req.originalUrl.startsWith('/api/')) {
       return next();
     }
 
@@ -117,6 +127,7 @@ mutation Register{
   app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
     console.log(`GraphQL Playground at http://localhost:${port}/graphql`);
+    console.log(`AI Chat available via GraphQL subscription: aiChat`);
     console.log(`Mode: ${isProduction ? 'production' : 'development'}`);
     console.log(`SSR: enabled`);
   });
