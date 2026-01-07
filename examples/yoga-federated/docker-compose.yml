@@ -1,4 +1,20 @@
 services:
+  app:
+    build: .
+    ports:
+      - '4002:4002'
+    environment:
+      # Native PG vars (used by prisma.config.ts)
+      PGUSER: axolotl
+      PGPASSWORD: axolotl
+      PGDATABASE: axolotl
+      PGHOST: db
+      # Or use DATABASE_URL directly for deployments:
+      # DATABASE_URL: postgresql://axolotl:axolotl@db:5432/axolotl
+    depends_on:
+      db:
+        condition: service_healthy
+
   db:
     image: pgvector/pgvector:pg16
     environment:
@@ -9,6 +25,11 @@ services:
       - '5533:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U axolotl -d axolotl']
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:

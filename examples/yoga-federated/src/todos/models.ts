@@ -8,6 +8,11 @@ export type Scalars = {
   ['Secret']: unknown;
 };
 
+export enum TodoUpdateType {
+  CREATED = 'CREATED',
+  UPDATED = 'UPDATED',
+}
+
 export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> = {
   ['Todo']: {
     _id: {
@@ -58,6 +63,21 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
       args: Record<string, never>;
     };
   };
+  ['TodoUpdate']: {
+    type: {
+      args: Record<string, never>;
+    };
+    todo: {
+      args: Record<string, never>;
+    };
+  };
+  ['Subscription']: {
+    todoUpdates: {
+      args: {
+        ownerId: string;
+      };
+    };
+  };
   ['Mutation']: {
     user: {
       args: Record<string, never>;
@@ -92,6 +112,13 @@ export interface AuthorizedUserQuery<S extends { [P in keyof Scalars]: any } = {
 }
 export interface Query<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   user?: AuthorizedUserQuery | undefined | null;
+}
+export interface TodoUpdate<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
+  type: TodoUpdateType;
+  todo: Todo;
+}
+export interface Subscription<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
+  todoUpdates: TodoUpdate;
 }
 export interface Mutation<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   user?: AuthorizedUserMutation | undefined | null;

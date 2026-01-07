@@ -4,6 +4,7 @@ import AuthorizedUserMutation from './AuthorizedUserMutation/resolvers.js';
 import AuthorizedUserQuery from './AuthorizedUserQuery/resolvers.js';
 import Query from './Query/resolvers.js';
 import Mutation from './Mutation/resolvers.js';
+import Subscription from './Subscription/resolvers.js';
 
 export default createResolvers({
   ...TodoOps,
@@ -11,4 +12,5 @@ export default createResolvers({
   ...AuthorizedUserQuery,
   ...Query,
   ...Mutation,
+  ...Subscription,
 });

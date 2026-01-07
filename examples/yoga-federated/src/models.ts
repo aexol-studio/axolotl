@@ -8,6 +8,11 @@ export type Scalars = {
   ['Secret']: unknown;
 };
 
+export enum TodoUpdateType {
+  CREATED = 'CREATED',
+  UPDATED = 'UPDATED',
+}
+
 export interface AIChatMessage<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   role: string;
   content: string;
@@ -27,6 +32,14 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
   };
   ['TodoOps']: {
     markDone: {
+      args: Record<string, never>;
+    };
+  };
+  ['TodoUpdate']: {
+    type: {
+      args: Record<string, never>;
+    };
+    todo: {
       args: Record<string, never>;
     };
   };
@@ -74,6 +87,24 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
       args: Record<string, never>;
     };
   };
+  ['Subscription']: {
+    todoUpdates: {
+      args: {
+        ownerId: string;
+      };
+    };
+    countdown: {
+      args: {
+        from?: number | undefined | null;
+      };
+    };
+    aiChat: {
+      args: {
+        messages: Array<AIChatMessage>;
+        system?: string | undefined | null;
+      };
+    };
+  };
   ['Mutation']: {
     user: {
       args: Record<string, never>;
@@ -99,19 +130,6 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
       args: Record<string, never>;
     };
   };
-  ['Subscription']: {
-    countdown: {
-      args: {
-        from?: number | undefined | null;
-      };
-    };
-    aiChat: {
-      args: {
-        messages: Array<AIChatMessage>;
-        system?: string | undefined | null;
-      };
-    };
-  };
 };
 
 export type Directives<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> = {
@@ -127,6 +145,10 @@ export interface Todo<S extends { [P in keyof Scalars]: any } = { [P in keyof Sc
 }
 export interface TodoOps<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   markDone?: boolean | undefined | null;
+}
+export interface TodoUpdate<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
+  type: TodoUpdateType;
+  todo: Todo;
 }
 export interface User<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   _id: string;
@@ -145,6 +167,11 @@ export interface AuthorizedUserQuery<S extends { [P in keyof Scalars]: any } = {
 export interface Query<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   user?: AuthorizedUserQuery | undefined | null;
 }
+export interface Subscription<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
+  todoUpdates: TodoUpdate;
+  countdown?: number | undefined | null;
+  aiChat: AIChatChunk;
+}
 export interface Mutation<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   user?: AuthorizedUserMutation | undefined | null;
   login: string;
@@ -153,8 +180,4 @@ export interface Mutation<S extends { [P in keyof Scalars]: any } = { [P in keyo
 export interface AIChatChunk<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   content: string;
   done: boolean;
-}
-export interface Subscription<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
-  countdown?: number | undefined | null;
-  aiChat: AIChatChunk;
 }

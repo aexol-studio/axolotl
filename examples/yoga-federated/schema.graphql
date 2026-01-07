@@ -10,6 +10,16 @@ type TodoOps{
 
 scalar Secret
 
+enum TodoUpdateType{
+	CREATED
+	UPDATED
+}
+
+type TodoUpdate{
+	type: TodoUpdateType!
+	todo: Todo!
+}
+
 type User{
 	_id: String!
 	username: String!
@@ -42,6 +52,19 @@ type Query{
 	user: AuthorizedUserQuery @resolver
 }
 
+type Subscription{
+	todoUpdates(
+		ownerId: String!
+	): TodoUpdate! @resolver
+	countdown(
+		from: Int
+	): Int @resolver
+	aiChat(
+		messages: [AIChatMessage!]!
+		system: String
+	): AIChatChunk! @resolver
+}
+
 type Mutation{
 	user: AuthorizedUserMutation @resolver
 	login(
@@ -62,16 +85,6 @@ input AIChatMessage{
 type AIChatChunk{
 	content: String!
 	done: Boolean!
-}
-
-type Subscription{
-	countdown(
-		from: Int
-	): Int @resolver
-	aiChat(
-		messages: [AIChatMessage!]!
-		system: String
-	): AIChatChunk! @resolver
 }
 
 schema{

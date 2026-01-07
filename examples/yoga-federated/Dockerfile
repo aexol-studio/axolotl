@@ -22,7 +22,12 @@ COPY --from=builder /app/prisma/generated ./prisma/generated
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/prisma/schema.prisma ./prisma/
+COPY --from=builder /app/prisma/migrations ./prisma/migrations
+COPY --from=builder /app/prisma.config.ts ./
+COPY --from=builder /app/entrypoint.sh ./
+
+RUN chmod +x ./entrypoint.sh
 
 EXPOSE 4002
 
-CMD ["npm", "run", "start"]
+CMD ["./entrypoint.sh"]

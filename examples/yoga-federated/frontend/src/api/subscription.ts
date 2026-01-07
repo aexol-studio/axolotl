@@ -33,5 +33,5 @@ export const subscription = () => {
   const host = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:4102';
   const sseUrl = `${host}/graphql`;
 
-  return SubscriptionSSE(sseUrl, { headers });
+  return SubscriptionSSE(sseUrl, { headers })('subscription');
 };

@@ -1093,6 +1093,13 @@ export type ValueTypes = {
 	['...on TodoOps']?: Omit<ValueTypes["TodoOps"], "...on TodoOps">
 }>;
 	["Secret"]:unknown;
+	["TodoUpdateType"]:TodoUpdateType;
+	["TodoUpdate"]: AliasType<{
+	type?:boolean | `@${string}`,
+	todo?:ValueTypes["Todo"],
+		__typename?: boolean | `@${string}`,
+	['...on TodoUpdate']?: Omit<ValueTypes["TodoUpdate"], "...on TodoUpdate">
+}>;
 	["User"]: AliasType<{
 	_id?:boolean | `@${string}`,
 	username?:boolean | `@${string}`,
@@ -1118,6 +1125,13 @@ todo?: [{	_id: string | Variable<any, string>},ValueTypes["Todo"]],
 		__typename?: boolean | `@${string}`,
 	['...on Query']?: Omit<ValueTypes["Query"], "...on Query">
 }>;
+	["Subscription"]: AliasType<{
+todoUpdates?: [{	ownerId: string | Variable<any, string>},ValueTypes["TodoUpdate"]],
+countdown?: [{	from?: number | undefined | null | Variable<any, string>},boolean | `@${string}`],
+aiChat?: [{	messages: Array<ValueTypes["AIChatMessage"]> | Variable<any, string>,	system?: string | undefined | null | Variable<any, string>},ValueTypes["AIChatChunk"]],
+		__typename?: boolean | `@${string}`,
+	['...on Subscription']?: Omit<ValueTypes["Subscription"], "...on Subscription">
+}>;
 	["Mutation"]: AliasType<{
 	user?:ValueTypes["AuthorizedUserMutation"],
 login?: [{	username: string | Variable<any, string>,	password: string | Variable<any, string>},boolean | `@${string}`],
@@ -1135,12 +1149,6 @@ register?: [{	username: string | Variable<any, string>,	password: string | Varia
 		__typename?: boolean | `@${string}`,
 	['...on AIChatChunk']?: Omit<ValueTypes["AIChatChunk"], "...on AIChatChunk">
 }>;
-	["Subscription"]: AliasType<{
-countdown?: [{	from?: number | undefined | null | Variable<any, string>},boolean | `@${string}`],
-aiChat?: [{	messages: Array<ValueTypes["AIChatMessage"]> | Variable<any, string>,	system?: string | undefined | null | Variable<any, string>},ValueTypes["AIChatChunk"]],
-		__typename?: boolean | `@${string}`,
-	['...on Subscription']?: Omit<ValueTypes["Subscription"], "...on Subscription">
-}>;
 	["ID"]:unknown
   }
 
@@ -1156,6 +1164,12 @@ export type ResolverInputTypes = {
 		__typename?: boolean | `@${string}`
 }>;
 	["Secret"]:unknown;
+	["TodoUpdateType"]:TodoUpdateType;
+	["TodoUpdate"]: AliasType<{
+	type?:boolean | `@${string}`,
+	todo?:ResolverInputTypes["Todo"],
+		__typename?: boolean | `@${string}`
+}>;
 	["User"]: AliasType<{
 	_id?:boolean | `@${string}`,
 	username?:boolean | `@${string}`,
@@ -1177,6 +1191,12 @@ todo?: [{	_id: string},ResolverInputTypes["Todo"]],
 	user?:ResolverInputTypes["AuthorizedUserQuery"],
 		__typename?: boolean | `@${string}`
 }>;
+	["Subscription"]: AliasType<{
+todoUpdates?: [{	ownerId: string},ResolverInputTypes["TodoUpdate"]],
+countdown?: [{	from?: number | undefined | null},boolean | `@${string}`],
+aiChat?: [{	messages: Array<ResolverInputTypes["AIChatMessage"]>,	system?: string | undefined | null},ResolverInputTypes["AIChatChunk"]],
+		__typename?: boolean | `@${string}`
+}>;
 	["Mutation"]: AliasType<{
 	user?:ResolverInputTypes["AuthorizedUserMutation"],
 login?: [{	username: string,	password: string},boolean | `@${string}`],
@@ -1190,11 +1210,6 @@ register?: [{	username: string,	password: string},boolean | `@${string}`],
 	["AIChatChunk"]: AliasType<{
 	content?:boolean | `@${string}`,
 	done?:boolean | `@${string}`,
-		__typename?: boolean | `@${string}`
-}>;
-	["Subscription"]: AliasType<{
-countdown?: [{	from?: number | undefined | null},boolean | `@${string}`],
-aiChat?: [{	messages: Array<ResolverInputTypes["AIChatMessage"]>,	system?: string | undefined | null},ResolverInputTypes["AIChatChunk"]],
 		__typename?: boolean | `@${string}`
 }>;
 	["schema"]: AliasType<{
@@ -1216,6 +1231,11 @@ export type ModelTypes = {
 		markDone?: boolean | undefined | null
 };
 	["Secret"]:any;
+	["TodoUpdateType"]:TodoUpdateType;
+	["TodoUpdate"]: {
+		type: ModelTypes["TodoUpdateType"],
+	todo: ModelTypes["Todo"]
+};
 	["User"]: {
 		_id: string,
 	username: string
@@ -1233,6 +1253,11 @@ export type ModelTypes = {
 	["Query"]: {
 		user?: ModelTypes["AuthorizedUserQuery"] | undefined | null
 };
+	["Subscription"]: {
+		todoUpdates: ModelTypes["TodoUpdate"],
+	countdown?: number | undefined | null,
+	aiChat: ModelTypes["AIChatChunk"]
+};
 	["Mutation"]: {
 		user?: ModelTypes["AuthorizedUserMutation"] | undefined | null,
 	login: string,
@@ -1245,10 +1270,6 @@ export type ModelTypes = {
 	["AIChatChunk"]: {
 		content: string,
 	done: boolean
-};
-	["Subscription"]: {
-		countdown?: number | undefined | null,
-	aiChat: ModelTypes["AIChatChunk"]
 };
 	["schema"]: {
 	query?: ModelTypes["Query"] | undefined | null,
@@ -1272,6 +1293,13 @@ export type GraphQLTypes = {
 	['...on TodoOps']: Omit<GraphQLTypes["TodoOps"], "...on TodoOps">
 };
 	["Secret"]: "scalar" & { name: "Secret" };
+	["TodoUpdateType"]: TodoUpdateType;
+	["TodoUpdate"]: {
+	__typename: "TodoUpdate",
+	type: GraphQLTypes["TodoUpdateType"],
+	todo: GraphQLTypes["Todo"],
+	['...on TodoUpdate']: Omit<GraphQLTypes["TodoUpdate"], "...on TodoUpdate">
+};
 	["User"]: {
 	__typename: "User",
 	_id: string,
@@ -1297,6 +1325,13 @@ export type GraphQLTypes = {
 	user?: GraphQLTypes["AuthorizedUserQuery"] | undefined | null,
 	['...on Query']: Omit<GraphQLTypes["Query"], "...on Query">
 };
+	["Subscription"]: {
+	__typename: "Subscription",
+	todoUpdates: GraphQLTypes["TodoUpdate"],
+	countdown?: number | undefined | null,
+	aiChat: GraphQLTypes["AIChatChunk"],
+	['...on Subscription']: Omit<GraphQLTypes["Subscription"], "...on Subscription">
+};
 	["Mutation"]: {
 	__typename: "Mutation",
 	user?: GraphQLTypes["AuthorizedUserMutation"] | undefined | null,
@@ -1314,18 +1349,16 @@ export type GraphQLTypes = {
 	done: boolean,
 	['...on AIChatChunk']: Omit<GraphQLTypes["AIChatChunk"], "...on AIChatChunk">
 };
-	["Subscription"]: {
-	__typename: "Subscription",
-	countdown?: number | undefined | null,
-	aiChat: GraphQLTypes["AIChatChunk"],
-	['...on Subscription']: Omit<GraphQLTypes["Subscription"], "...on Subscription">
-};
 	["ID"]: "scalar" & { name: "ID" }
     }
-
+export enum TodoUpdateType {
+	CREATED = "CREATED",
+	UPDATED = "UPDATED"
+}
 
 type ZEUS_VARIABLES = {
 	["Secret"]: ValueTypes["Secret"];
+	["TodoUpdateType"]: ValueTypes["TodoUpdateType"];
 	["AIChatMessage"]: ValueTypes["AIChatMessage"];
 	["ID"]: ValueTypes["ID"];
 }
