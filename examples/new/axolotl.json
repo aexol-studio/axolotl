@@ -3,12 +3,10 @@
   "models": "src/models.ts",
   "zeus": [
     {
-      "schema": "schema.graphql",
       "generationPath": "frontend/src",
       "esModule": true
     },
     {
-      "schema": "schema.graphql",
       "generationPath": "mobile/"
     }
   ]

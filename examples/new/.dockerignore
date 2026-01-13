@@ -11,4 +11,4 @@ coverage
 .nyc_output
 .vscode
 .idea
-prisma/generated
+src/prisma/generated
