@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { gql } from './api';
+import { gql } from '@/api';
 
 export default function App() {
   const [message, setMessage] = useState<string | null>(null);

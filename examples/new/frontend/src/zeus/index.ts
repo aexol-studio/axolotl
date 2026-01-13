@@ -1,6 +1,6 @@
 /* eslint-disable */
 
-import { AllTypesProps, ReturnTypes, Ops } from './const.js';
+import { AllTypesProps, ReturnTypes, Ops } from './const';
 
 
 export const HOST="Specify host"
@@ -1079,7 +1079,13 @@ export type ScalarCoders = {
 type ZEUS_UNIONS = never
 
 export type ValueTypes = {
-    ["Query"]: AliasType<{
+    ["User"]: AliasType<{
+	id?:boolean | `@${string}`,
+	name?:boolean | `@${string}`,
+		__typename?: boolean | `@${string}`,
+	['...on User']?: Omit<ValueTypes["User"], "...on User">
+}>;
+	["Query"]: AliasType<{
 	hello?:boolean | `@${string}`,
 		__typename?: boolean | `@${string}`,
 	['...on Query']?: Omit<ValueTypes["Query"], "...on Query">
@@ -1109,7 +1115,12 @@ aiChat?: [{	messages: Array<ValueTypes["AIChatMessage"]> | Variable<any, string>
   }
 
 export type ResolverInputTypes = {
-    ["Query"]: AliasType<{
+    ["User"]: AliasType<{
+	id?:boolean | `@${string}`,
+	name?:boolean | `@${string}`,
+		__typename?: boolean | `@${string}`
+}>;
+	["Query"]: AliasType<{
 	hello?:boolean | `@${string}`,
 		__typename?: boolean | `@${string}`
 }>;
@@ -1141,7 +1152,11 @@ aiChat?: [{	messages: Array<ResolverInputTypes["AIChatMessage"]>,	system?: strin
   }
 
 export type ModelTypes = {
-    ["Query"]: {
+    ["User"]: {
+		id: ModelTypes["ID"],
+	name: string
+};
+	["Query"]: {
 		hello: string
 };
 	["Mutation"]: {
@@ -1168,7 +1183,13 @@ export type ModelTypes = {
     }
 
 export type GraphQLTypes = {
-    ["Query"]: {
+    ["User"]: {
+	__typename: "User",
+	id: GraphQLTypes["ID"],
+	name: string,
+	['...on User']: Omit<GraphQLTypes["User"], "...on User">
+};
+	["Query"]: {
 	__typename: "Query",
 	hello: string,
 	['...on Query']: Omit<GraphQLTypes["Query"], "...on Query">

@@ -1,20 +1,16 @@
+import { UserType } from '@/api/selectors/UserSelector.ts';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
-export interface User {
-  _id: string;
-  username: string;
-}
-
 interface AuthState {
   token: string | null;
-  user: User | null;
+  user: UserType | null;
   isLoading: boolean;
   error: string | null;
 
   // Actions
   setToken: (token: string | null) => void;
-  setUser: (user: User | null) => void;
+  setUser: (user: UserType | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   logout: () => void;

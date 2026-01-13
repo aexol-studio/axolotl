@@ -1,5 +1,6 @@
 import { SubscriptionSSE } from '../zeus/index';
 import { useAuthStore } from '../stores/authStore';
+import { scalars } from './scalars.ts';
 
 // Subscription client - SSE-based real-time data
 // Usage examples:
@@ -33,5 +34,5 @@ export const subscription = () => {
   const host = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:4103';
   const sseUrl = `${host}/graphql`;
 
-  return SubscriptionSSE(sseUrl, { headers });
+  return SubscriptionSSE(sseUrl, { headers })('subscription', { scalars });
 };
