@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "playwright-mcp": {
+      "enabled": true,
+      "command": ["npx", "@playwright/mcp@latest"],
+      "type": "local"
+    },
+  },
+  "experimental": {
+      "batch_tool": true
+  }
+}
