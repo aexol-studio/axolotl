@@ -10,6 +10,11 @@ export default defineConfig(({ isSsrBuild }) => ({
     outDir: isSsrBuild ? path.resolve(__dirname, 'dist/server') : path.resolve(__dirname, 'dist/client'),
     emptyOutDir: true,
   },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './frontend/src'),
+    },
+  },
   server: {
     // Proxy API requests to the backend during standalone Vite dev
     proxy: {

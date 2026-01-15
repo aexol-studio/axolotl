@@ -21,6 +21,10 @@ export const AllTypesProps: Record<string,any> = {
 }
 
 export const ReturnTypes: Record<string,any> = {
+	User:{
+		id:"ID",
+		name:"String"
+	},
 	Query:{
 		hello:"String"
 	},
