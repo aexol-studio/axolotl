@@ -1,56 +1,80 @@
-# Frontend Development Guide (Boilerplate)
+# Frontend Development Guide
 
 ## Overview
 
-This is a **minimal boilerplate frontend** for Axolotl applications. It provides:
+This frontend communicates with the Axolotl GraphQL backend using **Zeus**, a type-safe GraphQL client that is auto-generated from the schema.
 
-- SSR-enabled React with Vite
-- Zeus type-safe GraphQL client (auto-generated)
-- Zustand state management with SSR-safe storage
-- Simple API layer structure
+The frontend uses:
 
-The boilerplate is intentionally minimal - extend it as needed.
+- **React** with TypeScript
+- **Vite** for bundling and SSR
+- **Zustand** for state management
+- **Zeus** for type-safe GraphQL queries
 
-## Project Structure
+## Actual Project Structure
 
 ```
-frontend/src/
-├── api/
-│   ├── client.ts       # Zeus Chain factory with auth headers
-│   ├── query.ts        # Query helper
-│   ├── mutation.ts     # Mutation helper
-│   ├── subscription.ts # SSE subscription helper
-│   └── index.ts        # Exports + typed gql helpers
-├── stores/
-│   ├── authStore.ts    # SSR-safe auth state (Zustand)
-│   └── index.ts        # Store exports
-├── zeus/               # AUTO-GENERATED - DO NOT EDIT
-│   ├── index.ts        # Zeus client
-│   └── const.ts        # GraphQL constants
-├── App.tsx             # Main component
-├── entry-client.tsx    # Client hydration
-└── entry-server.tsx    # SSR entry
+frontend/
+├── src/
+│   ├── api/                 # GraphQL client layer
+│   │   ├── client.ts        # Chain client creation
+│   │   ├── query.ts         # Query helper
+│   │   ├── mutation.ts      # Mutation helper
+│   │   ├── subscription.ts  # Subscription helper
+│   │   └── index.ts         # Re-exports
+│   ├── components/          # React components
+│   │   ├── AuthForm.tsx
+│   │   ├── Header.tsx
+│   │   ├── Toast.tsx
+│   │   ├── TodoForm.tsx
+│   │   ├── TodoItem.tsx
+│   │   ├── TodoList.tsx
+│   │   └── index.ts
+│   ├── hooks/               # Custom React hooks
+│   │   ├── useAuth.ts       # Authentication logic
+│   │   ├── useTodos.ts      # Todo CRUD operations
+│   │   ├── useTodoSubscription.ts
+│   │   └── index.ts
+│   ├── routes/              # Page components
+│   │   ├── Dashboard.tsx
+│   │   └── Landing.tsx
+│   ├── stores/              # Zustand state stores
+│   │   ├── authStore.ts     # Auth state (token, user)
+│   │   ├── toastStore.ts    # Toast notifications
+│   │   └── index.ts
+│   ├── zeus/                # Auto-generated (DO NOT EDIT)
+│   │   ├── const.ts
+│   │   └── index.ts
+│   ├── types.ts             # Shared TypeScript types
+│   ├── App.tsx              # Root component
+│   ├── entry-client.tsx     # Client hydration entry
+│   └── entry-server.tsx     # SSR render entry
+├── index.html
+└── tsconfig.json
 ```
 
----
+## Critical Rules for Frontend Development
 
-## Critical Rules
+1. **ALWAYS use Zeus** for GraphQL communication - never write raw GraphQL queries
+2. **Use the api/ layer** - import from `../api` not directly from Zeus
+3. **Use Zustand stores** for shared state (auth, toasts)
+4. **SSR-safe code** - check `typeof window` before accessing browser APIs
+5. **Use hooks** for data fetching logic - keep components presentational
+6. **ALWAYS define Selectors** for reusable query shapes
+7. **ALWAYS use `FromSelector`** to derive TypeScript types from selectors
+8. **NEVER manually duplicate backend types** - derive them from selectors
+9. **Use `$` function** for GraphQL variables when values come from user input or props
 
-1. **NEVER edit `zeus/` files** - regenerate with `npx @aexol/axolotl build`
-2. **ALWAYS use the API layer** for GraphQL calls
-3. **Use Zustand stores** for shared state
-4. **Use SSR-safe patterns** (check `typeof window !== 'undefined'`)
 
 ---
 
 ## State Management with Zustand
 
-### Auth Store
+### Auth Store (stores/authStore.ts)
 
-The boilerplate includes an SSR-safe auth store:
+Manages authentication state with SSR-safe localStorage persistence:
 
 ```typescript
-// stores/authStore.ts
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
@@ -61,10 +85,12 @@ interface AuthState {
   error: string | null;
   setToken: (token: string | null) => void;
   setUser: (user: User | null) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
   logout: () => void;
 }
 
-// SSR-safe storage - returns noop on server
+// SSR-safe storage
 const getStorage = () => {
   if (typeof window === 'undefined') {
     return { getItem: () => null, setItem: () => {}, removeItem: () => {} };
@@ -81,36 +107,54 @@ export const useAuthStore = create<AuthState>()(
       error: null,
       setToken: (token) => set({ token }),
       setUser: (user) => set({ user }),
+      setLoading: (isLoading) => set({ isLoading }),
+      setError: (error) => set({ error }),
       logout: () => set({ token: null, user: null, error: null }),
     }),
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => getStorage()),
-      partialize: (state) => ({ token: state.token }),
+      partialize: (state) => ({ token: state.token }), // Only persist token
     },
   ),
 );
 ```
 
-### Using in Components
+### Toast Store (stores/toastStore.ts)
+
+Manages toast notifications with auto-dismiss:
 
 ```typescript
-import { useAuthStore } from '../stores/authStore';
+import { create } from 'zustand';
 
-function MyComponent() {
-  const { token, user, setToken, logout } = useAuthStore();
+export type ToastType = 'success' | 'error' | 'info';
 
-  if (!token) {
-    return <LoginForm onLogin={(t) => setToken(t)} />;
-  }
-
-  return (
-    <div>
-      <p>Welcome, {user?.username}</p>
-      <button onClick={logout}>Logout</button>
-    </div>
-  );
+interface ToastState {
+  toasts: Toast[];
+  addToast: (message: string, type?: ToastType, duration?: number) => void;
+  removeToast: (id: string) => void;
 }
+
+export const useToastStore = create<ToastState>((set) => ({
+  toasts: [],
+  addToast: (message, type = 'info', duration = 4000) => {
+    const id = crypto.randomUUID();
+    set((state) => ({ toasts: [...state.toasts, { id, message, type, duration }] }));
+    if (duration > 0) {
+      setTimeout(() => {
+        set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));
+      }, duration);
+    }
+  },
+  removeToast: (id) => set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
+}));
+
+// Helper for easy toast creation
+export const toast = {
+  success: (msg: string) => useToastStore.getState().addToast(msg, 'success'),
+  error: (msg: string) => useToastStore.getState().addToast(msg, 'error'),
+  info: (msg: string) => useToastStore.getState().addToast(msg, 'info'),
+};
 ```
 
 ---
@@ -119,12 +163,11 @@ function MyComponent() {
 
 ### Client Setup (api/client.ts)
 
-Creates a Zeus Chain with auth headers from the store:
-
 ```typescript
 import { Chain } from '../zeus/index';
 import { useAuthStore } from '../stores/authStore';
 
+// Create authenticated chain - reads token from Zustand store
 export const createChain = () => {
   const token = useAuthStore.getState().token;
   const headers: Record<string, string> = {
@@ -137,280 +180,326 @@ export const createChain = () => {
 };
 ```
 
-### Query Helper (api/query.ts)
+### Query/Mutation Helpers (api/query.ts, api/mutation.ts)
 
 ```typescript
+// api/query.ts
 import { createChain } from './client';
-
-// Usage: const data = await query()({ hello: true })
 export const query = () => createChain()('query');
-```
 
-### Mutation Helper (api/mutation.ts)
-
-```typescript
+// api/mutation.ts
 import { createChain } from './client';
-
-// Usage: const data = await mutation()({ echo: [{ message: 'hello' }, true] })
 export const mutation = () => createChain()('mutation');
 ```
 
-### Subscription Helper (api/subscription.ts)
+### Usage in Hooks
 
 ```typescript
-import { SubscriptionSSE } from '../zeus/index';
-import { useAuthStore } from '../stores/authStore';
-
-export const subscription = () => {
-  const token = useAuthStore.getState().token;
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (token) headers['token'] = token;
-
-  const host = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:4103';
-  return SubscriptionSSE(`${host}/graphql`, { headers });
-};
-```
-
-### Typed API Helpers (api/index.ts)
-
-For cleaner component code, the boilerplate includes typed helpers:
-
-```typescript
-import { query } from './query';
-import { mutation } from './mutation';
-
-export const gql = {
-  query: {
-    hello: async (): Promise<{ hello: string }> => {
-      return query()({ hello: true });
-    },
-  },
-  mutation: {
-    echo: async (message: string): Promise<{ echo: string }> => {
-      return mutation()({ echo: [{ message }, true] });
-    },
-  },
-};
-```
-
----
-
-## Using the API
-
-### Simple Usage with gql Helpers
-
-```typescript
-import { gql } from './api';
-
-// In component
-const data = await gql.query.hello();
-console.log(data.hello); // "Hello from Axolotl!"
-
-const result = await gql.mutation.echo('Hello!');
-console.log(result.echo); // "Hello!"
-```
-
-### Direct Zeus Usage
-
-For more complex queries, use the raw helpers:
-
-```typescript
-import { query, mutation } from './api';
-
-// Query
-const data = await query()({
-  hello: true,
-});
-
-// Mutation with arguments
-const result = await mutation()({
-  echo: [{ message: 'Hello!' }, true],
-});
-```
-
-### Subscriptions
-
-```typescript
-import { subscription } from './api';
-
-// Countdown subscription
-const countdownSub = subscription()({
-  countdown: [{ from: 10 }, true],
-});
-
-countdownSub.on((data) => {
-  console.log('Count:', data.countdown);
-});
-countdownSub.error((err) => console.error(err));
-countdownSub.start();
-
-// AI Chat subscription
-const chatSub = subscription()({
-  aiChat: [
-    {
-      messages: [{ role: 'user', content: 'Hello!' }],
-      system: 'You are a helpful assistant.',
-    },
-    { content: true, done: true },
-  ],
-});
-
-chatSub.on((data) => {
-  if (!data.aiChat.done) {
-    console.log('AI:', data.aiChat.content);
-  }
-});
-chatSub.start();
-```
-
----
-
-## Example Component
-
-```typescript
-// App.tsx
-import { useState } from 'react';
-import { gql } from './api';
-
-export default function App() {
-  const [message, setMessage] = useState<string | null>(null);
-  const [echoInput, setEchoInput] = useState('');
-  const [echoResult, setEchoResult] = useState<string | null>(null);
-
-  const fetchHello = async () => {
-    const data = await gql.query.hello();
-    setMessage(data.hello);
-  };
-
-  const sendEcho = async () => {
-    if (!echoInput.trim()) return;
-    const data = await gql.mutation.echo(echoInput);
-    setEchoResult(data.echo);
-  };
-
-  return (
-    <div>
-      <button onClick={fetchHello}>Fetch Hello</button>
-      {message && <p>{message}</p>}
-
-      <input value={echoInput} onChange={(e) => setEchoInput(e.target.value)} />
-      <button onClick={sendEcho}>Echo</button>
-      {echoResult && <p>{echoResult}</p>}
-    </div>
-  );
-}
-```
-
----
-
-## Extending the Frontend
-
-### Adding New API Methods
-
-1. Add to `api/index.ts`:
-
-```typescript
-export const gql = {
-  query: {
-    hello: async () => query()({ hello: true }),
-    // Add new queries here
-    users: async () => query()({ users: { _id: true, username: true } }),
-  },
-  mutation: {
-    echo: async (message: string) => mutation()({ echo: [{ message }, true] }),
-    // Add new mutations here
-    login: async (username: string, password: string) => mutation()({ login: [{ username, password }, true] }),
-  },
-};
-```
-
-### Adding New Stores
-
-Create in `stores/` following the SSR-safe pattern:
-
-```typescript
-// stores/todoStore.ts
-import { create } from 'zustand';
-
-interface Todo {
-  _id: string;
-  content: string;
-  done: boolean;
-}
-
-interface TodoState {
-  todos: Todo[];
-  setTodos: (todos: Todo[]) => void;
-  addTodo: (todo: Todo) => void;
-}
-
-export const useTodoStore = create<TodoState>((set) => ({
-  todos: [],
-  setTodos: (todos) => set({ todos }),
-  addTodo: (todo) => set((state) => ({ todos: [...state.todos, todo] })),
-}));
-```
-
-### Adding Custom Hooks
-
-Create a `hooks/` folder for reusable logic:
-
-```typescript
-// hooks/useTodos.ts
-import { useState, useCallback } from 'react';
 import { query, mutation } from '../api';
-import { useTodoStore } from '../stores/todoStore';
+
+// Fetching data
+const data = await query()({
+  user: {
+    todos: { _id: true, content: true, done: true },
+  },
+});
+
+// Mutations
+await mutation()({
+  user: {
+    createTodo: [{ content: 'New task' }, true],
+  },
+});
+
+// Login
+const data = await mutation()({
+  login: [{ username, password }, true],
+});
+```
+
+---
+
+## Custom Hooks
+
+### useAuth Hook (hooks/useAuth.ts)
+
+```typescript
+import { useCallback, useEffect } from 'react';
+import { useAuthStore } from '../stores';
+import { query, mutation } from '../api';
+import type { AuthMode } from '../types';
+
+export function useAuth() {
+  const { token, user, isLoading, error, setToken, setUser, setLoading, setError, logout } = useAuthStore();
+
+  const fetchUser = useCallback(async () => {
+    if (!token) return null;
+    setLoading(true);
+    try {
+      const data = await query()({
+        user: { me: { _id: true, username: true } },
+      });
+      if (data.user?.me) {
+        setUser(data.user.me);
+        return data.user.me;
+      }
+      return null;
+    } catch (err) {
+      // Handle unauthorized
+      if (err.message?.includes('Unauthorized')) logout();
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  // Auto-fetch user when token changes
+  useEffect(() => {
+    if (token && !user) fetchUser();
+  }, [token, user, fetchUser]);
+
+  const authenticate = async (mode: AuthMode, username: string, password: string) => {
+    setLoading(true);
+    try {
+      const mutationName = mode === 'register' ? 'register' : 'login';
+      const data = await mutation()({
+        [mutationName]: [{ username, password }, true],
+      });
+      setToken(data[mutationName]);
+      return true;
+    } catch (err) {
+      setError(err.message);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    token,
+    user,
+    isLoading,
+    error,
+    isAuthenticated: !!token,
+    authenticate,
+    logout,
+    clearError: () => setError(null),
+  };
+}
+```
+
+### useTodos Hook (hooks/useTodos.ts)
+
+```typescript
+import { useState, useCallback } from 'react';
+import { useAuthStore } from '../stores';
+import { query, mutation } from '../api';
+import type { Todo } from '../types';
 
 export function useTodos() {
-  const { todos, setTodos, addTodo } = useTodoStore();
+  const token = useAuthStore((state) => state.token);
+  const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchTodos = useCallback(async () => {
+    if (!token) return;
     setIsLoading(true);
     try {
       const data = await query()({
         user: { todos: { _id: true, content: true, done: true } },
       });
       if (data.user?.todos) setTodos(data.user.todos);
+    } catch (err) {
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
-  }, [setTodos]);
+  }, [token]);
 
-  return { todos, isLoading, fetchTodos };
+  const createTodo = async (content: string) => {
+    if (!token || !content.trim()) return false;
+    setIsLoading(true);
+    try {
+      await mutation()({
+        user: { createTodo: [{ content }, true] },
+      });
+      await fetchTodos();
+      return true;
+    } catch (err) {
+      setError(err.message);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const markDone = async (todoId: string) => {
+    if (!token) return false;
+    setIsLoading(true);
+    try {
+      await mutation()({
+        user: { todoOps: [{ _id: todoId }, { markDone: true }] },
+      });
+      await fetchTodos();
+      return true;
+    } catch (err) {
+      setError(err.message);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    todos,
+    isLoading,
+    error,
+    fetchTodos,
+    createTodo,
+    markDone,
+    clearTodos: () => setTodos([]),
+    clearError: () => setError(null),
+  };
 }
 ```
 
 ---
 
-## Quick Reference
+## Types (types.ts)
 
-| Task                  | Code                                              |
-| --------------------- | ------------------------------------------------- |
-| Query                 | `gql.query.hello()` or `query()({ hello: true })` |
-| Mutation              | `gql.mutation.echo(msg)` or `mutation()({...})`   |
-| Subscription          | `subscription()({...}).on(cb).start()`            |
-| Get auth state        | `useAuthStore.getState().token`                   |
-| Use auth in component | `const { token } = useAuthStore()`                |
-| SSR check             | `typeof window !== 'undefined'`                   |
-| Regenerate Zeus       | `npx @aexol/axolotl build` (from project root)    |
+Shared TypeScript types used across the frontend:
+
+```typescript
+export type Todo = {
+  _id: string;
+  content: string;
+  done?: boolean | null;
+};
+
+export type User = {
+  _id: string;
+  username: string;
+};
+
+export type AuthMode = 'login' | 'register';
+```
+
+---
+
+## Advanced Zeus Patterns (Optional)
+
+These patterns are available but not currently used in this project. They can improve type safety and reusability.
+
+### Using Selectors
+
+Selectors define reusable query shapes:
+
+```typescript
+import { Selector, FromSelector } from '../zeus/index';
+
+// Define selector
+const todoSelector = Selector('Todo')({
+  _id: true,
+  content: true,
+  done: true,
+});
+
+// Derive type from selector (instead of manual type definition)
+type Todo = FromSelector<typeof todoSelector, 'Todo'>;
+
+// Use in query
+const data = await query()({
+  user: { todos: todoSelector },
+});
+```
+
+### GraphQL Variables with `$`
+
+Use `$` for parameterized queries:
+
+```typescript
+import { $ } from '../zeus/index';
+
+// With variables
+const result = await mutation()(
+  {
+    login: [
+      {
+        username: $('username', 'String!'),
+        password: $('password', 'String!'),
+      },
+      true,
+    ],
+  },
+  {
+    variables: { username: 'john', password: 'secret' },
+  },
+);
+```
+
+---
+
+## Best Practices
+
+1. **Use the api/ layer** - Don't import Zeus directly in components
+2. **Keep hooks focused** - One hook per domain (auth, todos, etc.)
+3. **Use Zustand for shared state** - Auth token, user data, notifications
+4. **SSR-safe code** - Always check `typeof window` before browser APIs
+5. **Handle errors gracefully** - Wrap API calls in try/catch
+6. **Use loading states** - Track loading state for better UX
+7. **Centralize types** - Keep shared types in `types.ts`
 
 ---
 
 ## Troubleshooting
 
+### Type errors after schema changes
+
+**Solution:** Regenerate Zeus by running `npx @aexol/axolotl build` in the project root
+
 ### Zeus files not found
 
-Run `npx @aexol/axolotl build` from the project root.
+**Solution:** Ensure `axolotl.json` has zeus configuration:
+
+```json
+{
+  "zeus": [
+    {
+      "generationPath": "frontend/src",
+      "esModule": true
+    }
+  ]
+}
+```
 
 ### SSR hydration mismatch
 
-Ensure stores use SSR-safe storage (check `typeof window`).
+**Solution:** Ensure state that differs between server/client is handled:
 
-### Auth token not sent
+```typescript
+// Use SSR-safe storage
+const getStorage = () => {
+  if (typeof window === 'undefined') {
+    return { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+  }
+  return localStorage;
+};
+```
 
-Check that `createChain()` is called fresh (not cached) so it reads current token.
+### Auth token not persisting
+
+**Solution:** Check that Zustand persist middleware is configured with SSR-safe storage.
 
 ---
 
-This boilerplate provides a minimal starting point. See `examples/yoga-federated/frontend/AGENTS.md` for a more complete frontend with hooks, selectors, and authentication flow.
+## Quick Reference
+
+| Task                   | Code                                                    |
+| ---------------------- | ------------------------------------------------------- |
+| Create query           | `query()({ user: { todos: { _id: true } } })`           |
+| Create mutation        | `mutation()({ login: [{ username, password }, true] })` |
+| Access auth state      | `useAuthStore((s) => s.token)`                          |
+| Show toast             | `toast.success('Done!')`                                |
+| Mutation with args     | `mutation()({ field: [{ arg: value }, selector] })`     |
+| Return scalar directly | `field: [{ args }, true]`                               |

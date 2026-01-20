@@ -4,14 +4,6 @@
 
 Axolotl is a **type-safe, schema-first GraphQL framework** that generates TypeScript types from your GraphQL schema and provides full type safety for resolvers. This guide provides exact instructions for LLMs to work with Axolotl projects.
 
-This example project (`yoga-federated`) is a **full-stack application** featuring:
-
-- GraphQL backend with micro-federation
-- React frontend with Vite SSR
-- Zustand state management
-- AI chat via GraphQL subscriptions (Vercel AI SDK)
-- Prisma schema (ready for PostgreSQL)
-
 ## Core Concepts
 
 ### 1. Schema-First Development
@@ -25,29 +17,12 @@ This example project (`yoga-federated`) is a **full-stack application** featurin
 ```
 project/
 ├── axolotl.json          # Configuration file
-├── schema.graphql        # Merged GraphQL schema (auto-generated)
-├── prisma/
-│   └── schema.prisma     # Prisma database schema
-├── frontend/             # React frontend with SSR
-│   ├── src/
-│   │   ├── api/          # GraphQL client (Zeus)
-│   │   ├── components/   # React components
-│   │   ├── hooks/        # Custom React hooks
-│   │   ├── routes/       # Page components
-│   │   ├── stores/       # Zustand state stores
-│   │   └── zeus/         # Auto-generated GraphQL client
-│   └── index.html
+├── schema.graphql        # GraphQL schema
 ├── src/
-│   ├── ai/              # AI providers (OpenAI integration)
-│   ├── todos/           # Todos federation module
-│   ├── users/           # Users federation module
 │   ├── axolotl.ts       # Framework initialization
 │   ├── models.ts        # Auto-generated types (DO NOT EDIT)
-│   ├── resolvers.ts     # Merged resolver implementations
-│   ├── directives.ts    # Custom GraphQL directives
-│   └── index.ts         # Express + Vite SSR server entry
-├── vite.config.ts       # Vite configuration for SSR
-└── docker-compose.yml   # Docker setup with PostgreSQL
+│   ├── resolvers.ts     # Resolver implementations
+│   └── index.ts         # Server entry point
 ```
 
 ---
@@ -77,22 +52,19 @@ The `axolotl.json` configuration file defines:
 
 ```json
 {
-  "schema": "schema.graphql",
-  "models": "src/models.ts",
+  "schema": "schema.graphql", // Path to main schema
+  "models": "src/models.ts", // Where to generate types
   "federation": [
+    // Optional: for micro-federation
     {
       "schema": "src/todos/schema.graphql",
       "models": "src/todos/models.ts"
-    },
-    {
-      "schema": "src/users/schema.graphql",
-      "models": "src/users/models.ts"
     }
   ],
   "zeus": [
+    // Optional: GraphQL client generation
     {
-      "generationPath": "frontend/src",
-      "esModule": true
+      "generationPath": "src/"
     }
   ]
 }
@@ -326,7 +298,7 @@ export const { applyMiddleware, createResolvers, createDirectives, adapter } = A
 ### With Custom Context (Recommended)
 
 ```typescript
-import { Directives, Models, Scalars } from '@/src/models.js';
+import { Models, Scalars } from '@/src/models.js';
 import { Axolotl } from '@aexol/axolotl-core';
 import { graphqlYogaWithContextAdapter } from '@aexol/axolotl-graphql-yoga';
 import { YogaInitialContext } from 'graphql-yoga';
@@ -345,7 +317,7 @@ async function buildContext(initial: YogaInitialContext): Promise<AppContext> {
   const user = token ? await verifyToken(token) : null;
 
   return {
-    ...initial, // MUST spread initial context
+    ...initial, // ✅ MUST spread initial context
     userId: user?._id || null,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'admin' || false,
@@ -355,23 +327,7 @@ async function buildContext(initial: YogaInitialContext): Promise<AppContext> {
 
 export const { createResolvers, adapter } = Axolotl(graphqlYogaWithContextAdapter<AppContext>(buildContext))<
   Models<{ Secret: number }>,
-  Scalars,
-  Directives
->();
-```
-
-**Note:** This project uses the simpler adapter without custom context:
-
-```typescript
-// src/axolotl.ts (actual implementation)
-import { Directives, Models, Scalars } from '@/src/models.js';
-import { Axolotl } from '@aexol/axolotl-core';
-import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
-
-export const { applyMiddleware, createResolvers, createDirectives, adapter } = Axolotl(graphqlYogaAdapter)<
-  Models<{ Secret: number; ID: string }>,
-  Scalars,
-  Directives
+  Scalars
 >();
 ```
 
@@ -1568,7 +1524,7 @@ npm run models
 npm run dev
 ```
 
-Visit `http://localhost:4102/graphql` and try these operations:
+Visit `http://localhost:4002/graphql` and try these operations:
 
 ```graphql
 # Register a user
@@ -1604,288 +1560,6 @@ query MyData {
     }
   }
 }
-```
-
----
-
-## STEP 9: Server-Side Rendering (SSR) with Vite
-
-This project features full SSR using Express + Vite for optimal performance and SEO.
-
-### SSR Architecture
-
-```
-Request Flow:
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│   Browser   │───▶│   Express   │───▶│    Vite     │
-└─────────────┘    └─────────────┘    └─────────────┘
-                          │                   │
-                          ▼                   ▼
-                   ┌─────────────┐    ┌─────────────┐
-                   │   GraphQL   │    │  React SSR  │
-                   │    /graphql │    │  Renderer   │
-                   └─────────────┘    └─────────────┘
-```
-
-### Server Entry Point (src/index.ts)
-
-```typescript
-import fs from 'node:fs/promises';
-import express from 'express';
-import { createServer as createViteServer, ViteDevServer } from 'vite';
-import { adapter } from '@/src/axolotl.js';
-import resolvers from '@/src/resolvers.js';
-import directives from './directives.js';
-
-const isProduction = process.env.NODE_ENV === 'production';
-
-async function startServer() {
-  const app = express();
-  const port = parseInt(process.env.PORT || '4102', 10);
-
-  // Create Axolotl/Yoga GraphQL instance
-  const { yoga } = adapter({ resolvers, directives }, { yoga: { graphqlEndpoint: '/graphql', graphiql: true } });
-
-  // Mount GraphQL
-  app.use('/graphql', yoga);
-
-  // Development: Vite dev server with HMR
-  // Production: Static file serving
-  let vite: ViteDevServer | undefined;
-  if (!isProduction) {
-    vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'custom',
-    });
-    app.use(vite.middlewares);
-  } else {
-    app.use(compression());
-    app.use(sirv('./dist/client'));
-  }
-
-  // SSR handler for all routes
-  app.use('*all', async (req, res) => {
-    const url = req.originalUrl;
-    let template, render;
-
-    if (!isProduction) {
-      template = await fs.readFile('./frontend/index.html', 'utf-8');
-      template = await vite!.transformIndexHtml(url, template);
-      render = (await vite!.ssrLoadModule('/src/entry-server.tsx')).render;
-    } else {
-      template = cachedProductionTemplate;
-      render = (await import('./dist/server/entry-server.js')).render;
-    }
-
-    const rendered = await render(url);
-    const html = template
-      .replace('<!--app-head-->', rendered.head ?? '')
-      .replace('<!--app-html-->', rendered.html ?? '');
-
-    res.status(200).set({ 'Content-Type': 'text/html' }).send(html);
-  });
-
-  app.listen(port);
-}
-```
-
-### Frontend Entry Points
-
-**Client Entry (frontend/src/entry-client.tsx):**
-
-```typescript
-import { hydrateRoot } from 'react-dom/client';
-import App from './App';
-
-hydrateRoot(document.getElementById('root')!, <App />);
-```
-
-**Server Entry (frontend/src/entry-server.tsx):**
-
-```typescript
-import { renderToString } from 'react-dom/server';
-import App from './App';
-
-export function render(url: string) {
-  const html = renderToString(<App />);
-  return { html };
-}
-```
-
-### SSR-Safe Patterns
-
-When writing frontend code for SSR:
-
-```typescript
-// SSR-safe storage access
-const getStorage = () => {
-  if (typeof window === 'undefined') {
-    return { getItem: () => null, setItem: () => {}, removeItem: () => {} };
-  }
-  return localStorage;
-};
-
-// Use in Zustand persist middleware
-persist(storeCreator, {
-  storage: createJSONStorage(() => getStorage()),
-});
-```
-
----
-
-## STEP 10: Prisma Database Integration
-
-This project includes Prisma schema for PostgreSQL (ready to use with Docker).
-
-### Prisma Schema (prisma/schema.prisma)
-
-```prisma
-generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
-}
-
-datasource db {
-  provider = "postgresql"
-}
-
-model User {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  password  String
-  token     String?
-  todos     Todo[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Todo {
-  id        String   @id @default(cuid())
-  content   String
-  done      Boolean  @default(false)
-  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  ownerId   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-```
-
-### Setup with Docker
-
-```bash
-# Start PostgreSQL
-docker-compose up -d
-
-# Generate Prisma client
-npx prisma generate
-
-# Run migrations
-npx prisma migrate dev
-
-# View data in Prisma Studio
-npx prisma studio
-```
-
-### Environment Configuration
-
-```bash
-# .env
-DATABASE_URL="postgresql://user:password@localhost:5432/axolotl?schema=public"
-```
-
-**Note:** The current example uses in-memory storage (`db.ts` files). To use Prisma:
-
-1. Import the generated Prisma client
-2. Replace in-memory operations with Prisma queries
-
----
-
-## STEP 11: AI Chat Integration (Vercel AI SDK)
-
-This project includes AI chat functionality via GraphQL subscriptions using Vercel AI SDK.
-
-### AI Provider Setup (src/ai/providers.ts)
-
-```typescript
-import { createOpenAI } from '@ai-sdk/openai';
-
-export const openai = createOpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-export const gpt4o = openai('gpt-4o');
-export const gpt4oMini = openai('gpt-4o-mini');
-export const gpt35Turbo = openai('gpt-3.5-turbo');
-```
-
-### AI Chat Subscription Resolver
-
-```typescript
-import { createSubscriptionHandler } from '@aexol/axolotl-core';
-import { createResolvers } from '../../axolotl.js';
-import { streamText, CoreMessage } from 'ai';
-import { gpt4oMini } from '../../../ai/index.js';
-
-export default createResolvers({
-  Subscription: {
-    aiChat: createSubscriptionHandler(async function* (_, { messages, system }) {
-      if (!process.env.OPENAI_API_KEY) {
-        yield { content: 'Error: OPENAI_API_KEY is not configured', done: true };
-        return;
-      }
-
-      const result = streamText({
-        model: gpt4oMini,
-        messages: messages as CoreMessage[],
-        system: system || 'You are a helpful assistant.',
-      });
-
-      for await (const chunk of result.textStream) {
-        yield { content: chunk, done: false };
-      }
-      yield { content: '', done: true };
-    }),
-  },
-});
-```
-
-### GraphQL Schema for AI Chat
-
-```graphql
-input ChatMessage {
-  role: String!
-  content: String!
-}
-
-type AIChatResponse {
-  content: String!
-  done: Boolean!
-}
-
-type Subscription {
-  aiChat(messages: [ChatMessage!]!, system: String): AIChatResponse! @resolver
-}
-```
-
-### Using AI Chat
-
-```graphql
-subscription AIChat {
-  aiChat(
-    messages: [{ role: "user", content: "Hello! What is Axolotl?" }]
-    system: "You are an expert on GraphQL frameworks"
-  ) {
-    content
-    done
-  }
-}
-```
-
-### Environment Configuration
-
-```bash
-# .env
-OPENAI_API_KEY=sk-your-api-key-here
 ```
 
 ---

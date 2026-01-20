@@ -60,6 +60,11 @@ frontend/
 3. **Use Zustand stores** for shared state (auth, toasts)
 4. **SSR-safe code** - check `typeof window` before accessing browser APIs
 5. **Use hooks** for data fetching logic - keep components presentational
+6. **ALWAYS define Selectors** for reusable query shapes
+7. **ALWAYS use `FromSelector`** to derive TypeScript types from selectors
+8. **NEVER manually duplicate backend types** - derive them from selectors
+9. **Use `$` function** for GraphQL variables when values come from user input or props
+
 
 ---
 
