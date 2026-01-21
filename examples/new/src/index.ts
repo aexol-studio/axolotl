@@ -76,7 +76,7 @@ mutation Echo {
       const url = req.originalUrl;
 
       let template: string;
-      let render: (url: string) => { html: string; head?: string };
+      let render: (url: string) => Promise<{ html: string; head?: string } | { redirect: string; status: number }>;
 
       if (!isProduction) {
         // Always read fresh template in development
@@ -90,6 +90,11 @@ mutation Echo {
       }
 
       const rendered = await render(url);
+
+      // Handle redirect
+      if ('redirect' in rendered) {
+        return res.redirect(rendered.status, rendered.redirect);
+      }
 
       const html = template
         .replace(`<!--app-head-->`, rendered.head ?? '')

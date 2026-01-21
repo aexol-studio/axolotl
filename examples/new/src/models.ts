@@ -1,9 +1,16 @@
-export interface AIChatMessage {
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+export type Scalars = {
+  ['ID']: unknown;
+};
+
+export interface AIChatMessage<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   role: string;
   content: string;
 }
 
-export type Models = {
+export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> = {
   ['User']: {
     id: {
       args: Record<string, never>;
@@ -47,29 +54,27 @@ export type Models = {
   };
 };
 
-export type Directives = {
+export type Directives<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> = {
   resolver: {
     args: Record<string, never>;
   };
 };
 
-export type Scalars = unknown;
-
-export interface User {
-  id: unknown;
+export interface User<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
+  id: S['ID'];
   name: string;
 }
-export interface Query {
+export interface Query<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   hello: string;
 }
-export interface Mutation {
+export interface Mutation<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   echo: string;
 }
-export interface AIChatChunk {
+export interface AIChatChunk<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   content: string;
   done: boolean;
 }
-export interface Subscription {
+export interface Subscription<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   countdown?: number | undefined | null;
   aiChat: AIChatChunk;
 }
