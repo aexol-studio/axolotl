@@ -1,4 +1,5 @@
 node_modules
+lib
 dist
 .git
 .gitignore
@@ -11,4 +12,4 @@ coverage
 .nyc_output
 .vscode
 .idea
-prisma/generated
+src/generated
