@@ -8,6 +8,10 @@
   "publishConfig": {
     "access": "restricted"
   },
+  "prisma": {
+    "schema": "src/prisma/schema.prisma",
+    "seed": "tsx src/prisma/seed.ts"
+  },
   "scripts": {
     "start": "NODE_ENV=production node lib/index.js",
     "build": "tspc && npm run build:client && npm run build:server",
@@ -25,7 +29,7 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate --schema src/prisma/schema.prisma"
   },
   "author": "GraphQL Editor Centaur Generator",
   "license": "ISC",
