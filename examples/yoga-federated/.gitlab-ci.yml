@@ -1,2 +1,21 @@
 # GitLab CI configuration placeholder
 # Add your CI/CD pipeline configuration here
+# include:
+#   - project: "ci/templates/node"
+#     file: ["npm.yml"]
+#   - project: "ci/templates/docker"
+#     file: ["npm-monorepo.yml"]
+# build:
+#   rules:
+#     - when: never
+# build deps:
+#   rules:
+#     - when: never
+# test:
+#   rules:
+#     - when: never
+# lint:
+#   rules:
+#     - when: never
+# variables:
+#   DOCKER_BUILD_ARGS: ENVFILE

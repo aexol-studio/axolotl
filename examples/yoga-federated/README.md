@@ -28,7 +28,7 @@ npm run db:push
 npm run dev
 ```
 
-This starts both the GraphQL backend and React frontend on the same port (http://localhost:4002).
+This starts both the GraphQL backend and React frontend on the same port (http://localhost:4102).
 
 ## Scripts
 
@@ -82,11 +82,32 @@ Default connection string: `postgresql://axolotl:axolotl@localhost:5432/axolotl?
 
 ## Docker Deployment
 
-Build and run the Docker image:
+### Standalone (Docker Compose)
 
-```sh
-docker build -t axolotl-yoga-federated .
-docker run -p 4002:4002 -e DATABASE_URL="your-database-url" axolotl-yoga-federated
+Run the complete stack with PostgreSQL:
+
+```bash
+docker-compose up --build
+```
+
+This will:
+
+- Build the application
+- Start PostgreSQL with pgvector extension
+- Run the GraphQL server on http://localhost:4102/graphql
+
+### Production Build
+
+Build and run just the app container:
+
+```bash
+docker build -t yoga-federated .
+docker run -p 4102:4102 \
+  -e PGUSER=axolotl \
+  -e PGPASSWORD=axolotl \
+  -e PGDATABASE=axolotl \
+  -e PGHOST=your-db-host \
+  yoga-federated
 ```
 
 ## Entry points

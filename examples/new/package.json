@@ -29,6 +29,9 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
+    "seed": "tsx src/prisma/seed.ts",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "postinstall": "prisma generate --schema src/prisma/schema.prisma"
   },
   "author": "GraphQL Editor Centaur Generator",
