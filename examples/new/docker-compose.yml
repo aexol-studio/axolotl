@@ -14,8 +14,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-  db:
-        condition: service_healthy
+
   db:
     image: pgvector/pgvector:pg16
     environment:
