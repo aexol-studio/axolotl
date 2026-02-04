@@ -1,98 +1,121 @@
 import { Link, useNavigate } from 'react-router';
-import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/authStore';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2 } from 'lucide-react';
+
+const loginSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const navigate = useNavigate();
   const { setUser, setToken } = useAuthStore();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
-    // Mock authentication - in real app would call API
+  const onSubmit = (data: LoginFormValues) => {
     const mockUser = {
       id: 'user-' + Date.now(),
-      name: email.split('@')[0] || 'Guest',
+      name: data.email.split('@')[0] || 'Guest',
     };
     const mockToken = 'mock-jwt-token-' + Date.now();
 
-    // Set auth state
     setUser(mockUser);
     setToken(mockToken);
 
-    // Navigate to profile
+    toast.success('Welcome back!', {
+      description: `Signed in as ${mockUser.name}`,
+    });
+
     navigate('/profile');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 flex items-center justify-center p-4">
-      <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl max-w-md w-full border border-white/20">
-        <h1 className="text-4xl font-bold text-white mb-2 text-center">Login</h1>
-        <p className="text-purple-200 text-center mb-8">Sign in to your account</p>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 pt-20">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-4xl font-bold">Login</CardTitle>
+          <CardDescription>Sign in to your account</CardDescription>
+        </CardHeader>
 
-        {/* Mock Auth Info */}
-        <div className="bg-yellow-900/30 border border-yellow-500/30 rounded-lg p-4 mb-6">
-          <p className="text-yellow-200 text-sm text-center">
-            ✨ Demo Mode: Enter any email/password to access protected routes
-          </p>
-        </div>
+        <CardContent className="space-y-6">
+          {/* Mock Auth Info */}
+          <Alert className="border-yellow-500 bg-yellow-500/10">
+            <AlertDescription className="text-yellow-600 dark:text-yellow-400 text-sm text-center">
+              ✨ Demo Mode: Enter any email/password to access protected routes
+            </AlertDescription>
+          </Alert>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-white text-sm font-medium mb-2">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              required
-            />
-          </div>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="you@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <div>
-            <label htmlFor="password" className="block text-white text-sm font-medium mb-2">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              required
-            />
-          </div>
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="••••••••" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <button
-            type="submit"
-            className="w-full bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
-          >
-            Sign In
-          </button>
-        </form>
+              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  'Sign In'
+                )}
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
 
-        <div className="mt-6 flex gap-3">
-          <Link
-            to="/"
-            className="flex-1 text-center bg-white/10 hover:bg-white/20 text-white font-medium py-2 px-4 rounded-lg transition-colors border border-white/20"
-          >
-            Home
-          </Link>
-          <Link
-            to="/about"
-            className="flex-1 text-center bg-white/10 hover:bg-white/20 text-white font-medium py-2 px-4 rounded-lg transition-colors border border-white/20"
-          >
-            About
-          </Link>
-        </div>
-      </div>
+        <CardFooter className="gap-3">
+          <Button asChild variant="outline" className="flex-1">
+            <Link to="/">Home</Link>
+          </Button>
+          <Button asChild variant="outline" className="flex-1">
+            <Link to="/about">About</Link>
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

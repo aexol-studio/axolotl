@@ -1,15 +1,21 @@
 import { redirect, useNavigate, Link } from 'react-router';
 import { useAuthStore } from '@/stores/authStore';
 import { useUserQuery } from '@/api/hooks';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Loader2, LogOut, User, Hash } from 'lucide-react';
 
-// Loader function - checks auth and protects route
 export async function loader() {
-  // SSR: redirect to login (no access to store on server)
   if (typeof window === 'undefined') {
     return redirect('/login');
   }
 
-  // Client: check auth state
   const { user, token } = useAuthStore.getState();
   if (!user || !token) {
     return redirect('/login');
@@ -22,92 +28,119 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const { user: authUser } = useAuthStore();
 
-  // Use React Query to fetch user profile data
   const userQuery = useUserQuery(authUser?.id);
 
   const handleLogout = () => {
     useAuthStore.getState().logout();
+    toast.success('Logged out successfully');
     navigate('/login');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-900 via-teal-900 to-cyan-900 flex items-center justify-center p-4">
-      <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl max-w-md w-full border border-white/20">
-        <h1 className="text-4xl font-bold text-white mb-2 text-center">Profile</h1>
-        <p className="text-teal-200 text-center mb-8">Your account details</p>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 pt-20">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-4xl font-bold">Profile</CardTitle>
+          <CardDescription>Your account details</CardDescription>
+        </CardHeader>
 
-        <div className="space-y-4">
+        <CardContent className="space-y-4">
           {/* Query Status */}
-          <div className="bg-white/5 rounded-lg p-3 border border-white/10 flex items-center justify-between">
-            <span className="text-white/60 text-sm">React Query Status:</span>
-            <span
-              className={`text-sm font-medium ${userQuery.isFetching ? 'text-yellow-300' : userQuery.error ? 'text-red-300' : 'text-green-300'}`}
-            >
-              {userQuery.isFetching ? '⟳ Loading...' : userQuery.error ? '✗ Error' : '✓ Loaded'}
-            </span>
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
+            <span className="text-muted-foreground text-sm">React Query Status</span>
+            <Badge variant={userQuery.isFetching ? 'outline' : userQuery.error ? 'destructive' : 'default'}>
+              {userQuery.isFetching ? (
+                <>
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  Loading
+                </>
+              ) : userQuery.error ? (
+                '✗ Error'
+              ) : (
+                '✓ Loaded'
+              )}
+            </Badge>
           </div>
 
           {/* User Info Card */}
           {userQuery.isLoading ? (
-            <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <p className="text-white/60 text-center">Loading profile...</p>
-            </div>
+            <Card>
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-16 w-16 rounded-full" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           ) : userQuery.error ? (
-            <div className="bg-red-900/30 rounded-xl p-6 border border-red-500/30">
-              <p className="text-red-300 text-center">Error loading profile: {String(userQuery.error)}</p>
-            </div>
+            <Alert variant="destructive">
+              <AlertDescription>Error loading profile: {String(userQuery.error)}</AlertDescription>
+            </Alert>
           ) : userQuery.data ? (
-            <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <div className="space-y-3">
-                <div>
-                  <p className="text-white/60 text-sm">Name</p>
-                  <p className="text-white text-lg font-medium">{userQuery.data.name}</p>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4 mb-4">
+                  <Avatar className="h-16 w-16">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xl">
+                      {userQuery.data.name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="text-xl font-semibold">{userQuery.data.name}</h3>
+                    <p className="text-muted-foreground text-sm">Member</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-white/60 text-sm">User ID</p>
-                  <p className="text-white text-sm font-mono">{userQuery.data.id}</p>
+                <Separator className="my-4" />
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground text-sm">Name</span>
+                    <span className="ml-auto font-medium">{userQuery.data.name}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Hash className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground text-sm">User ID</span>
+                    <code className="ml-auto text-xs font-mono bg-muted px-2 py-1 rounded">{userQuery.data.id}</code>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ) : (
-            <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <p className="text-white/60 text-center">No user data available</p>
-            </div>
+            <Card>
+              <CardContent className="p-6">
+                <p className="text-muted-foreground text-center">No user data available</p>
+              </CardContent>
+            </Card>
           )}
 
           {/* Info Note */}
-          <div className="bg-blue-900/30 border border-blue-500/30 rounded-lg p-4">
-            <p className="text-blue-200 text-sm text-center">
+          <Alert className="border-blue-500 bg-blue-500/10">
+            <AlertDescription className="text-blue-600 dark:text-blue-400 text-sm text-center">
               Protected route with React Query data fetching.
               <br />
-              <span className="text-xs text-blue-300">useUserQuery manages loading, error & success states.</span>
-            </p>
-          </div>
+              <span className="text-xs">useUserQuery manages loading, error & success states.</span>
+            </AlertDescription>
+          </Alert>
 
-          {/* Actions */}
-          <button
-            onClick={handleLogout}
-            className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
-          >
+          {/* Logout Button */}
+          <Button onClick={handleLogout} variant="destructive" className="w-full">
+            <LogOut className="h-4 w-4 mr-2" />
             Logout
-          </button>
-        </div>
+          </Button>
+        </CardContent>
 
-        <div className="mt-6 flex gap-3">
-          <Link
-            to="/"
-            className="flex-1 text-center bg-white/10 hover:bg-white/20 text-white font-medium py-2 px-4 rounded-lg transition-colors border border-white/20"
-          >
-            Home
-          </Link>
-          <Link
-            to="/settings"
-            className="flex-1 text-center bg-white/10 hover:bg-white/20 text-white font-medium py-2 px-4 rounded-lg transition-colors border border-white/20"
-          >
-            Settings
-          </Link>
-        </div>
-      </div>
+        <CardFooter className="gap-3">
+          <Button asChild variant="outline" className="flex-1">
+            <Link to="/">Home</Link>
+          </Button>
+          <Button asChild variant="outline" className="flex-1">
+            <Link to="/settings">Settings</Link>
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }
