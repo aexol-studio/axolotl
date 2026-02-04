@@ -25,7 +25,10 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
-    "postinstall": "prisma generate"
+    "seed": "tsx src/prisma/seed.ts",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "postinstall": "prisma generate --schema src/prisma/schema.prisma"
   },
   "author": "GraphQL Editor Centaur Generator",
   "license": "ISC",
@@ -73,5 +76,9 @@
     "typescript-eslint": "^8.53.0",
     "typescript-transform-paths": "^3.5.5",
     "vite": "^6.3.5"
+  },
+  "prisma": {
+    "schema": "src/prisma/schema.prisma",
+    "seed": "tsx src/prisma/seed.ts"
   }
 }

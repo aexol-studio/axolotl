@@ -14,7 +14,7 @@ const templateHtml = isProduction ? await fs.readFile(resolve(__dirname, '../dis
 
 async function startServer() {
   const app = express();
-  const port = parseInt(process.env.PORT || '4103', 10);
+  const port = parseInt(process.env.PORT || '8080', 10);
 
   // Create Axolotl/Yoga instance
   const { yoga } = adapter(
