@@ -5,9 +5,14 @@ WORKDIR /app
 
 COPY package*.json ./
 COPY src/prisma/schema.prisma ./src/prisma/schema.prisma
-RUN npm ci
+COPY prisma.config.ts ./
+
+# Skip Prisma postinstall hook - we'll generate after full copy
+RUN npm ci --ignore-scripts
 
 COPY . .
+
+# Generate Prisma client once with full context
 RUN npx prisma generate
 RUN npm run build
 
@@ -28,6 +33,6 @@ COPY --from=builder /app/src/prisma/migrations ./src/prisma/migrations
 COPY --from=builder /app/prisma.config.ts ./
 COPY --from=builder /app/schema.graphql ./
 
-EXPOSE 4103
+EXPOSE 8080
 
 CMD ["node", "lib/index.js"]

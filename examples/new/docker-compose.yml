@@ -1,20 +1,21 @@
 name: axolotl-new-starter
 services:
-  # app:
-  #   build: .
-  #   ports:
-  #     - '4002:4002'
-  #   environment:
-  #     # Native PG vars (used by prisma.config.ts)
-  #     PGUSER: axolotl
-  #     PGPASSWORD: axolotl
-  #     PGDATABASE: axolotl
-  #     PGHOST: db
-  #     # Or use DATABASE_URL directly for deployments:
-  #     # DATABASE_URL: postgresql://axolotl:axolotl@db:5432/axolotl
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
+  app:
+    build: .
+    ports:
+      - '8080:8080'
+    environment:
+      PORT: 8080
+      # Native PG vars (used by prisma.config.ts)
+      PGUSER: axolotl
+      PGPASSWORD: axolotl
+      PGDATABASE: axolotl
+      PGHOST: db
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+        condition: service_healthy
   db:
     image: pgvector/pgvector:pg16
     environment:

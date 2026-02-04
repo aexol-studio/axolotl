@@ -4,9 +4,15 @@ FROM node:24-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install --ignore-scripts
+COPY src/prisma/schema.prisma ./src/prisma/schema.prisma
+COPY prisma.config.ts ./
+
+# Skip Prisma postinstall hook - we'll generate after full copy
+RUN npm ci --ignore-scripts
 
 COPY . .
+
+# Generate Prisma client once with full context
 RUN npx prisma generate
 RUN npm run build
 
@@ -17,28 +23,16 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy compiled backend (lib/) and frontend (dist/)
 COPY --from=builder /app/lib ./lib
 COPY --from=builder /app/dist ./dist
-
-# Copy Prisma generated client (at src/generated/prisma per schema output)
-COPY --from=builder /app/src/generated ./src/generated
-
-# Copy node_modules and package.json
+COPY --from=builder /app/src/prisma/generated ./src/prisma/generated
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
-
-# Copy Prisma schema for runtime migrations
-COPY --from=builder /app/prisma/schema.prisma ./prisma/
-
-# Copy prisma.config.ts and env.ts for Prisma CLI at runtime
+COPY --from=builder /app/src/prisma/schema.prisma ./src/prisma/
+COPY --from=builder /app/src/prisma/migrations ./src/prisma/migrations
 COPY --from=builder /app/prisma.config.ts ./
-COPY --from=builder /app/src/env.ts ./src/
-
-# Copy and setup entrypoint
-COPY --from=builder /app/entrypoint.sh ./
-RUN chmod +x ./entrypoint.sh
+COPY --from=builder /app/schema.graphql ./
 
 EXPOSE 4102
 
-CMD ["./entrypoint.sh"]
+CMD ["node", "lib/index.js"]

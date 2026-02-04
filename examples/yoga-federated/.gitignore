@@ -5,7 +5,7 @@
 tsconfig.tsbuildinfo
 
 # Prisma generated client
-prisma/generated/
+src/prisma/generated/
 
 # Prisma config compiled output (compiled by Prisma CLI, not tsc)
 prisma.config.js

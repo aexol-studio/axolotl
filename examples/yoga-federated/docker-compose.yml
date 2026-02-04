@@ -1,16 +1,18 @@
+# Standalone Docker deployment for yoga-federated example
+# Run: docker-compose up --build
+
 services:
   app:
     build: .
     ports:
-      - '4002:4002'
+      - '4102:4102'
     environment:
+      PORT: 4102
       # Native PG vars (used by prisma.config.ts)
       PGUSER: axolotl
       PGPASSWORD: axolotl
       PGDATABASE: axolotl
       PGHOST: db
-      # Or use DATABASE_URL directly for deployments:
-      # DATABASE_URL: postgresql://axolotl:axolotl@db:5432/axolotl
     depends_on:
       db:
         condition: service_healthy
