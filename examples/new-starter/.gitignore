@@ -1,0 +1,19 @@
+/lib
+/dist
+/.tmp
+/node_modules
+.graphql-editor-auth.json
+tsconfig.tsbuildinfo
+
+# Prisma generated client
+src/prisma/generated/
+
+# Prisma config compiled output (compiled by Prisma CLI, not tsc)
+prisma.config.js
+prisma.config.d.ts
+prisma.config.js.map
+
+# Prisma config compiled output (compiled by Prisma CLI, not tsc)
+prisma.config.js
+prisma.config.d.ts
+prisma.config.js.map

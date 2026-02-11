@@ -1,0 +1,1 @@
+export { GraphQLShowcaseTab } from './GraphQLShowcaseTab';

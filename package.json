@@ -49,7 +49,6 @@
     "packages/core",
     "adapters/graphql-yoga",
     "packages/cli",
-    "packages/scripts",
-    "examples/yoga-federated"
+    "packages/scripts"
   ]
 }

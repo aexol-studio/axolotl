@@ -1,0 +1,1 @@
+export { ProtectedLayout } from './Layout';
