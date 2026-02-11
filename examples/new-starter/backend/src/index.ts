@@ -21,6 +21,9 @@ async function startServer() {
   const { yoga } = adapter(
     { resolvers, directives },
     {
+      schema: {
+        file: { path: 'backend/schema.graphql' },
+      },
       yoga: {
         graphqlEndpoint: '/graphql',
         graphiql: {
@@ -74,7 +77,7 @@ mutation Register{
   let vite: ViteDevServer | undefined;
   if (!isProduction) {
     vite = await createViteServer({
-      configFile: resolve(__dirname, '../vite.config.ts'),
+      configFile: resolve(__dirname, '../frontend/vite.config.ts'),
       server: { middlewareMode: true },
       appType: 'custom',
     });

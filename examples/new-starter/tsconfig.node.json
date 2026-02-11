@@ -8,5 +8,5 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["vite.config.ts", "prisma.config.ts"]
+  "include": ["frontend/vite.config.ts", "prisma.config.ts"]
 }

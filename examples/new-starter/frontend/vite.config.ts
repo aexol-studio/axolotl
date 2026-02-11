@@ -5,14 +5,14 @@ import path from 'path';
 
 export default defineConfig(({ isSsrBuild }) => ({
   plugins: [react(), tailwindcss()],
-  root: path.resolve(__dirname, 'frontend'),
+  root: path.resolve(__dirname, '.'),
   build: {
-    outDir: isSsrBuild ? path.resolve(__dirname, 'dist/server') : path.resolve(__dirname, 'dist/client'),
+    outDir: isSsrBuild ? path.resolve(__dirname, '../dist/server') : path.resolve(__dirname, '../dist/client'),
     emptyOutDir: true,
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './frontend/src'),
+      '@': path.resolve(__dirname, './src'),
     },
   },
   server: {

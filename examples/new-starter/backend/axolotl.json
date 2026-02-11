@@ -13,7 +13,7 @@
   ],
   "zeus": [
     {
-      "generationPath": "frontend/src",
+      "generationPath": "../frontend/src",
       "esModule": true
     }
   ]

@@ -17,7 +17,7 @@
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "baseUrl": "./",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./backend/*"]
     },
     "plugins": [
       {
@@ -29,14 +29,14 @@
       }
     ]
   },
-  "include": ["src/**/*"],
+  "include": ["backend/src/**/*"],
   "exclude": [
     "lib",
     "node_modules",
     "jest.config.js",
     "frontend",
     "dist",
-    "vite.config.ts",
+    "frontend/vite.config.ts",
     "prisma.config.ts",
     "mobile"
   ]

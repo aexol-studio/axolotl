@@ -344,17 +344,17 @@ const error = queryError?.message ?? loginMutation.error?.message ?? registerMut
 
 ### Type errors after schema changes
 
-**Solution:** Regenerate Zeus by running `npx @aexol/axolotl build` in the project root
+**Solution:** Regenerate Zeus by running `cd backend && npx @aexol/axolotl build`
 
 ### Zeus files not found
 
-**Solution:** Ensure `axolotl.json` has zeus configuration:
+**Solution:** Ensure `backend/axolotl.json` has zeus configuration:
 
 ```json
 {
   "zeus": [
     {
-      "generationPath": "frontend/src",
+      "generationPath": "../frontend/src",
       "esModule": true
     }
   ]

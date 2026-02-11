@@ -14,10 +14,10 @@ const getDatabaseUrl = (): string => {
 };
 
 export default defineConfig({
-  schema: 'src/prisma/schema.prisma',
+  schema: 'backend/src/prisma/schema.prisma',
   migrations: {
-    path: 'src/prisma/migrations',
-    seed: process.env.NODE_ENV === 'production' ? 'node lib/prisma/seed.js' : 'tsx src/prisma/seed.ts',
+    path: 'backend/src/prisma/migrations',
+    seed: process.env.NODE_ENV === 'production' ? 'node lib/prisma/seed.js' : 'tsx backend/src/prisma/seed.ts',
   },
   datasource: {
     url: getDatabaseUrl(),

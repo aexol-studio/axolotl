@@ -7,7 +7,7 @@ description: Axolotl server setup, axolotl.ts initialization, custom context, sc
 
 **Purpose:** Initialize Axolotl framework with adapter and type definitions.
 
-**File: src/axolotl.ts**
+**File: backend/src/axolotl.ts**
 
 ### Without Custom Context (Basic)
 
@@ -85,7 +85,7 @@ export const { createResolvers, adapter } = Axolotl(graphqlYogaWithContextAdapte
 
 ## Server Configuration
 
-**File: src/index.ts**
+**File: backend/src/index.ts**
 
 ### Basic Server
 

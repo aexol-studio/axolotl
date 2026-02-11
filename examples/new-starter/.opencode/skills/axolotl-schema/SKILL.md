@@ -36,7 +36,7 @@ schema {
 
 - This is the source of truth for your API
 - The `@resolver` directive marks fields that need resolver implementations
-- After modifying schema, ALWAYS run: `npx @aexol/axolotl build`
+- After modifying schema, ALWAYS run: `cd backend && npx @aexol/axolotl build`
 
 ---
 
@@ -45,15 +45,15 @@ schema {
 **Command:**
 
 ```bash
-npx @aexol/axolotl build
+cd backend && npx @aexol/axolotl build
 # Or with custom directory:
 npx @aexol/axolotl build --cwd path/to/project
 ```
 
 **What it does:**
 
-- Reads `schema.graphql`
-- Generates TypeScript types in `src/models.ts`
+- Reads `backend/schema.graphql`
+- Generates TypeScript types in `backend/src/models.ts`
 - Creates type definitions for Query, Mutation, Subscription, and all types
 
 **Generated models.ts structure:**
@@ -92,7 +92,7 @@ export type Models<S extends { [P in keyof Scalars]: any }> = {
 **Command:**
 
 ```bash
-npx @aexol/axolotl resolvers
+cd backend && npx @aexol/axolotl resolvers
 ```
 
 **What it does:**
@@ -120,7 +120,7 @@ type Mutation {
 The command generates:
 
 ```
-src/
+backend/src/
 ├── resolvers/
 │   ├── Query/
 │   │   ├── user.ts          # Individual field resolver
@@ -190,14 +190,14 @@ export default createResolvers({
 **Workflow:**
 
 1. Add `@resolver` directives to schema fields
-2. Run `npx @aexol/axolotl build` to update types
-3. Run `npx @aexol/axolotl resolvers` to scaffold structure
+2. Run `cd backend && npx @aexol/axolotl build` to update types
+3. Run `cd backend && npx @aexol/axolotl resolvers` to scaffold structure
 4. Implement TODO sections in generated resolver files
 5. Import and use `resolvers/resolvers.ts` in your server
 
 **Note for Federated Projects:**
 
-The command automatically detects federation in `axolotl.json` and generates resolver structures for each federated schema in the appropriate directories.
+The command automatically detects federation in `backend/axolotl.json` and generates resolver structures for each federated schema in the appropriate directories.
 
 ---
 
@@ -208,16 +208,16 @@ The command automatically detects federation in `axolotl.json` and generates res
 npx @aexol/axolotl create-yoga my-project
 
 # Generate models from schema
-npx @aexol/axolotl build
+cd backend && npx @aexol/axolotl build
 
 # Generate models with custom directory
 npx @aexol/axolotl build --cwd path/to/project
 
 # Generate resolver boilerplate from @resolver directives
-npx @aexol/axolotl resolvers
+cd backend && npx @aexol/axolotl resolvers
 
 # Inspect resolvers (find unimplemented @resolver fields)
-npx @aexol/axolotl inspect -s schema.graphql -r lib/resolvers.js
+cd backend && npx @aexol/axolotl inspect -s schema.graphql -r lib/resolvers.js
 ```
 
 ### Inspect Command
@@ -225,7 +225,7 @@ npx @aexol/axolotl inspect -s schema.graphql -r lib/resolvers.js
 The `inspect` command identifies which resolvers marked with `@resolver` directive are not yet implemented:
 
 ```bash
-npx @aexol/axolotl inspect -s ./schema.graphql -r ./lib/resolvers.js
+cd backend && npx @aexol/axolotl inspect -s ./schema.graphql -r ./lib/resolvers.js
 ```
 
 **What it does:**
@@ -252,15 +252,15 @@ Total: 3 resolver(s) to implement
 - ⚠️ Stub - Resolver exists but throws "Not implemented" error
 - ❌ Missing - No resolver function exists for this field
 
-**Tip:** Use `npx @aexol/axolotl resolvers` to generate stubs, then use `inspect` to track implementation progress.
+**Tip:** Use `cd backend && npx @aexol/axolotl resolvers` to generate stubs, then use `inspect` to track implementation progress.
 
 ---
 
 ## Quick Reference
 
-| Task               | Command/Code                                                |
-| ------------------ | ----------------------------------------------------------- |
-| Initialize project | `npx @aexol/axolotl create-yoga <name>`                     |
-| Generate types     | `npx @aexol/axolotl build`                                  |
-| Scaffold resolvers | `npx @aexol/axolotl resolvers`                              |
-| Inspect resolvers  | `npx @aexol/axolotl inspect -s schema.graphql -r resolvers` |
+| Task               | Command/Code                                                              |
+| ------------------ | ------------------------------------------------------------------------- |
+| Initialize project | `npx @aexol/axolotl create-yoga <name>`                                   |
+| Generate types     | `cd backend && npx @aexol/axolotl build`                                  |
+| Scaffold resolvers | `cd backend && npx @aexol/axolotl resolvers`                              |
+| Inspect resolvers  | `cd backend && npx @aexol/axolotl inspect -s schema.graphql -r resolvers` |

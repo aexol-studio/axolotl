@@ -209,7 +209,7 @@ export const AuthorizedUserQuery = createResolvers({
 #### Adding New Protected Fields
 
 1. Add the field to `AuthorizedUserQuery` or `AuthorizedUserMutation` in the schema
-2. Run `axolotl build` to regenerate types
+2. Run `cd backend && axolotl build` to regenerate types
 3. Implement the resolver — destructure `[source]` to access the authenticated user. Auth is already enforced by the gateway.
 
 #### Alternative Auth Approaches
@@ -274,7 +274,7 @@ export default createResolvers({
 ### Organized Resolver Structure (Recommended)
 
 ```typescript
-// src/resolvers/Query/resolvers.ts
+// backend/src/resolvers/Query/resolvers.ts
 import { createResolvers } from '../axolotl.js';
 import user from './user.js';
 
@@ -284,7 +284,7 @@ export default createResolvers({
   },
 });
 
-// src/resolvers/Query/user.ts
+// backend/src/resolvers/Query/user.ts
 import { createResolvers } from '../axolotl.js';
 
 export default createResolvers({
@@ -296,7 +296,7 @@ export default createResolvers({
   },
 });
 
-// Main resolvers.ts
+// backend/src/resolvers.ts (main entry)
 import { mergeAxolotls } from '@aexol/axolotl-core';
 import QueryResolvers from '@/src/resolvers/Query/resolvers.js';
 import MutationResolvers from '@/src/resolvers/Mutation/resolvers.js';

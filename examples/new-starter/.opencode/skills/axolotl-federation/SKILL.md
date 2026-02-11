@@ -37,7 +37,7 @@ Micro-federation in Axolotl is a modular architecture pattern where:
 
 ### Federation Configuration
 
-**axolotl.json:**
+**backend/axolotl.json:**
 
 ```json
 {
@@ -64,39 +64,40 @@ Recommended structure for a federated project:
 
 ```
 project/
-├── axolotl.json              # Main config with federation array
-├── schema.graphql            # Generated supergraph (don't edit manually)
-├── src/
-│   ├── models.ts             # Generated supergraph models
-│   ├── axolotl.ts           # Main Axolotl instance
-│   ├── resolvers.ts         # Merged resolvers (calls mergeAxolotls)
-│   ├── index.ts             # Server entry point
-│   │
-│   ├── users/               # Users domain module
-│   │   ├── schema.graphql   # Users schema
-│   │   ├── models.ts        # Generated from users schema
-│   │   ├── axolotl.ts       # Users Axolotl instance
-│   │   ├── db.ts            # Users data layer
-│   │   └── resolvers/
-│   │       ├── resolvers.ts       # Main users resolvers export
-│   │       ├── Mutation/
-│   │       │   ├── resolvers.ts
-│   │       │   ├── login.ts
-│   │       │   └── register.ts
-│   │       └── Query/
+├── backend/
+│   ├── axolotl.json              # Main config with federation array
+│   ├── schema.graphql            # Generated supergraph (don't edit manually)
+│   ├── src/
+│   │   ├── models.ts             # Generated supergraph models
+│   │   ├── axolotl.ts           # Main Axolotl instance
+│   │   ├── resolvers.ts         # Merged resolvers (calls mergeAxolotls)
+│   │   ├── index.ts             # Server entry point
+│   │   │
+│   │   ├── users/               # Users domain module
+│   │   │   ├── schema.graphql   # Users schema
+│   │   │   ├── models.ts        # Generated from users schema
+│   │   │   ├── axolotl.ts       # Users Axolotl instance
+│   │   │   ├── db.ts            # Users data layer
+│   │   │   └── resolvers/
+│   │   │       ├── resolvers.ts       # Main users resolvers export
+│   │   │       ├── Mutation/
+│   │   │       │   ├── resolvers.ts
+│   │   │       │   ├── login.ts
+│   │   │       │   └── register.ts
+│   │   │       └── Query/
+│   │   │           ├── resolvers.ts
+│   │   │           └── user.ts
+│   │   │
+│   │   └── todos/               # Todos domain module
+│   │       ├── schema.graphql
+│   │       ├── models.ts
+│   │       ├── axolotl.ts
+│   │       ├── db.ts
+│   │       └── resolvers/
 │   │           ├── resolvers.ts
-│   │           └── user.ts
-│   │
-│   └── todos/               # Todos domain module
-│       ├── schema.graphql
-│       ├── models.ts
-│       ├── axolotl.ts
-│       ├── db.ts
-│       └── resolvers/
-│           ├── resolvers.ts
-│           ├── AuthorizedUserMutation/
-│           ├── AuthorizedUserQuery/
-│           └── TodoOps/
+│   │           ├── AuthorizedUserMutation/
+│   │           ├── AuthorizedUserQuery/
+│   │           └── TodoOps/
 ```
 
 ---
@@ -203,7 +204,7 @@ export const { createResolvers, createDirectives, applyMiddleware } = Axolotl(gr
 
 ### Schema Merging Rules
 
-When you run `axolotl build`, schemas are merged using these rules:
+When you run `cd backend && axolotl build`, schemas are merged using these rules:
 
 **1. Types are merged by name:**
 
@@ -329,7 +330,7 @@ export default mergeAxolotls(todosResolvers, usersResolvers);
 ### Type Generation Flow
 
 ```
-1. Read axolotl.json
+1. Read backend/axolotl.json
    ↓
 2. For each federation entry:
    - Parse schema file
@@ -473,20 +474,20 @@ Directive implementations should be registered in each module's Axolotl instance
 npm install
 
 # Generate all models and merged schema
-npx @aexol/axolotl build
+cd backend && npx @aexol/axolotl build
 
 # Generate resolver scaffolding (optional)
-npx @aexol/axolotl resolvers
+cd backend && npx @aexol/axolotl resolvers
 ```
 
 **When to Regenerate:**
 
-Run `axolotl build` when you:
+Run `cd backend && axolotl build` when you:
 
 - Add or modify any schema file
 - Add new types or fields
 - Add or remove federation modules
-- Change `axolotl.json` configuration
+- Change `backend/axolotl.json` configuration
 
 The CLI will regenerate:
 
@@ -575,7 +576,7 @@ Fix by making them identical in both files.
 
 ```bash
 # Regenerate all models
-npx @aexol/axolotl build
+cd backend && npx @aexol/axolotl build
 
 # Check your tsconfig.json has correct path mappings
 {

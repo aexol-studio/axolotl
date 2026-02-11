@@ -12,23 +12,23 @@
     "start": "NODE_ENV=production node lib/index.js",
     "build": "tspc && npm run build:client && npm run build:server",
     "build:backend": "tspc",
-    "build:client": "vite build",
-    "build:server": "vite build --ssr src/entry-server.tsx",
+    "build:client": "vite build --config frontend/vite.config.ts",
+    "build:server": "vite build --config frontend/vite.config.ts --ssr src/entry-server.tsx",
     "watch": "tspc --watch",
-    "models": "axolotl build",
-    "resolvers": "axolotl resolvers",
-    "inspect": "axolotl inspect -s schema.graphql -r ./lib/resolvers.js",
-    "chaos": "axolotl chaos -s schema.graphql -u http://localhost:4000/graphql",
-    "dev": "nodemon",
+    "models": "cd backend && axolotl build",
+    "resolvers": "cd backend && axolotl resolvers",
+    "inspect": "axolotl inspect -s backend/schema.graphql -r ./lib/resolvers.js",
+    "chaos": "axolotl chaos -s backend/schema.graphql -u http://localhost:4000/graphql",
+    "dev": "nodemon --config backend/nodemon.json",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
-    "seed": "tsx src/prisma/seed.ts",
+    "seed": "tsx backend/src/prisma/seed.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "postinstall": "prisma generate --schema src/prisma/schema.prisma"
+    "postinstall": "prisma generate --schema backend/src/prisma/schema.prisma"
   },
   "author": "GraphQL Editor Centaur Generator",
   "license": "ISC",
@@ -75,6 +75,7 @@
     "embla-carousel-react": "^8.6.0",
     "express": "^5.1.0",
     "graphql": "^16.9.0",
+    "@graphql-tools/utils": "^10.11.0",
     "graphql-yoga": "^5.10.4",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.563.0",
@@ -121,7 +122,7 @@
     "vite": "^7.0.0"
   },
   "prisma": {
-    "schema": "src/prisma/schema.prisma",
-    "seed": "tsx src/prisma/seed.ts"
+    "schema": "backend/src/prisma/schema.prisma",
+    "seed": "tsx backend/src/prisma/seed.ts"
   }
 }

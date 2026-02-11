@@ -23,13 +23,20 @@ This is a fullstack project with an **Axolotl GraphQL backend** and a **React fr
 
 ```
 project/
-├── axolotl.json          # Configuration file
-├── schema.graphql        # GraphQL schema
-├── src/
-│   ├── axolotl.ts       # Framework initialization
-│   ├── models.ts        # Auto-generated types (DO NOT EDIT)
-│   ├── resolvers.ts     # Resolver implementations
-│   └── index.ts         # Server entry point
+├── backend/
+│   ├── axolotl.json      # Configuration file
+│   ├── schema.graphql    # GraphQL schema
+│   ├── nodemon.json      # Dev watcher config
+│   ├── prisma.config.ts  # Prisma configuration
+│   ├── src/
+│   │   ├── axolotl.ts    # Framework initialization
+│   │   ├── models.ts     # Auto-generated types (DO NOT EDIT)
+│   │   ├── resolvers.ts  # Resolver implementations
+│   │   └── index.ts      # Server entry point
+├── frontend/
+│   ├── vite.config.ts    # Vite configuration
+│   ├── src/
+│   │   └── ...           # React app source
 ```
 
 ### Critical Rules
@@ -51,7 +58,7 @@ project/
 
 ### Understanding axolotl.json
 
-The `axolotl.json` configuration file defines:
+The `axolotl.json` configuration file is located at `backend/axolotl.json` and defines:
 
 ```json
 {
@@ -65,7 +72,7 @@ The `axolotl.json` configuration file defines:
   ],
   "zeus": [
     {
-      "generationPath": "src/"
+      "generationPath": "../frontend/src"
     }
   ]
 }
@@ -73,20 +80,20 @@ The `axolotl.json` configuration file defines:
 
 **Instructions:**
 
-- Read `axolotl.json` first to understand project structure
-- NEVER edit `axolotl.json` unless explicitly asked
+- Read `backend/axolotl.json` first to understand project structure
+- NEVER edit `backend/axolotl.json` unless explicitly asked
 - Use paths from config to locate schema and models
 
 ### Backend Workflow Checklist
 
-1. **Read axolotl.json** to understand structure
-2. **Check schema.graphql** for current schema
+1. **Read `backend/axolotl.json`** to understand structure
+2. **Check `backend/schema.graphql`** for current schema
 3. **Verify models.ts is up-to-date** (regenerate if needed)
 4. **Locate axolotl.ts** to understand initialization
 5. **Find resolver files** and understand structure
 6. **Make schema changes** if requested
-7. **Run `axolotl build`** after schema changes
-8. **Optionally run `axolotl resolvers`** to scaffold new resolver files
+7. **Run `cd backend && axolotl build`** after schema changes
+8. **Optionally run `cd backend && axolotl resolvers`** to scaffold new resolver files
 9. **Update resolvers** to match new types
 10. **Test** that server starts without type errors
 
@@ -94,7 +101,7 @@ The `axolotl.json` configuration file defines:
 
 #### Type errors in resolvers
 
-**Solution:** Run `npx @aexol/axolotl build` to regenerate models
+**Solution:** Run `cd backend && npx @aexol/axolotl build` to regenerate models
 
 #### Scalar types showing as 'unknown'
 
@@ -114,22 +121,22 @@ Axolotl(adapter)<Models<{ MyScalar: string }>, Scalars>();
 
 ### Backend Quick Reference
 
-| Task                 | Command/Code                                                |
-| -------------------- | ----------------------------------------------------------- |
-| Initialize project   | `npx @aexol/axolotl create-yoga <name>`                     |
-| Generate types       | `npx @aexol/axolotl build`                                  |
-| Scaffold resolvers   | `npx @aexol/axolotl resolvers`                              |
-| Create resolvers     | `createResolvers({ Query: {...} })`                         |
-| Access context       | `([, , context])` - third in tuple                          |
-| Access parent        | `([source])` - first in tuple                               |
-| Merge resolvers      | `mergeAxolotls(resolvers1, resolvers2)`                     |
-| Start server         | `adapter({ resolvers }).server.listen(4000)`                |
-| Add custom context   | `graphqlYogaWithContextAdapter<Ctx>(contextFn)`             |
-| Context must extend  | `YogaInitialContext & { custom }`                           |
-| Context must include | `{ ...initial, ...custom }`                                 |
-| Define scalars       | `createScalars({ ScalarName: GraphQLScalarType })`          |
-| Define directives    | `createDirectives({ directiveName: mapper })`               |
-| Inspect resolvers    | `npx @aexol/axolotl inspect -s schema.graphql -r resolvers` |
+| Task                 | Command/Code                                                                 |
+| -------------------- | ---------------------------------------------------------------------------- |
+| Initialize project   | `npx @aexol/axolotl create-yoga <name>`                                      |
+| Generate types       | `cd backend && npx @aexol/axolotl build`                                     |
+| Scaffold resolvers   | `cd backend && npx @aexol/axolotl resolvers`                                 |
+| Create resolvers     | `createResolvers({ Query: {...} })`                                          |
+| Access context       | `([, , context])` - third in tuple                                           |
+| Access parent        | `([source])` - first in tuple                                                |
+| Merge resolvers      | `mergeAxolotls(resolvers1, resolvers2)`                                      |
+| Start server         | `adapter({ resolvers }).server.listen(4000)`                                 |
+| Add custom context   | `graphqlYogaWithContextAdapter<Ctx>(contextFn)`                              |
+| Context must extend  | `YogaInitialContext & { custom }`                                            |
+| Context must include | `{ ...initial, ...custom }`                                                  |
+| Define scalars       | `createScalars({ ScalarName: GraphQLScalarType })`                           |
+| Define directives    | `createDirectives({ directiveName: mapper })`                                |
+| Inspect resolvers    | `npx @aexol/axolotl inspect -s backend/schema.graphql -r ./lib/resolvers.js` |
 
 ---
 
@@ -236,17 +243,17 @@ toast('Default notification');
 
 #### Type errors after schema changes
 
-**Solution:** Regenerate Zeus by running `npx @aexol/axolotl build` in the project root
+**Solution:** Regenerate Zeus by running `cd backend && npx @aexol/axolotl build`
 
 #### Zeus files not found
 
-**Solution:** Ensure `axolotl.json` has zeus configuration:
+**Solution:** Ensure `backend/axolotl.json` has zeus configuration:
 
 ```json
 {
   "zeus": [
     {
-      "generationPath": "frontend/src",
+      "generationPath": "../frontend/src",
       "esModule": true
     }
   ]

@@ -45,7 +45,7 @@ throw new Error('Database connection failed');
 
 ---
 
-## Frontend: Error Utilities (`src/api/errors.ts`)
+## Frontend: Error Utilities (`frontend/src/api/errors.ts`)
 
 ### `getGraphQLErrorMessage(error)`
 
@@ -72,7 +72,7 @@ import { isAuthError } from '../api';
 
 ---
 
-## Global Error Handling (`src/lib/queryClient.ts`)
+## Global Error Handling (`frontend/src/lib/queryClient.ts`)
 
 The `QueryClient` handles errors automatically. **You do NOT need `onError` in individual hooks.**
 
