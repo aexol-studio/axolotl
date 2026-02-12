@@ -1,5 +1,4 @@
 import { SubscriptionSSE } from '../zeus/index';
-import { useAuthStore } from '../stores/authStore';
 
 // Subscription client - SSE-based real-time data
 // Usage examples:
@@ -21,17 +20,14 @@ import { useAuthStore } from '../stores/authStore';
 // sub.error((err) => console.error(err));
 // sub.start();
 export const subscription = () => {
-  const token = useAuthStore.getState().token;
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-  if (token) {
-    headers['token'] = token;
-  }
-
   // Use current origin for SSE endpoint
   const host = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:4102';
   const sseUrl = `${host}/graphql`;
 
-  return SubscriptionSSE(sseUrl, { headers })('subscription');
+  return SubscriptionSSE(sseUrl, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'same-origin',
+  })('subscription');
 };

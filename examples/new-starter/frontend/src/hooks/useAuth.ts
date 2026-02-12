@@ -2,16 +2,23 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuthStore } from '../stores';
 import { query, mutation, getGraphQLErrorMessage } from '../api';
+import { useInitialAuth } from '../contexts/AuthContext';
 
 export type AuthMode = 'login' | 'register';
 
 export const useAuth = () => {
-  const token = useAuthStore((s) => s.token);
-  const setToken = useAuthStore((s) => s.setToken);
-  const logout = useAuthStore((s) => s.logout);
+  const storeIsAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const setAuthenticated = useAuthStore((s) => s.setAuthenticated);
+  const storeLogout = useAuthStore((s) => s.logout);
   const queryClient = useQueryClient();
+  const initialAuth = useInitialAuth();
 
-  // Fetch current user — only when token exists
+  // SSR: store is always false (no window), so use AuthContext (set from cookie)
+  // Client: store is initialized synchronously from window.__INITIAL_AUTH__, so trust it
+  // After logout: store is false → correctly returns false
+  const isAuthenticated = typeof window === 'undefined' ? initialAuth.isAuthenticated : storeIsAuthenticated;
+
+  // Fetch current user — only when authenticated
   // React Query deduplicates: multiple components calling useAuth() = 1 request
   const {
     data: user,
@@ -25,7 +32,7 @@ export const useAuth = () => {
       });
       return data.user?.me ?? null;
     },
-    enabled: !!token,
+    enabled: isAuthenticated, // uses computed isAuthenticated (SSR-safe)
     staleTime: 1000 * 60 * 5, // 5 min
   });
 
@@ -37,8 +44,8 @@ export const useAuth = () => {
       });
       return data.login as string;
     },
-    onSuccess: (token) => {
-      setToken(token);
+    onSuccess: () => {
+      setAuthenticated(true);
       queryClient.invalidateQueries({ queryKey: ['me'] });
       toast.success('Welcome back!');
     },
@@ -52,8 +59,8 @@ export const useAuth = () => {
       });
       return data.register as string;
     },
-    onSuccess: (token) => {
-      setToken(token);
+    onSuccess: () => {
+      setAuthenticated(true);
       queryClient.invalidateQueries({ queryKey: ['me'] });
       toast.success('Account created successfully!');
     },
@@ -79,8 +86,15 @@ export const useAuth = () => {
     (registerMutation.error ? getGraphQLErrorMessage(registerMutation.error) : null) ??
     null;
 
-  const handleLogout = () => {
-    logout(); // clears token; query cache is cleared by QueryCache.onError in queryClient.ts
+  // Logout: call API to clear cookie, then update local state
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
+    } catch {
+      // Even if the API call fails, clear local state
+    }
+    storeLogout();
+    queryClient.clear();
   };
 
   const clearError = () => {
@@ -90,10 +104,9 @@ export const useAuth = () => {
 
   return {
     user: user ?? null,
-    token,
     isLoading,
     error,
-    isAuthenticated: !!token,
+    isAuthenticated,
     authenticate,
     logout: handleLogout,
     clearError,

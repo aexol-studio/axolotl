@@ -16,7 +16,7 @@ import { useGraphQLShowcase } from './useGraphQLShowcase';
 
 export const GraphQLShowcaseTab = () => {
   const {
-    token,
+    isAuthenticated,
     userData,
     isUserLoading,
     userError,
@@ -71,7 +71,7 @@ export const GraphQLShowcaseTab = () => {
           <CardContent className="space-y-4">
             <CodeSnippet code={`query()({ user: { me: { _id: true, username: true } } })`} />
 
-            {!token ? (
+            {!isAuthenticated ? (
               <Alert>
                 <LogIn className="h-4 w-4" />
                 <AlertTitle>Authentication Required</AlertTitle>
@@ -120,7 +120,7 @@ export const GraphQLShowcaseTab = () => {
           <CardContent className="space-y-4">
             <CodeSnippet code={`query()({ user: { todos: { _id: true, content: true, done: true } } })`} />
 
-            {!token ? (
+            {!isAuthenticated ? (
               <Alert>
                 <LogIn className="h-4 w-4" />
                 <AlertTitle>Authentication Required</AlertTitle>
@@ -182,7 +182,7 @@ export const GraphQLShowcaseTab = () => {
         <CardContent className="space-y-4">
           <CodeSnippet code={`mutation()({ user: { changePassword: [{ newPassword }, true] } })`} />
 
-          {!token ? (
+          {!isAuthenticated ? (
             <Alert>
               <LogIn className="h-4 w-4" />
               <AlertTitle>Authentication Required</AlertTitle>

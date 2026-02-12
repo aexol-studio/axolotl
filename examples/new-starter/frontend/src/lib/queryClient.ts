@@ -8,6 +8,7 @@ export const queryClient = new QueryClient({
     onError: (error) => {
       if (isAuthError(error)) {
         toast.info('Session expired. Please log in again.');
+        fetch('/api/logout', { method: 'POST', credentials: 'same-origin' }).catch(() => {});
         useAuthStore.getState().logout();
         queryClient.clear();
       }

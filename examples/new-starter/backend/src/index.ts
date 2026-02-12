@@ -6,6 +6,7 @@ import { dirname, resolve } from 'path';
 import { adapter } from '@/src/axolotl.js';
 import resolvers from '@/src/resolvers.js';
 import directives from './directives.js';
+import { parseCookies, serializeClearCookie } from './lib/cookies.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const isProduction = process.env.NODE_ENV === 'production';
@@ -16,6 +17,12 @@ const templateHtml = isProduction ? await fs.readFile(resolve(__dirname, '../dis
 async function startServer() {
   const app = express();
   const port = parseInt(process.env.PORT || '4102', 10);
+
+  // Parse cookies from request headers
+  app.use((req, _res, next) => {
+    req.cookies = parseCookies(req.headers.cookie ?? null);
+    next();
+  });
 
   // Create Axolotl/Yoga instance
   const { yoga } = adapter(
@@ -73,6 +80,12 @@ mutation Register{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   app.use('/graphql', yoga as any);
 
+  // Logout endpoint — clears the auth cookie
+  app.post('/api/logout', (_req, res) => {
+    res.setHeader('Set-Cookie', serializeClearCookie());
+    res.status(200).json({ success: true });
+  });
+
   // Add Vite or respective production middlewares
   let vite: ViteDevServer | undefined;
   if (!isProduction) {
@@ -100,7 +113,7 @@ mutation Register{
       const url = req.originalUrl;
 
       let template: string;
-      let render: (url: string) => { html: string; head?: string };
+      let render: (url: string, options?: { isAuthenticated: boolean }) => { html: string; head?: string };
 
       if (!isProduction) {
         // Always read fresh template in development
@@ -113,10 +126,16 @@ mutation Register{
         render = (await import('../dist/server/entry-server.js')).render;
       }
 
-      const rendered = await render(url);
+      const authToken = req.cookies?.['auth-token'];
+      const isAuthenticated = !!authToken;
+
+      const rendered = await render(url, { isAuthenticated });
+
+      const initialStateScript = `<script>window.__INITIAL_AUTH__=${JSON.stringify({ isAuthenticated })}</script>`;
 
       const html = template
         .replace(`<!--app-head-->`, rendered.head ?? '')
+        .replace(`<!--app-initial-state-->`, initialStateScript)
         .replace(`<!--app-html-->`, rendered.html ?? '');
 
       res.status(200).set({ 'Content-Type': 'text/html' }).send(html);

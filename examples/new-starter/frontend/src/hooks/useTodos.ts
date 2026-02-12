@@ -4,7 +4,7 @@ import { useAuthStore } from '../stores';
 import { query, mutation, getGraphQLErrorMessage, todoSelector, type TodoType } from '../api';
 
 export const useTodos = () => {
-  const token = useAuthStore((s) => s.token);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const queryClient = useQueryClient();
 
   // Fetch todos — only when authenticated
@@ -20,7 +20,7 @@ export const useTodos = () => {
       });
       return data.user?.todos ?? [];
     },
-    enabled: !!token,
+    enabled: isAuthenticated,
   });
 
   // Create todo mutation
@@ -50,7 +50,7 @@ export const useTodos = () => {
   });
 
   const createTodo = async (content: string) => {
-    if (!token || !content.trim()) return false;
+    if (!isAuthenticated || !content.trim()) return false;
     try {
       await createMutation.mutateAsync(content);
       return true;
@@ -60,7 +60,7 @@ export const useTodos = () => {
   };
 
   const markDone = async (todoId: string) => {
-    if (!token) return false;
+    if (!isAuthenticated) return false;
     try {
       await markDoneMutation.mutateAsync(todoId);
       return true;

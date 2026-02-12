@@ -1,8 +1,8 @@
 import { Models } from '@/src/users/models.js';
 import { Axolotl } from '@aexol/axolotl-core';
-import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
+import { graphqlYogaWithContextAdapter } from '@aexol/axolotl-graphql-yoga';
+import { AppContext } from '@/src/lib/context.js';
 
-export const { applyMiddleware, createResolvers, createDirectives, adapter } = Axolotl(graphqlYogaAdapter)<
-  Models,
-  unknown
->();
+const yogaAdapter = graphqlYogaWithContextAdapter<AppContext>((initial) => initial as AppContext);
+
+export const { applyMiddleware, createResolvers, createDirectives, adapter } = Axolotl(yogaAdapter)<Models, unknown>();

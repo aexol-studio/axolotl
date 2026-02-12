@@ -10,7 +10,7 @@ import { changePasswordSchema, type ChangePasswordValues } from '../../Examples.
 
 export const useGraphQLShowcase = () => {
   // --- Auth ---
-  const token = useAuthStore((s) => s.token);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   // --- Change Password ---
   const changePasswordForm = useForm<ChangePasswordValues>({
@@ -209,7 +209,7 @@ export const useGraphQLShowcase = () => {
 
   return {
     // Auth
-    token,
+    isAuthenticated,
     // Change password
     changePasswordForm,
     onChangePasswordSubmit,

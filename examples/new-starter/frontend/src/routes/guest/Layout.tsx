@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react';
 export const GuestLayout = () => {
   const { isLoading, isAuthenticated } = useAuth();
 
-  if (isLoading) {
+  if (isLoading && !isAuthenticated) {
     return (
       <div className="min-h-full flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
