@@ -24,7 +24,7 @@ Import `GraphQLError` from `'graphql'` (NOT `graphql-yoga`). Always include `ext
 import { GraphQLError } from 'graphql';
 
 // User-facing — passes through to client
-throw new GraphQLError('Invalid username or password', {
+throw new GraphQLError('Invalid email or password', {
   extensions: { code: 'INVALID_CREDENTIALS' },
 });
 
@@ -34,14 +34,15 @@ throw new Error('Database connection failed');
 
 ### Error code vocabulary
 
-| Code                  | When to use                             |
-| --------------------- | --------------------------------------- |
-| `UNAUTHORIZED`        | Missing or invalid auth token           |
-| `FORBIDDEN`           | Valid token but insufficient permission |
-| `INVALID_CREDENTIALS` | Wrong username/password on login        |
-| `USER_EXISTS`         | Registration with existing username     |
-| `NOT_FOUND`           | Requested resource doesn't exist        |
-| `VALIDATION_ERROR`    | Input fails validation rules            |
+| Code                  | When to use                               |
+| --------------------- | ----------------------------------------- |
+| `UNAUTHORIZED`        | Missing or invalid auth token/session     |
+| `FORBIDDEN`           | Valid session but insufficient permission |
+| `INVALID_CREDENTIALS` | Wrong email/password on login             |
+| `EMAIL_EXISTS`        | Registration with existing email          |
+| `INVALID_INPUT`       | Input fails validation rules              |
+| `NOT_FOUND`           | Requested resource doesn't exist          |
+| `VALIDATION_ERROR`    | Input fails complex validation rules      |
 
 ---
 
@@ -55,7 +56,7 @@ Extracts `errors[0].message` from Zeus `GraphQLError` responses. Returns `"An un
 import { getGraphQLErrorMessage } from '../api';
 
 const message = getGraphQLErrorMessage(error);
-// "Invalid username or password" — if backend used GraphQLError
+// "Invalid email or password" — if backend used GraphQLError
 // "An unexpected error occurred" — if backend used plain Error (masked)
 ```
 
@@ -82,6 +83,7 @@ export const queryClient = new QueryClient({
     onError: (error) => {
       if (isAuthError(error)) {
         toast.info('Session expired. Please log in again.');
+        fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
         useAuthStore.getState().logout();
         queryClient.clear();
       }

@@ -25,18 +25,15 @@ React Query (state/cache management)
 
 ```typescript
 import { Chain } from '../zeus/index';
-import { useAuthStore } from '../stores/authStore';
 
-// Create authenticated chain - reads token from Zustand store
+// Create chain with cookie credentials - auth token sent automatically via httpOnly cookie
 export const createChain = () => {
-  const token = useAuthStore.getState().token;
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-  if (token) {
-    headers['token'] = token;
-  }
-  return Chain('/graphql', { headers });
+  return Chain('/graphql', {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'same-origin',
+  });
 };
 ```
 
@@ -60,20 +57,20 @@ import { query, mutation } from '../api';
 // Fetching data
 const data = await query()({
   user: {
-    me: { _id: true, username: true },
+    me: { _id: true, email: true },
   },
 });
 
 // Mutations
 await mutation()({
   user: {
-    updateUser: [{ username: 'new-name' }, true],
+    changePassword: [{ newPassword: 'new-secret' }, true],
   },
 });
 
 // Login
 const data = await mutation()({
-  login: [{ username, password }, true],
+  login: [{ email, password }, true],
 });
 ```
 
@@ -142,14 +139,14 @@ const result = await mutation()(
   {
     login: [
       {
-        username: $('username', 'String!'),
+        email: $('email', 'String!'),
         password: $('password', 'String!'),
       },
       true,
     ],
   },
   {
-    variables: { username: 'john', password: 'secret' },
+    variables: { email: 'john@example.com', password: 'secret' },
   },
 );
 ```
@@ -203,7 +200,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../stores';
 import { query } from '../api';
 
-const token = useAuthStore((s) => s.token);
+const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
 const { data, isLoading, error } = useQuery({
   queryKey: ['posts'],
@@ -213,7 +210,7 @@ const { data, isLoading, error } = useQuery({
     });
     return data.user?.posts ?? [];
   },
-  enabled: !!token, // only fetch when authenticated
+  enabled: isAuthenticated, // only fetch when authenticated
 });
 ```
 
@@ -288,7 +285,7 @@ const { data } = useQuery({
   queryFn: async () => {
     /* ... */
   },
-  enabled: !!token, // don't fetch until token exists
+  enabled: isAuthenticated, // don't fetch until authenticated
   retry: (failureCount, error) => {
     if (error instanceof Error && error.message.includes('Unauthorized')) return false;
     return failureCount < 1;
@@ -310,7 +307,7 @@ const error = queryError?.message ?? loginMutation.error?.message ?? registerMut
 
 1. **ALWAYS use React Query** (`useQuery`/`useMutation`) for data fetching in components -- never manual `useState`/`useEffect` fetching
 2. **Use Zeus `query()`/`mutation()`** inside React Query's `queryFn`/`mutationFn`
-3. **Use `enabled`** option for conditional queries (e.g., `enabled: !!token`)
+3. **Use `enabled`** option for conditional queries (e.g., `enabled: isAuthenticated`)
 4. **Invalidate cache** after mutations with `queryClient.invalidateQueries()`
 5. **Clear cache on logout** with `queryClient.clear()`
 6. **ALWAYS use Zeus** for GraphQL communication -- never write raw GraphQL queries
@@ -329,13 +326,13 @@ const error = queryError?.message ?? loginMutation.error?.message ?? registerMut
 | Task                    | Code                                                             |
 | ----------------------- | ---------------------------------------------------------------- |
 | Create query            | `query()({ user: { posts: { _id: true } } })`                    |
-| Create mutation         | `mutation()({ login: [{ username, password }, true] })`          |
+| Create mutation         | `mutation()({ login: [{ email, password }, true] })`             |
 | Mutation with args      | `mutation()({ field: [{ arg: value }, selector] })`              |
 | Return scalar directly  | `field: [{ args }, true]`                                        |
 | Fetch with React Query  | `useQuery({ queryKey: ['key'], queryFn: () => query()({...}) })` |
 | Mutate with React Query | `useMutation({ mutationFn: (args) => mutation()({...}) })`       |
 | Invalidate cache        | `queryClient.invalidateQueries({ queryKey: ['key'] })`           |
-| Conditional query       | `useQuery({ ..., enabled: !!token })`                            |
+| Conditional query       | `useQuery({ ..., enabled: isAuthenticated })`                    |
 | Define selector         | `const sel = Selector('Post')({ _id: true, ... })`               |
 | Derive type             | `type T = FromSelector<typeof sel, 'Post'>`                      |
 | Clear all cache         | `queryClient.clear()`                                            |

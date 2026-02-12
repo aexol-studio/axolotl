@@ -23,7 +23,7 @@ Define schemas at **module level** (outside the component). Use `z.infer` to der
 import { z } from 'zod';
 
 const loginSchema = z.object({
-  username: z.string().min(3, 'Username must be at least 3 characters'),
+  email: z.string().email('Please enter a valid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
@@ -37,7 +37,7 @@ Use `.refine()` or `.superRefine()` for cross-field validation:
 ```typescript
 const authSchema = z
   .object({
-    username: z.string().min(3, 'Username must be at least 3 characters'),
+    email: z.string().email('Please enter a valid email address'),
     password: z.string().min(6, 'Password must be at least 6 characters'),
     confirmPassword: z.string().optional(),
     mode: z.enum(['login', 'register']),
@@ -78,7 +78,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
 const formSchema = z.object({
-  username: z.string().min(3, 'Username must be at least 3 characters'),
+  email: z.string().email('Please enter a valid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
@@ -88,7 +88,7 @@ type FormValues = z.infer<typeof formSchema>;
 const form = useForm<FormValues>({
   resolver: zodResolver(formSchema),
   defaultValues: {
-    username: '',
+    email: '',
     password: '',
   },
 });
@@ -114,7 +114,7 @@ import { Button } from '@/components/ui/button';
 function LoginForm() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { username: '', password: '' },
+    defaultValues: { email: '', password: '' },
   });
 
   const onSubmit = async (values: FormValues) => {
@@ -126,12 +126,12 @@ function LoginForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="username"
+          name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input {...field} autoComplete="username" />
+                <Input {...field} autoComplete="email" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -185,7 +185,6 @@ Form (provider — spreads form methods into context)
 
    | Field Type       | autoComplete Value   |
    | ---------------- | -------------------- |
-   | Username         | `"username"`         |
    | Email            | `"email"`            |
    | Current password | `"current-password"` |
    | New password     | `"new-password"`     |
@@ -225,7 +224,7 @@ const onSubmit = async (values: FormValues) => {
 
 ### Server-Side Field Errors
 
-When the server returns field-specific validation errors (e.g., "username taken"):
+When the server returns field-specific validation errors (e.g., "email taken"):
 
 ```typescript
 const onSubmit = async (values: FormValues) => {
@@ -234,8 +233,8 @@ const onSubmit = async (values: FormValues) => {
     form.reset();
     toast.success('Account created!');
   } catch (error) {
-    if (error instanceof Error && error.message.includes('username')) {
-      form.setError('username', { message: 'Username is already taken' });
+    if (error instanceof Error && error.message.includes('email')) {
+      form.setError('email', { message: 'Email is already taken' });
     } else {
       form.setError('root', { message: 'Registration failed' });
     }
@@ -303,7 +302,7 @@ const onSubmit = async (values: FormValues) => {
 
 // ✅ Correct — spread field props
 <FormControl>
-  <Input {...field} autoComplete="username" />
+  <Input {...field} autoComplete="email" />
 </FormControl>
 ```
 
@@ -346,10 +345,10 @@ const form = useForm<FormValues>({
 
 ```tsx
 // ❌ Wrong — lowercase (HTML attribute, not React)
-<Input {...field} autocomplete="username" />
+<Input {...field} autocomplete="email" />
 
 // ✅ Correct — camelCase (React JSX)
-<Input {...field} autoComplete="username" />
+<Input {...field} autoComplete="email" />
 ```
 
 ### FormMessage not showing errors
@@ -360,7 +359,7 @@ const form = useForm<FormValues>({
 
 ```tsx
 // ❌ Wrong — FormMessage outside FormItem
-<FormField name="username" render={({ field }) => (
+<FormField name="email" render={({ field }) => (
   <FormItem>
     <FormControl><Input {...field} /></FormControl>
   </FormItem>
@@ -368,7 +367,7 @@ const form = useForm<FormValues>({
 <FormMessage /> {/* Won't work here */}
 
 // ✅ Correct — FormMessage inside FormItem
-<FormField name="username" render={({ field }) => (
+<FormField name="email" render={({ field }) => (
   <FormItem>
     <FormControl><Input {...field} /></FormControl>
     <FormMessage />

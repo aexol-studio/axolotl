@@ -150,7 +150,7 @@ export const Dashboard = () => {
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-bold tracking-tight">My Todos</h1>
-          {user && <p className="text-muted-foreground text-sm">Welcome, {user.username}</p>}
+          {user && <p className="text-muted-foreground text-sm">Welcome, {user.email}</p>}
         </div>
 
         <ErrorMessage message={error} />

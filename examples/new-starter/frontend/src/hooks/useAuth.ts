@@ -28,7 +28,7 @@ export const useAuth = () => {
     queryKey: ['me'],
     queryFn: async () => {
       const data = await query()({
-        user: { me: { _id: true, username: true } },
+        user: { me: { _id: true, email: true } },
       });
       return data.user?.me ?? null;
     },
@@ -38,9 +38,9 @@ export const useAuth = () => {
 
   // Login mutation
   const loginMutation = useMutation({
-    mutationFn: async ({ username, password }: { username: string; password: string }) => {
+    mutationFn: async ({ email, password }: { email: string; password: string }) => {
       const data = await mutation()({
-        login: [{ username, password }, true],
+        login: [{ email, password }, true],
       });
       return data.login as string;
     },
@@ -53,9 +53,9 @@ export const useAuth = () => {
 
   // Register mutation
   const registerMutation = useMutation({
-    mutationFn: async ({ username, password }: { username: string; password: string }) => {
+    mutationFn: async ({ email, password }: { email: string; password: string }) => {
       const data = await mutation()({
-        register: [{ username, password }, true],
+        register: [{ email, password }, true],
       });
       return data.register as string;
     },
@@ -66,12 +66,12 @@ export const useAuth = () => {
     },
   });
 
-  const authenticate = async (mode: AuthMode, username: string, password: string) => {
+  const authenticate = async (mode: AuthMode, email: string, password: string) => {
     try {
       if (mode === 'register') {
-        await registerMutation.mutateAsync({ username, password });
+        await registerMutation.mutateAsync({ email, password });
       } else {
-        await loginMutation.mutateAsync({ username, password });
+        await loginMutation.mutateAsync({ email, password });
       }
       return true;
     } catch {

@@ -27,11 +27,11 @@ type TodoUpdate{
 type Mutation{
 	user: AuthorizedUserMutation @resolver
 	login(
-		username: String!
+		email: String!
 		password: String!
 	): String! @resolver
 	register(
-		username: String!
+		email: String!
 		password: String!
 	): String! @resolver
 }
@@ -76,7 +76,7 @@ type Subscription{
 
 type User{
 	_id: String!
-	username: String!
+	email: String!
 }
 
 input AIChatMessage{

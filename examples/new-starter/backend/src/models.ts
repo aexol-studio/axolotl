@@ -54,13 +54,13 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
     };
     login: {
       args: {
-        username: string;
+        email: string;
         password: string;
       };
     };
     register: {
       args: {
-        username: string;
+        email: string;
         password: string;
       };
     };
@@ -124,7 +124,7 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
     _id: {
       args: Record<string, never>;
     };
-    username: {
+    email: {
       args: Record<string, never>;
     };
   };
@@ -183,7 +183,7 @@ export interface Subscription<S extends { [P in keyof Scalars]: any } = { [P in 
 }
 export interface User<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   _id: string;
-  username: string;
+  email: string;
 }
 export interface AIChatChunk<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   content: string;

@@ -36,7 +36,7 @@ const isLinkActive = (pathname: string, itemPath: string): boolean =>
 const getVisibleNavItems = (items: NavItem[], isAuthenticated: boolean): NavItem[] =>
   items.filter((item) => !item.authRequired || isAuthenticated);
 
-const getUserInitial = (username: string | undefined): string => (username ? username.charAt(0).toUpperCase() : '?');
+const getUserInitial = (email: string | undefined): string => (email ? email.charAt(0).toUpperCase() : '?');
 
 export const TopNav = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -104,14 +104,14 @@ export const TopNav = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback>{getUserInitial(user?.username)}</AvatarFallback>
+                    <AvatarFallback>{getUserInitial(user?.email)}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuLabel className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  <span>{user?.username}</span>
+                  <span>{user?.email}</span>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout} className="cursor-pointer">
@@ -168,7 +168,7 @@ export const TopNav = () => {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
                     <User className="h-4 w-4" />
-                    <span>{user?.username}</span>
+                    <span>{user?.email}</span>
                   </div>
                   <button
                     onClick={() => {

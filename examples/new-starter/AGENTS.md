@@ -35,6 +35,7 @@ project/
 │   │   ├── index.ts      # Server entry point
 │   │   ├── db.ts         # Shared Prisma client
 │   │   ├── lib/          # Shared utilities
+│   │   │   ├── auth.ts
 │   │   │   ├── context.ts
 │   │   │   └── cookies.ts
 │   │   └── modules/
@@ -42,6 +43,8 @@ project/
 │   │       │   ├── schema.graphql
 │   │       │   ├── models.ts
 │   │       │   ├── axolotl.ts
+│   │       │   ├── lib/
+│   │       │   │   └── verifyAuth.ts
 │   │       │   └── resolvers/
 │   │       └── users/     # Users domain module
 │   │           ├── schema.graphql
@@ -240,7 +243,7 @@ frontend/
 │   │       ├── NotFound.page.tsx
 │   │       └── index.ts
 │   ├── stores/                  # Zustand state stores
-│   │   ├── authStore.ts         # Auth state (token, user)
+│   │   ├── authStore.ts         # Auth state (isAuthenticated)
 │   │   └── index.ts
 │   ├── zeus/                    # Auto-generated (DO NOT EDIT)
 │   │   ├── const.ts
@@ -334,25 +337,41 @@ toast('Default notification');
 }
 ```
 
-#### SSR hydration mismatch
-
-**Solution:** Ensure state that differs between server/client is handled with SSR-safe storage checks (`typeof window === 'undefined'`).
-
-#### Auth token not persisting
-
-**Solution:** Check that Zustand persist middleware is configured with SSR-safe storage.
-
 ### Frontend Quick Reference
 
-| Task                   | Code                                                       |
-| ---------------------- | ---------------------------------------------------------- |
-| Create query           | `query()({ user: { me: { _id: true, username: true } } })` |
-| Create mutation        | `mutation()({ login: [{ username, password }, true] })`    |
-| Access auth state      | `useAuthStore((s) => s.token)`                             |
-| Show toast (sonner)    | `toast.success('Done!')`                                   |
-| Mutation with args     | `mutation()({ field: [{ arg: value }, selector] })`        |
-| Return scalar directly | `field: [{ args }, true]`                                  |
+| Task                   | Code                                                    |
+| ---------------------- | ------------------------------------------------------- |
+| Create query           | `query()({ user: { me: { _id: true, email: true } } })` |
+| Create mutation        | `mutation()({ login: [{ email, password }, true] })`    |
+| Access auth state      | `useAuthStore((s) => s.isAuthenticated)`                |
+| Show toast (sonner)    | `toast.success('Done!')`                                |
+| Mutation with args     | `mutation()({ field: [{ arg: value }, selector] })`     |
+| Return scalar directly | `field: [{ args }, true]`                               |
 
 ---
+
+### Authentication Architecture
+
+This project uses **JWT+JTI session-based cookie authentication** with a **gateway resolver pattern** for authorization.
+
+**How it works:**
+
+- Passwords hashed with bcrypt (12 rounds). JWTs signed with HS256 containing `{ userId, email, jti }` where `jti` is a session UUID
+- Sessions stored in a `Session` table (Prisma) for server-side revocation. 30-day expiry
+- Tokens sent via httpOnly `Set-Cookie` header — frontend never touches tokens directly
+- Auth check: gateway resolvers (`Query.user` / `Mutation.user`) call `verifyAuth()` which decodes JWT → checks session exists in DB → returns `{ _id, email }` as source for child resolvers
+- Logout: `POST /api/logout` deletes session + clears cookie
+- Password change invalidates all other sessions (keeps current one)
+- SSR: server verifies cookie on every page render, injects `window.__INITIAL_AUTH__ = { isAuthenticated: true/false }`
+
+**Key files:**
+
+- `backend/src/lib/auth.ts` — JWT sign/verify, bcrypt hash/verify, session token generation
+- `backend/src/lib/cookies.ts` — Cookie serialize/parse, `COOKIE_NAME`, `COOKIE_OPTIONS`
+- `backend/src/modules/auth/lib/verifyAuth.ts` — Shared auth verification (JWT → session DB check)
+- `frontend/src/stores/authStore.ts` — `isAuthenticated` boolean from `__INITIAL_AUTH__`
+- `frontend/src/hooks/useAuth.ts` — Login/register/logout + user query
+
+**Adding protected resolvers:** Add field to `AuthorizedUserQuery` or `AuthorizedUserMutation` in your domain module's schema, run `axolotl build`, implement resolver destructuring `[source]` as `{ _id: string; email: string }`. Auth is already enforced by the gateway.
 
 **Before writing any code, always check available skills for detailed guidance on the topic you're working on.**

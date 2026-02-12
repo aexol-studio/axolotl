@@ -12,7 +12,7 @@ scalar Secret
 
 type User {
   _id: String!
-  username: String!
+  email: String!
 }
 
 type Query {
@@ -21,7 +21,7 @@ type Query {
 }
 
 type Mutation {
-  login(username: String!, password: String!): String! @resolver
+  login(email: String!, password: String!): String! @resolver
 }
 
 directive @resolver on FIELD_DEFINITION
@@ -68,7 +68,7 @@ export type Scalars = {
 export type Models<S extends { [P in keyof Scalars]: any }> = {
   ['User']: {
     _id: { args: Record<string, never> };
-    username: { args: Record<string, never> };
+    email: { args: Record<string, never> };
   };
   ['Query']: {
     hello: { args: Record<string, never> };
@@ -77,7 +77,7 @@ export type Models<S extends { [P in keyof Scalars]: any }> = {
   ['Mutation']: {
     login: {
       args: {
-        username: string;
+        email: string;
         password: string;
       };
     };
@@ -113,7 +113,7 @@ type Query {
 }
 
 type Mutation {
-  login(username: String!, password: String!): String! @resolver
+  login(email: String!, password: String!): String! @resolver
 }
 ```
 

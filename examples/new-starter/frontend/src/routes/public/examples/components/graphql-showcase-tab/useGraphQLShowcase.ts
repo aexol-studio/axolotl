@@ -32,7 +32,7 @@ export const useGraphQLShowcase = () => {
   };
 
   // --- User Query Demo ---
-  const [userData, setUserData] = useState<{ _id: string; username: string } | null>(null);
+  const [userData, setUserData] = useState<{ _id: string; email: string } | null>(null);
   const [isUserLoading, setIsUserLoading] = useState(false);
   const [userError, setUserError] = useState<string | null>(null);
 
@@ -41,7 +41,7 @@ export const useGraphQLShowcase = () => {
     setUserError(null);
     try {
       const data = await query()({
-        user: { me: { _id: true, username: true } },
+        user: { me: { _id: true, email: true } },
       });
       setUserData(data.user?.me ?? null);
       toast.success('Profile fetched successfully!');

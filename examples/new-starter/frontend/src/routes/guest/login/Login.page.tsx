@@ -11,7 +11,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import type { AuthMode } from '@/hooks/useAuth.js';
 
 const authFormSchema = z.object({
-  username: z.string().min(3, 'Username must be at least 3 characters'),
+  email: z.string().email('Please enter a valid email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 type AuthFormValues = z.infer<typeof authFormSchema>;
@@ -23,13 +23,13 @@ export const Login = () => {
   const form = useForm<AuthFormValues>({
     resolver: zodResolver(authFormSchema),
     defaultValues: {
-      username: '',
+      email: '',
       password: '',
     },
   });
 
   const onSubmitHandler = async (values: AuthFormValues) => {
-    const success = await authenticate(authMode, values.username, values.password);
+    const success = await authenticate(authMode, values.email, values.password);
     if (success) form.reset();
   };
 
@@ -77,12 +77,12 @@ export const Login = () => {
                 <form onSubmit={form.handleSubmit(onSubmitHandler)} className="space-y-4">
                   <FormField
                     control={form.control}
-                    name="username"
+                    name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Username</FormLabel>
+                        <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input {...field} type="text" placeholder="Username" autoComplete="username" />
+                          <Input {...field} type="email" placeholder="you@example.com" autoComplete="email" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

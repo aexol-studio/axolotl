@@ -87,12 +87,12 @@ schema {
 ```graphql
 type User {
   _id: String!
-  username: String!
+  email: String!
 }
 
 type Mutation {
-  login(username: String!, password: String!): String! @resolver
-  register(username: String!, password: String!): String! @resolver
+  login(email: String!, password: String!): String! @resolver
+  register(email: String!, password: String!): String! @resolver
 }
 
 type AuthorizedUserQuery {
@@ -184,7 +184,7 @@ When you run `cd backend && axolotl build`, schemas are merged using these rules
 # modules/users/schema.graphql
 type User {
   _id: String!
-  username: String!
+  email: String!
 }
 
 # modules/posts/schema.graphql
@@ -195,7 +195,7 @@ type User {
 # Merged result in schema.graphql
 type User {
   _id: String!
-  username: String! # Field from users module
+  email: String! # Field from users module
 }
 ```
 
@@ -235,9 +235,9 @@ The `mergeAxolotls` function intelligently merges resolvers:
 **2. Overlapping resolvers are executed in parallel and results are deep-merged:**
 
 ```typescript
-// users: { Query: { user: () => ({ username: "john" }) } }
+// users: { Query: { user: () => ({ email: "john@example.com" }) } }
 // posts: { Query: { user: () => ({ posts: [...] }) } }
-// Result: { Query: { user: () => ({ username: "john", posts: [...] }) } }
+// Result: { Query: { user: () => ({ email: "john@example.com", posts: [...] }) } }
 ```
 
 This allows multiple modules to contribute different fields to the same resolver!
@@ -265,14 +265,31 @@ export default createResolvers({
 
 ```typescript
 // src/modules/users/resolvers/Mutation/login.ts
+import { GraphQLError } from 'graphql';
 import { createResolvers } from '../../axolotl.js';
-import { db } from '../../db.js';
+import { prisma } from '@/src/db.js';
+import { serializeSetCookie } from '@/src/lib/cookies.js';
+import { verifyPassword, signToken, generateSessionToken, getSessionExpiryDate } from '@/src/lib/auth.js';
 
 export default createResolvers({
   Mutation: {
-    login: async (_, { password, username }) => {
-      const user = db.users.find((u) => u.username === username && u.password === password);
-      return user?.token;
+    login: async (input, { password, email: rawEmail }) => {
+      const email = rawEmail.toLowerCase().trim();
+      const user = await prisma.user.findFirst({ where: { email } });
+      if (!user) throw new GraphQLError('Invalid credentials', { extensions: { code: 'INVALID_CREDENTIALS' } });
+      const isValid = await verifyPassword(password, user.password);
+      if (!isValid) throw new GraphQLError('Invalid credentials', { extensions: { code: 'INVALID_CREDENTIALS' } });
+      const sessionToken = generateSessionToken();
+      const session = await prisma.session.create({
+        data: { token: sessionToken, userId: user.id, expiresAt: getSessionExpiryDate() },
+      });
+      const jwtToken = signToken({ userId: user.id, email: user.email, jti: session.token });
+      const context = input[2];
+      const { res } = context;
+      if (res) {
+        res.setHeader('Set-Cookie', serializeSetCookie(jwtToken));
+      }
+      return jwtToken;
     },
   },
 });
@@ -324,7 +341,7 @@ When modules need to reference the same types, define them in each schema:
 # src/modules/users/schema.graphql
 type User {
   _id: String!
-  username: String!
+  email: String!
 }
 ```
 
@@ -641,15 +658,13 @@ Visit `http://localhost:4002/graphql` and try these operations:
 ```graphql
 # Register a user
 mutation Register {
-  register(username: "user", password: "password")
+  register(email: "user@example.com", password: "password")
 }
 
-# Login (returns token)
+# Login (cookie is set automatically by the server response)
 mutation Login {
-  login(username: "user", password: "password")
+  login(email: "user@example.com", password: "password")
 }
-
-# Set the token in headers: { "token": "your-token-here" }
 
 # Create a post
 mutation CreatePost {
@@ -663,7 +678,7 @@ query MyData {
   user {
     me {
       _id
-      username
+      email
     }
     posts {
       _id

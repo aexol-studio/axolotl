@@ -1,11 +1,11 @@
 type User {
   _id: String!
-  username: String!
+  email: String!
 }
 
 type Mutation {
-  login(username: String!, password: String!): String! @resolver
-  register(username: String!, password: String!): String! @resolver
+  login(email: String!, password: String!): String! @resolver
+  register(email: String!, password: String!): String! @resolver
 }
 
 type AuthorizedUserMutation {

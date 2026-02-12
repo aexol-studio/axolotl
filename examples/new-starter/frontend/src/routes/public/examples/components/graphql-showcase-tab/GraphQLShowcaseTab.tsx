@@ -69,7 +69,7 @@ export const GraphQLShowcaseTab = () => {
             <CardDescription>Fetch your profile using a Zeus query.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <CodeSnippet code={`query()({ user: { me: { _id: true, username: true } } })`} />
+            <CodeSnippet code={`query()({ user: { me: { _id: true, email: true } } })`} />
 
             {!isAuthenticated ? (
               <Alert>
@@ -98,8 +98,8 @@ export const GraphQLShowcaseTab = () => {
                       <Badge variant="outline">{userData._id}</Badge>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">Username:</span>
-                      <span className="text-sm font-medium text-foreground">{userData.username}</span>
+                      <span className="text-sm text-muted-foreground">Email:</span>
+                      <span className="text-sm font-medium text-foreground">{userData.email}</span>
                     </div>
                   </div>
                 )}

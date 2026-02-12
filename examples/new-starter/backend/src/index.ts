@@ -6,7 +6,9 @@ import { dirname, resolve } from 'path';
 import { adapter } from '@/src/axolotl.js';
 import resolvers from '@/src/resolvers.js';
 import directives from './directives.js';
-import { parseCookies, serializeClearCookie } from './lib/cookies.js';
+import { parseCookies, getTokenFromCookies, serializeClearCookie } from './lib/cookies.js';
+import { verifyToken } from './lib/auth.js';
+import { prisma } from './db.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const isProduction = process.env.NODE_ENV === 'production';
@@ -59,7 +61,7 @@ mutation Done{
 }
 
 mutation Register{
-  register(username: "user",password: "password")
+  register(email: "user@example.com",password: "password")
 }
 
 # AI Chat via GraphQL Subscription
@@ -80,8 +82,19 @@ mutation Register{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   app.use('/graphql', yoga as any);
 
-  // Logout endpoint — clears the auth cookie
-  app.post('/api/logout', (_req, res) => {
+  // Logout endpoint — deletes session from DB and clears the auth cookie
+  app.post('/api/logout', async (req, res) => {
+    try {
+      const cookieHeader = req.headers.cookie ?? null;
+      const rawToken = getTokenFromCookies(cookieHeader);
+      if (rawToken) {
+        const payload = verifyToken(rawToken);
+        // Delete session from DB — ignore if already deleted or expired
+        await prisma.session.delete({ where: { token: payload.jti } }).catch(() => {});
+      }
+    } catch {
+      // JWT verification failed — token is invalid/expired, just clear cookie
+    }
     res.setHeader('Set-Cookie', serializeClearCookie());
     res.status(200).json({ success: true });
   });
@@ -126,8 +139,23 @@ mutation Register{
         render = (await import('../dist/server/entry-server.js')).render;
       }
 
-      const authToken = req.cookies?.['auth-token'];
-      const isAuthenticated = !!authToken;
+      let isAuthenticated = false;
+      const authCookie = req.cookies?.['auth-token'];
+      if (authCookie) {
+        try {
+          const payload = verifyToken(authCookie);
+          const session = await prisma.session.findFirst({
+            where: {
+              token: payload.jti,
+              expiresAt: { gt: new Date() },
+            },
+            select: { token: true },
+          });
+          isAuthenticated = !!session;
+        } catch {
+          isAuthenticated = false;
+        }
+      }
 
       const rendered = await render(url, { isAuthenticated });
 

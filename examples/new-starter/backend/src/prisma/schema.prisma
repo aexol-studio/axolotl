@@ -8,13 +8,25 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  username  String   @unique
+  id        String    @id @default(cuid())
+  email     String    @unique
   password  String
-  token     String?
   todos     Todo[]
+  sessions  Session[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Session {
+  token     String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  expiresAt DateTime
+  userAgent String?
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model Todo {

@@ -5,7 +5,7 @@ export const COOKIE_OPTIONS = {
   sameSite: 'lax' as const,
   path: '/',
   secure: process.env.NODE_ENV === 'production',
-  maxAge: 30 * 24 * 60 * 60 * 1000,
+  maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
 };
 
 /**

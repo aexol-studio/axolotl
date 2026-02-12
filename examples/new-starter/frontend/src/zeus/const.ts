@@ -88,7 +88,7 @@ export const ReturnTypes: Record<string,any> = {
 	},
 	User:{
 		_id:"String",
-		username:"String"
+		email:"String"
 	},
 	AIChatChunk:{
 		content:"String",

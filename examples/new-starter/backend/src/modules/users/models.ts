@@ -15,20 +15,20 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
     _id: {
       args: Record<string, never>;
     };
-    username: {
+    email: {
       args: Record<string, never>;
     };
   };
   ['Mutation']: {
     login: {
       args: {
-        username: string;
+        email: string;
         password: string;
       };
     };
     register: {
       args: {
-        username: string;
+        email: string;
         password: string;
       };
     };
@@ -76,7 +76,7 @@ export type Directives<S extends { [P in keyof Scalars]: any } = { [P in keyof S
 
 export interface User<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   _id: string;
-  username: string;
+  email: string;
 }
 export interface Mutation<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   login: string;

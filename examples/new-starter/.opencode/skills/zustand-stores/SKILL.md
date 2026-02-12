@@ -1,58 +1,37 @@
 ---
 name: zustand-stores
-description: Zustand state management patterns - auth store with SSR-safe localStorage persistence and store best practices
+description: Zustand state management patterns - auth store with SSR-safe initialization and store best practices
 ---
 
 ## State Management with Zustand
 
 ### Auth Store (stores/authStore.ts)
 
-Manages authentication state with SSR-safe localStorage persistence:
+Manages authentication state with SSR-safe initialization from server-rendered data:
 
 ```typescript
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface AuthState {
-  token: string | null;
-  user: User | null;
-  isLoading: boolean;
-  error: string | null;
-  setToken: (token: string | null) => void;
-  setUser: (user: User | null) => void;
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
+  isAuthenticated: boolean;
+  setAuthenticated: (value: boolean) => void;
   logout: () => void;
 }
 
-// SSR-safe storage
-const getStorage = () => {
-  if (typeof window === 'undefined') {
-    return { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+// Initialize from SSR-injected flag (set by server when valid session cookie exists)
+// Note: window.__INITIAL_AUTH__ is typed via global.d.ts Window interface augmentation
+const getInitialAuth = (): boolean => {
+  if (typeof window !== 'undefined' && window.__INITIAL_AUTH__) {
+    return window.__INITIAL_AUTH__.isAuthenticated;
   }
-  return localStorage;
+  return false;
 };
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      token: null,
-      user: null,
-      isLoading: false,
-      error: null,
-      setToken: (token) => set({ token }),
-      setUser: (user) => set({ user }),
-      setLoading: (isLoading) => set({ isLoading }),
-      setError: (error) => set({ error }),
-      logout: () => set({ token: null, user: null, error: null }),
-    }),
-    {
-      name: 'auth-storage',
-      storage: createJSONStorage(() => getStorage()),
-      partialize: (state) => ({ token: state.token }), // Only persist token
-    },
-  ),
-);
+export const useAuthStore = create<AuthState>()((set) => ({
+  isAuthenticated: getInitialAuth(),
+  setAuthenticated: (value) => set({ isAuthenticated: value }),
+  logout: () => set({ isAuthenticated: false }),
+}));
 ```
 
 ---
@@ -60,35 +39,36 @@ export const useAuthStore = create<AuthState>()(
 ## Key Patterns
 
 1. **Use Zustand stores** for shared state (auth, UI state)
-2. **SSR-safe code** - always check `typeof window` before accessing browser APIs
-3. **Use `partialize`** to control what gets persisted to localStorage
+2. **SSR-safe code** — always check `typeof window` before accessing browser APIs
+3. **No persist needed for auth** — authentication state comes from httpOnly cookies (managed by browser) and SSR-injected `__INITIAL_AUTH__`
 4. **Access store state outside React** with `useStore.getState()` for helpers
-5. **Use selectors** when accessing store: `useAuthStore((s) => s.token)` instead of destructuring the whole store
+5. **Use selectors** when accessing store: `useAuthStore((s) => s.isAuthenticated)` instead of destructuring the whole store
 
 ---
 
 ## Quick Reference
 
-| Task              | Code                           |
-| ----------------- | ------------------------------ |
-| Access auth state | `useAuthStore((s) => s.token)` |
+| Task              | Code                                     |
+| ----------------- | ---------------------------------------- |
+| Access auth state | `useAuthStore((s) => s.isAuthenticated)` |
 
 ## Troubleshooting
 
 ### SSR hydration mismatch
 
-**Solution:** Ensure state that differs between server/client is handled:
+**Solution:** Ensure state that differs between server/client is handled with SSR-safe initialization from server data:
 
 ```typescript
-// Use SSR-safe storage
-const getStorage = () => {
-  if (typeof window === 'undefined') {
-    return { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+// SSR-safe initialization from server data
+// window.__INITIAL_AUTH__ is typed via global.d.ts Window interface augmentation
+const getInitialAuth = (): boolean => {
+  if (typeof window !== 'undefined' && window.__INITIAL_AUTH__) {
+    return window.__INITIAL_AUTH__.isAuthenticated;
   }
-  return localStorage;
+  return false;
 };
 ```
 
-### Auth token not persisting
+### Auth state lost on refresh
 
-**Solution:** Check that Zustand persist middleware is configured with SSR-safe storage.
+**Solution:** Auth state is derived from httpOnly cookies (sent automatically by the browser) and the `__INITIAL_AUTH__` flag injected during SSR. If auth state is lost, check that the server is reading the cookie and injecting the flag correctly. See the Authentication Architecture section in AGENTS.md for the full SSR auth flow.

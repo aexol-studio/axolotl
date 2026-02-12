@@ -1107,8 +1107,8 @@ export type ValueTypes = {
 }>;
 	["Mutation"]: AliasType<{
 	user?:ValueTypes["AuthorizedUserMutation"],
-login?: [{	username: string | Variable<any, string>,	password: string | Variable<any, string>},boolean | `@${string}`],
-register?: [{	username: string | Variable<any, string>,	password: string | Variable<any, string>},boolean | `@${string}`],
+login?: [{	email: string | Variable<any, string>,	password: string | Variable<any, string>},boolean | `@${string}`],
+register?: [{	email: string | Variable<any, string>,	password: string | Variable<any, string>},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`,
 	['...on Mutation']?: Omit<ValueTypes["Mutation"], "...on Mutation">
 }>;
@@ -1137,7 +1137,7 @@ aiChat?: [{	messages: Array<ValueTypes["AIChatMessage"]> | Variable<any, string>
 }>;
 	["User"]: AliasType<{
 	_id?:boolean | `@${string}`,
-	username?:boolean | `@${string}`,
+	email?:boolean | `@${string}`,
 		__typename?: boolean | `@${string}`,
 	['...on User']?: Omit<ValueTypes["User"], "...on User">
 }>;
@@ -1178,8 +1178,8 @@ export type ResolverInputTypes = {
 }>;
 	["Mutation"]: AliasType<{
 	user?:ResolverInputTypes["AuthorizedUserMutation"],
-login?: [{	username: string,	password: string},boolean | `@${string}`],
-register?: [{	username: string,	password: string},boolean | `@${string}`],
+login?: [{	email: string,	password: string},boolean | `@${string}`],
+register?: [{	email: string,	password: string},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`
 }>;
 	["AuthorizedUserQuery"]: AliasType<{
@@ -1204,7 +1204,7 @@ aiChat?: [{	messages: Array<ResolverInputTypes["AIChatMessage"]>,	system?: strin
 }>;
 	["User"]: AliasType<{
 	_id?:boolean | `@${string}`,
-	username?:boolean | `@${string}`,
+	email?:boolean | `@${string}`,
 		__typename?: boolean | `@${string}`
 }>;
 	["AIChatMessage"]: {
@@ -1267,7 +1267,7 @@ export type ModelTypes = {
 };
 	["User"]: {
 		_id: string,
-	username: string
+	email: string
 };
 	["AIChatMessage"]: {
 	role: string,
@@ -1344,7 +1344,7 @@ export type GraphQLTypes = {
 	["User"]: {
 	__typename: "User",
 	_id: string,
-	username: string,
+	email: string,
 	['...on User']: Omit<GraphQLTypes["User"], "...on User">
 };
 	["AIChatMessage"]: {

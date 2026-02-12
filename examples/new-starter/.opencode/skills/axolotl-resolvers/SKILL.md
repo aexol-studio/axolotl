@@ -35,10 +35,10 @@ export default createResolvers({
     },
   },
   Mutation: {
-    login: async ([source, args, context], { username, password }) => {
+    login: async ([source, args, context], { email, password }) => {
       //            ↑ Destructure tuple    ↑ Convenience args parameter
-      const token = await authenticateUser(username, password);
-      return token;
+      const result = await authenticateUser(email, password);
+      return result;
     },
   },
 });
@@ -104,24 +104,19 @@ type AuthorizedUserQuery {
 createResolvers({
   Query: {
     user: async ([, , context]) => {
-      const token = context.request.headers.get('authorization');
-      const user = await verifyToken(token);
-
-      // This object becomes the SOURCE for AuthorizedUserQuery resolvers
-      return {
-        _id: user._id,
-        username: user.username,
-      };
+      const cookieHeader = context.request.headers.get('cookie');
+      const tokenHeader = context.request.headers.get('token');
+      const authResult = await verifyAuth(cookieHeader, tokenHeader);
+      // authResult becomes the SOURCE for AuthorizedUserQuery resolvers
+      return authResult; // { _id: string, email: string }
     },
   },
   AuthorizedUserQuery: {
     me: ([source]) => {
-      // source is what Query.user returned
-      const src = source as { _id: string; username: string };
+      const src = source as { _id: string; email: string };
       return src;
     },
     posts: async ([source]) => {
-      // Access parent data
       const src = source as { _id: string };
       return getPostsByUserId(src._id);
     },
@@ -156,8 +151,8 @@ type Query {
 
 type Mutation {
   user: AuthorizedUserMutation @resolver # ← Defined by auth module
-  login(username: String!, password: String!): String! @resolver # ← Defined by users module
-  register(username: String!, password: String!): String! @resolver # ← Defined by users module
+  login(email: String!, password: String!): String! @resolver # ← Defined by users module
+  register(email: String!, password: String!): String! @resolver # ← Defined by users module
 }
 
 # PROTECTED - only reachable if gateway resolver succeeds
@@ -198,18 +193,17 @@ GraphQL requires at least one field per object type. The `_: String` field serve
 
 #### Gateway Resolver
 
-The gateway validates the token and returns the authenticated user. That returned object becomes `source` for every child resolver.
+The gateway verifies authentication via `verifyAuth()` (cookie/token → JWT verification → session check) and returns the authenticated user identity. That returned object becomes `source` for every child resolver.
 
 ```typescript
 export const Query = createResolvers({
   Query: {
     user: async (input) => {
-      const token = input[2].request.headers.get('token');
-      if (!token) throw new GraphQLError('Not authorized', { extensions: { code: 'UNAUTHORIZED' } });
-      const user = await prisma.user.findFirst({ where: { token } });
-      if (!user) throw new GraphQLError('Not authorized', { extensions: { code: 'UNAUTHORIZED' } });
+      const cookieHeader = input[2].request.headers.get('cookie');
+      const tokenHeader = input[2].request.headers.get('token');
+      const authResult = await verifyAuth(cookieHeader, tokenHeader);
       // Returned value becomes `source` for all child resolvers
-      return { _id: user.id, username: user.username };
+      return authResult; // { _id: string, email: string }
     },
   },
 });
@@ -223,7 +217,7 @@ Child resolvers destructure `[source]` to access the authenticated user — auth
 export const AuthorizedUserQuery = createResolvers({
   AuthorizedUserQuery: {
     posts: async ([source]) => {
-      const user = source as { _id: string; username: string };
+      const user = source as { _id: string; email: string };
       return await prisma.post.findMany({ where: { authorId: user._id } });
     },
     me: async ([source]) => {
@@ -270,8 +264,7 @@ Do **not** add it to `src/modules/auth/schema.graphql`.
 ```typescript
 type UserSource = {
   _id: string;
-  username: string;
-  token?: string;
+  email: string;
 };
 
 export default createResolvers({
@@ -280,7 +273,7 @@ export default createResolvers({
       const src = source as UserSource;
       return {
         _id: src._id,
-        username: src.username,
+        email: src.email,
       };
     },
   },
@@ -296,7 +289,6 @@ const getUserResolver = async ([, , context]) => {
   const user = await authenticateUser(context);
   return {
     _id: user._id,
-    username: user.username,
     email: user.email,
   };
 };
