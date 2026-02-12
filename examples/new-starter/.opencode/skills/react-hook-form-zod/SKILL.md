@@ -61,11 +61,11 @@ type AuthFormValues = z.infer<typeof authSchema>;
 ### Custom Error Messages
 
 ```typescript
-const todoSchema = z.object({
-  content: z.string().min(1, 'Todo cannot be empty').max(200, 'Todo must be under 200 characters').trim(),
+const postSchema = z.object({
+  title: z.string().min(1, 'Title cannot be empty').max(200, 'Title must be under 200 characters').trim(),
 });
 
-type TodoFormValues = z.infer<typeof todoSchema>;
+type PostFormValues = z.infer<typeof postSchema>;
 ```
 
 ---

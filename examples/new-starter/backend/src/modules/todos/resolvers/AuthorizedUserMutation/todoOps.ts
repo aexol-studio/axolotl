@@ -1,5 +1,5 @@
 import { createResolvers } from '../../axolotl.js';
-import { User } from '../../models.js';
+import { User } from '../../../users/models.js';
 import { prisma } from '@/src/db.js';
 
 export default createResolvers({

@@ -59,9 +59,9 @@ createResolvers({
 // Pattern 2: Access source and context
 createResolvers({
   AuthorizedUserQuery: {
-    todos: async ([source, , context]) => {
+    posts: async ([source, , context]) => {
       const src = source as { _id: string };
-      return getTodosByUserId(src._id);
+      return getPostsByUserId(src._id);
     },
   },
 });
@@ -69,8 +69,8 @@ createResolvers({
 // Pattern 3: Use convenience args parameter
 createResolvers({
   Mutation: {
-    createTodo: async ([, , context], { content }) => {
-      return createTodo(content, context.userId);
+    createPost: async ([, , context], { title, content }) => {
+      return createPost(title, content, context.userId);
     },
   },
 });
@@ -97,7 +97,7 @@ type Query {
 
 type AuthorizedUserQuery {
   me: User! @resolver
-  todos: [Todo!] @resolver
+  posts: [Post!] @resolver
 }
 
 // Resolvers
@@ -120,10 +120,10 @@ createResolvers({
       const src = source as { _id: string; username: string };
       return src;
     },
-    todos: async ([source]) => {
+    posts: async ([source]) => {
       // Access parent data
       const src = source as { _id: string };
-      return getTodosByUserId(src._id);
+      return getPostsByUserId(src._id);
     },
   },
 });
@@ -132,6 +132,8 @@ createResolvers({
 ### Gateway Authentication Pattern
 
 Schema-level auth enforcement where `Query.user` / `Mutation.user` act as authentication gateways — protected resolvers are unreachable without passing through them first.
+
+> **CRITICAL RULE:** Domain modules define resolvers for `AuthorizedUserQuery` and `AuthorizedUserMutation` types. They **NEVER** define resolvers for `Query.user` or `Mutation.user` — those gateway resolvers are owned exclusively by the **auth module** (`src/modules/auth/`). Duplicating gateway resolvers in domain modules causes merge conflicts and breaks authentication.
 
 #### Why It Works
 
@@ -142,32 +144,57 @@ Schema-level auth enforcement where `Query.user` / `Mutation.user` act as authen
 
 #### Schema Structure
 
+The merged schema (output of `axolotl build`) combines fields from all modules:
+
 ```graphql
+# MERGED SCHEMA (combines auth + users + domain modules)
+
 # PUBLIC - accessible without authentication
 type Query {
-  user: AuthorizedUserQuery! @resolver # ← Gateway (auth check here)
+  user: AuthorizedUserQuery @resolver # ← Defined by auth module
 }
 
 type Mutation {
-  user: AuthorizedUserMutation! @resolver # ← Gateway (auth check here)
-  login(username: String!, password: String!): String! @resolver # ← Public
-  register(username: String!, password: String!): String! @resolver # ← Public
+  user: AuthorizedUserMutation @resolver # ← Defined by auth module
+  login(username: String!, password: String!): String! @resolver # ← Defined by users module
+  register(username: String!, password: String!): String! @resolver # ← Defined by users module
 }
 
 # PROTECTED - only reachable if gateway resolver succeeds
 type AuthorizedUserQuery {
-  me: User! @resolver
-  todos: [Todo!] @resolver
+  _: String # ← Placeholder from auth module
+  me: User! @resolver # ← Added by users module
+  posts: [Post!] @resolver # ← Added by posts module (example)
 }
 
 type AuthorizedUserMutation {
-  createTodo(content: String!): String! @resolver
-  changePassword(newPassword: String!): Boolean @resolver
+  _: String # ← Placeholder from auth module
+  changePassword(newPassword: String!): Boolean @resolver # ← Added by users module
+  createPost(title: String!, content: String!): String! @resolver # ← Added by posts module (example)
 }
 ```
 
+> Each module only defines the fields it owns. `axolotl build` merges them into this unified schema.
+
 - `Query` / `Mutation` root fields = **public namespace**
 - `AuthorizedUserQuery` / `AuthorizedUserMutation` = **protected namespace**
+
+#### The `_: String` Placeholder
+
+In the **auth module's** schema, `AuthorizedUserQuery` and `AuthorizedUserMutation` are defined with a single placeholder field:
+
+```graphql
+# src/modules/auth/schema.graphql
+type AuthorizedUserQuery {
+  _: String
+}
+
+type AuthorizedUserMutation {
+  _: String
+}
+```
+
+GraphQL requires at least one field per object type. The `_: String` field serves as that placeholder. **Domain modules add their real fields** (e.g., `me`, `posts`, `createPost`) by declaring the same type name in their own schema files. At build time, Axolotl's schema merger combines all fields from all modules into the final type. The `_` placeholder is harmless — it simply exists so the auth module's schema is valid on its own.
 
 #### Gateway Resolver
 
@@ -195,9 +222,9 @@ Child resolvers destructure `[source]` to access the authenticated user — auth
 ```typescript
 export const AuthorizedUserQuery = createResolvers({
   AuthorizedUserQuery: {
-    todos: async ([source]) => {
+    posts: async ([source]) => {
       const user = source as { _id: string; username: string };
-      return await prisma.todo.findMany({ where: { ownerId: user._id } });
+      return await prisma.post.findMany({ where: { authorId: user._id } });
     },
     me: async ([source]) => {
       return source; // Already have the user from gateway
@@ -208,15 +235,33 @@ export const AuthorizedUserQuery = createResolvers({
 
 #### Adding New Protected Fields
 
-1. Add the field to `AuthorizedUserQuery` or `AuthorizedUserMutation` in the schema
+1. Add the field to `AuthorizedUserQuery` or `AuthorizedUserMutation` **in your domain module's `schema.graphql`** file (NOT in the auth module). Axolotl's build step automatically merges it into the unified type.
 2. Run `cd backend && axolotl build` to regenerate types
-3. Implement the resolver — destructure `[source]` to access the authenticated user. Auth is already enforced by the gateway.
+3. Implement the resolver in your domain module — destructure `[source]` to access the authenticated user. Auth is already enforced by the gateway.
+
+Example: To add a `posts` field to `AuthorizedUserQuery`, add it in `src/modules/posts/schema.graphql`:
+
+```graphql
+type AuthorizedUserQuery {
+  posts: [Post!] @resolver
+}
+```
+
+Do **not** add it to `src/modules/auth/schema.graphql`.
 
 #### Alternative Auth Approaches
 
 - **Context-level auth** — validate token once in context builder, access `context.userId` everywhere. See the `axolotl-server` skill.
 - **Directive-based auth** — `@auth` directive on fields. See the `axolotl-server` skill.
 - **Gateway pattern is preferred** when you want schema-enforced protection without custom context setup.
+
+> **Rule Summary:**
+>
+> - Auth module (`src/modules/auth/`) → owns `Query.user` and `Mutation.user` gateway resolvers
+> - Domain modules → define fields on `AuthorizedUserQuery` / `AuthorizedUserMutation` types, and implement resolvers for those fields
+> - Domain modules **NEVER** define `Query.user` or `Mutation.user` resolvers
+
+> **Multi-module setup:** For details on how the gateway pattern works across federated modules (schema merging, `mergeAxolotls`, cross-module type sharing), see the `axolotl-federation` skill.
 
 ### Typing the Parent (Two Methods)
 

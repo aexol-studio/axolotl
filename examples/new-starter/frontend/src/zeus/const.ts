@@ -3,6 +3,19 @@
 export const AllTypesProps: Record<string,any> = {
 	Secret: `scalar.Secret` as const,
 	TodoUpdateType: "enum" as const,
+	Mutation:{
+		login:{
+
+		},
+		register:{
+
+		}
+	},
+	AuthorizedUserQuery:{
+		todo:{
+
+		}
+	},
 	AuthorizedUserMutation:{
 		createTodo:{
 			secret:"Secret"
@@ -11,11 +24,6 @@ export const AllTypesProps: Record<string,any> = {
 
 		},
 		changePassword:{
-
-		}
-	},
-	AuthorizedUserQuery:{
-		todo:{
 
 		}
 	},
@@ -30,14 +38,6 @@ export const AllTypesProps: Record<string,any> = {
 			messages:"AIChatMessage"
 		}
 	},
-	Mutation:{
-		login:{
-
-		},
-		register:{
-
-		}
-	},
 	AIChatMessage:{
 
 	},
@@ -45,6 +45,9 @@ export const AllTypesProps: Record<string,any> = {
 }
 
 export const ReturnTypes: Record<string,any> = {
+	Query:{
+		user:"AuthorizedUserQuery"
+	},
 	Todo:{
 		_id:"String",
 		content:"String",
@@ -58,35 +61,34 @@ export const ReturnTypes: Record<string,any> = {
 		type:"TodoUpdateType",
 		todo:"Todo"
 	},
-	User:{
-		_id:"String",
-		username:"String"
-	},
-	AuthorizedUserMutation:{
-		createTodo:"String",
-		todoOps:"TodoOps",
-		changePassword:"Boolean"
+	Mutation:{
+		user:"AuthorizedUserMutation",
+		login:"String",
+		register:"String"
 	},
 	AuthorizedUserQuery:{
+		_:"String",
 		todos:"Todo",
 		todo:"Todo",
 		me:"User"
 	},
+	AuthorizedUserMutation:{
+		_:"String",
+		createTodo:"String",
+		todoOps:"TodoOps",
+		changePassword:"Boolean"
+	},
 	resolver:{
 
-	},
-	Query:{
-		user:"AuthorizedUserQuery"
 	},
 	Subscription:{
 		todoUpdates:"TodoUpdate",
 		countdown:"Int",
 		aiChat:"AIChatChunk"
 	},
-	Mutation:{
-		user:"AuthorizedUserMutation",
-		login:"String",
-		register:"String"
+	User:{
+		_id:"String",
+		username:"String"
 	},
 	AIChatChunk:{
 		content:"String",

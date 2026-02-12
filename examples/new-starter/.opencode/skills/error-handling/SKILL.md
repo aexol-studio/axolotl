@@ -122,8 +122,8 @@ const createMutation = useMutation({
     /* ... */
   },
   onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['todos'] });
-    toast.success('Todo created!');
+    queryClient.invalidateQueries({ queryKey: ['posts'] });
+    toast.success('Item created!');
   },
   // ⛔ No onError — global handler covers it
 });

@@ -169,7 +169,7 @@ Everything else is **route-scoped by default**. The [Promotion Rule](#promotion-
 | `ConfirmDialog` | ✅ Yes    | `components/molecules/`                  | Generic — any destructive action on any page can use it      |
 | `DataTable`     | ✅ Yes    | `components/organisms/`                  | Generic — works with any data shape on any page              |
 | `AuthForm`      | ❌ No     | `routes/guest/landing/components/`       | Tied to login/register business logic — only Landing uses it |
-| `TodoForm`      | ❌ No     | `routes/protected/dashboard/components/` | Tied to todo creation — only Dashboard uses it               |
+| `PostForm`      | ❌ No     | `routes/protected/dashboard/components/` | Tied to post creation — only Dashboard uses it               |
 | `SettingsPanel` | ❌ No     | `routes/protected/settings/components/`  | Specific to settings page                                    |
 
 ---
@@ -182,44 +182,34 @@ Components that **only live inside a single page/route** should NOT be in the gl
 
 Every route gets its own folder. The page file uses `.page.tsx` suffix and lives inside it.
 
+> See **frontend-navigation** skill for the complete route structure, route grouping convention, and auth guard patterns.
+
+Route-scoped components live next to their page:
+
 ```
 routes/
-├── index.tsx                    # Single source of truth — all route definitions here
-├── guest/                       # Routes for unauthenticated users only
-│   ├── Layout.tsx               # GuestLayout — auth guard
-│   ├── index.ts
+├── index.tsx                    # Route definitions (see frontend-navigation skill)
+├── guest/
 │   └── landing/
 │       ├── Landing.page.tsx
-│       ├── index.ts
-│       └── components/
+│       └── components/          # ← Route-scoped components go here
 │           └── AuthForm.tsx
-├── public/                      # Routes visible to everyone
+├── public/
 │   └── examples/
 │       ├── Examples.page.tsx
-│       ├── index.ts
 │       └── components/
-│           ├── FormShowcase.tsx                  # Small → single file
-│           └── component-showcase/              # Large → folder with components/ subfolder
+│           ├── FormShowcase.tsx
+│           └── component-showcase/
 │               ├── ComponentShowcase.tsx
 │               └── components/
 │                   └── DataNavigationOverlays.tsx
-└── protected/                   # Routes requiring authentication
-    ├── Layout.tsx               # ProtectedLayout — auth guard
-    ├── index.ts
-    ├── dashboard/
-    │   ├── Dashboard.page.tsx
-    │   ├── index.ts
-    │   └── components/
-    │       ├── TodoForm.tsx
-    │       └── TodoList.tsx
-    └── admin/
-        ├── Layout.tsx
-        └── dashboard/
-            ├── Dashboard.page.tsx
-            └── index.ts
+└── protected/
+    └── dashboard/
+        ├── Dashboard.page.tsx
+        └── components/
+            ├── PostForm.tsx
+            └── PostList.tsx
 ```
-
-> **Route Grouping Convention:** Routes are organized into `guest/`, `public/`, `protected/` folders based on auth requirements. `routes/index.tsx` is the **single source of truth** for route definitions and protection — folder grouping is a co-location convenience, not the enforcement mechanism. Route-scoped component rules apply identically regardless of which group a route belongs to.
 
 ### Promotion Rule
 
@@ -251,7 +241,7 @@ Is this component CURRENTLY used by 2+ routes, OR is it genuinely generic
 └── NO ↓
 
 Is this a form/section tied to specific business logic
-(login form, todo form, settings panel, user profile editor)?
+(login form, post form, settings panel, user profile editor)?
 ├── YES → routes/{route}/components/ — these are almost NEVER reusable
 └── NO ↓
 

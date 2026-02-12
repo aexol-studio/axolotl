@@ -20,9 +20,6 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
     };
   };
   ['Mutation']: {
-    user: {
-      args: Record<string, never>;
-    };
     login: {
       args: {
         username: string;
@@ -34,11 +31,6 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
         username: string;
         password: string;
       };
-    };
-  };
-  ['Query']: {
-    user: {
-      args: Record<string, never>;
     };
   };
   ['AuthorizedUserMutation']: {
@@ -87,12 +79,8 @@ export interface User<S extends { [P in keyof Scalars]: any } = { [P in keyof Sc
   username: string;
 }
 export interface Mutation<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
-  user: AuthorizedUserMutation;
   login: string;
   register: string;
-}
-export interface Query<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
-  user: AuthorizedUserQuery;
 }
 export interface AuthorizedUserMutation<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   changePassword?: boolean | undefined | null;

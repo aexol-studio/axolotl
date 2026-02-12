@@ -1080,7 +1080,12 @@ export type ScalarCoders = {
 type ZEUS_UNIONS = never
 
 export type ValueTypes = {
-    ["Todo"]: AliasType<{
+    ["Query"]: AliasType<{
+	user?:ValueTypes["AuthorizedUserQuery"],
+		__typename?: boolean | `@${string}`,
+	['...on Query']?: Omit<ValueTypes["Query"], "...on Query">
+}>;
+	["Todo"]: AliasType<{
 	_id?:boolean | `@${string}`,
 	content?:boolean | `@${string}`,
 	done?:boolean | `@${string}`,
@@ -1100,30 +1105,28 @@ export type ValueTypes = {
 		__typename?: boolean | `@${string}`,
 	['...on TodoUpdate']?: Omit<ValueTypes["TodoUpdate"], "...on TodoUpdate">
 }>;
-	["User"]: AliasType<{
-	_id?:boolean | `@${string}`,
-	username?:boolean | `@${string}`,
+	["Mutation"]: AliasType<{
+	user?:ValueTypes["AuthorizedUserMutation"],
+login?: [{	username: string | Variable<any, string>,	password: string | Variable<any, string>},boolean | `@${string}`],
+register?: [{	username: string | Variable<any, string>,	password: string | Variable<any, string>},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`,
-	['...on User']?: Omit<ValueTypes["User"], "...on User">
-}>;
-	["AuthorizedUserMutation"]: AliasType<{
-createTodo?: [{	content: string | Variable<any, string>,	secret?: ValueTypes["Secret"] | undefined | null | Variable<any, string>},boolean | `@${string}`],
-todoOps?: [{	_id: string | Variable<any, string>},ValueTypes["TodoOps"]],
-changePassword?: [{	newPassword: string | Variable<any, string>},boolean | `@${string}`],
-		__typename?: boolean | `@${string}`,
-	['...on AuthorizedUserMutation']?: Omit<ValueTypes["AuthorizedUserMutation"], "...on AuthorizedUserMutation">
+	['...on Mutation']?: Omit<ValueTypes["Mutation"], "...on Mutation">
 }>;
 	["AuthorizedUserQuery"]: AliasType<{
+	_?:boolean | `@${string}`,
 	todos?:ValueTypes["Todo"],
 todo?: [{	_id: string | Variable<any, string>},ValueTypes["Todo"]],
 	me?:ValueTypes["User"],
 		__typename?: boolean | `@${string}`,
 	['...on AuthorizedUserQuery']?: Omit<ValueTypes["AuthorizedUserQuery"], "...on AuthorizedUserQuery">
 }>;
-	["Query"]: AliasType<{
-	user?:ValueTypes["AuthorizedUserQuery"],
+	["AuthorizedUserMutation"]: AliasType<{
+	_?:boolean | `@${string}`,
+createTodo?: [{	content: string | Variable<any, string>,	secret?: ValueTypes["Secret"] | undefined | null | Variable<any, string>},boolean | `@${string}`],
+todoOps?: [{	_id: string | Variable<any, string>},ValueTypes["TodoOps"]],
+changePassword?: [{	newPassword: string | Variable<any, string>},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`,
-	['...on Query']?: Omit<ValueTypes["Query"], "...on Query">
+	['...on AuthorizedUserMutation']?: Omit<ValueTypes["AuthorizedUserMutation"], "...on AuthorizedUserMutation">
 }>;
 	["Subscription"]: AliasType<{
 todoUpdates?: [{	ownerId: string | Variable<any, string>},ValueTypes["TodoUpdate"]],
@@ -1132,12 +1135,11 @@ aiChat?: [{	messages: Array<ValueTypes["AIChatMessage"]> | Variable<any, string>
 		__typename?: boolean | `@${string}`,
 	['...on Subscription']?: Omit<ValueTypes["Subscription"], "...on Subscription">
 }>;
-	["Mutation"]: AliasType<{
-	user?:ValueTypes["AuthorizedUserMutation"],
-login?: [{	username: string | Variable<any, string>,	password: string | Variable<any, string>},boolean | `@${string}`],
-register?: [{	username: string | Variable<any, string>,	password: string | Variable<any, string>},boolean | `@${string}`],
+	["User"]: AliasType<{
+	_id?:boolean | `@${string}`,
+	username?:boolean | `@${string}`,
 		__typename?: boolean | `@${string}`,
-	['...on Mutation']?: Omit<ValueTypes["Mutation"], "...on Mutation">
+	['...on User']?: Omit<ValueTypes["User"], "...on User">
 }>;
 	["AIChatMessage"]: {
 	role: string | Variable<any, string>,
@@ -1153,7 +1155,11 @@ register?: [{	username: string | Variable<any, string>,	password: string | Varia
   }
 
 export type ResolverInputTypes = {
-    ["Todo"]: AliasType<{
+    ["Query"]: AliasType<{
+	user?:ResolverInputTypes["AuthorizedUserQuery"],
+		__typename?: boolean | `@${string}`
+}>;
+	["Todo"]: AliasType<{
 	_id?:boolean | `@${string}`,
 	content?:boolean | `@${string}`,
 	done?:boolean | `@${string}`,
@@ -1170,25 +1176,24 @@ export type ResolverInputTypes = {
 	todo?:ResolverInputTypes["Todo"],
 		__typename?: boolean | `@${string}`
 }>;
-	["User"]: AliasType<{
-	_id?:boolean | `@${string}`,
-	username?:boolean | `@${string}`,
-		__typename?: boolean | `@${string}`
-}>;
-	["AuthorizedUserMutation"]: AliasType<{
-createTodo?: [{	content: string,	secret?: ResolverInputTypes["Secret"] | undefined | null},boolean | `@${string}`],
-todoOps?: [{	_id: string},ResolverInputTypes["TodoOps"]],
-changePassword?: [{	newPassword: string},boolean | `@${string}`],
+	["Mutation"]: AliasType<{
+	user?:ResolverInputTypes["AuthorizedUserMutation"],
+login?: [{	username: string,	password: string},boolean | `@${string}`],
+register?: [{	username: string,	password: string},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`
 }>;
 	["AuthorizedUserQuery"]: AliasType<{
+	_?:boolean | `@${string}`,
 	todos?:ResolverInputTypes["Todo"],
 todo?: [{	_id: string},ResolverInputTypes["Todo"]],
 	me?:ResolverInputTypes["User"],
 		__typename?: boolean | `@${string}`
 }>;
-	["Query"]: AliasType<{
-	user?:ResolverInputTypes["AuthorizedUserQuery"],
+	["AuthorizedUserMutation"]: AliasType<{
+	_?:boolean | `@${string}`,
+createTodo?: [{	content: string,	secret?: ResolverInputTypes["Secret"] | undefined | null},boolean | `@${string}`],
+todoOps?: [{	_id: string},ResolverInputTypes["TodoOps"]],
+changePassword?: [{	newPassword: string},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`
 }>;
 	["Subscription"]: AliasType<{
@@ -1197,10 +1202,9 @@ countdown?: [{	from?: number | undefined | null},boolean | `@${string}`],
 aiChat?: [{	messages: Array<ResolverInputTypes["AIChatMessage"]>,	system?: string | undefined | null},ResolverInputTypes["AIChatChunk"]],
 		__typename?: boolean | `@${string}`
 }>;
-	["Mutation"]: AliasType<{
-	user?:ResolverInputTypes["AuthorizedUserMutation"],
-login?: [{	username: string,	password: string},boolean | `@${string}`],
-register?: [{	username: string,	password: string},boolean | `@${string}`],
+	["User"]: AliasType<{
+	_id?:boolean | `@${string}`,
+	username?:boolean | `@${string}`,
 		__typename?: boolean | `@${string}`
 }>;
 	["AIChatMessage"]: {
@@ -1222,7 +1226,10 @@ register?: [{	username: string,	password: string},boolean | `@${string}`],
   }
 
 export type ModelTypes = {
-    ["Todo"]: {
+    ["Query"]: {
+		user?: ModelTypes["AuthorizedUserQuery"] | undefined | null
+};
+	["Todo"]: {
 		_id: string,
 	content: string,
 	done?: boolean | undefined | null
@@ -1236,32 +1243,31 @@ export type ModelTypes = {
 		type: ModelTypes["TodoUpdateType"],
 	todo: ModelTypes["Todo"]
 };
-	["User"]: {
-		_id: string,
-	username: string
-};
-	["AuthorizedUserMutation"]: {
-		createTodo: string,
-	todoOps: ModelTypes["TodoOps"],
-	changePassword?: boolean | undefined | null
+	["Mutation"]: {
+		user?: ModelTypes["AuthorizedUserMutation"] | undefined | null,
+	login: string,
+	register: string
 };
 	["AuthorizedUserQuery"]: {
-		todos?: Array<ModelTypes["Todo"]> | undefined | null,
+		_?: string | undefined | null,
+	todos?: Array<ModelTypes["Todo"]> | undefined | null,
 	todo: ModelTypes["Todo"],
 	me: ModelTypes["User"]
 };
-	["Query"]: {
-		user?: ModelTypes["AuthorizedUserQuery"] | undefined | null
+	["AuthorizedUserMutation"]: {
+		_?: string | undefined | null,
+	createTodo: string,
+	todoOps: ModelTypes["TodoOps"],
+	changePassword?: boolean | undefined | null
 };
 	["Subscription"]: {
 		todoUpdates: ModelTypes["TodoUpdate"],
 	countdown?: number | undefined | null,
 	aiChat: ModelTypes["AIChatChunk"]
 };
-	["Mutation"]: {
-		user?: ModelTypes["AuthorizedUserMutation"] | undefined | null,
-	login: string,
-	register: string
+	["User"]: {
+		_id: string,
+	username: string
 };
 	["AIChatMessage"]: {
 	role: string,
@@ -1280,7 +1286,12 @@ export type ModelTypes = {
     }
 
 export type GraphQLTypes = {
-    ["Todo"]: {
+    ["Query"]: {
+	__typename: "Query",
+	user?: GraphQLTypes["AuthorizedUserQuery"] | undefined | null,
+	['...on Query']: Omit<GraphQLTypes["Query"], "...on Query">
+};
+	["Todo"]: {
 	__typename: "Todo",
 	_id: string,
 	content: string,
@@ -1300,30 +1311,28 @@ export type GraphQLTypes = {
 	todo: GraphQLTypes["Todo"],
 	['...on TodoUpdate']: Omit<GraphQLTypes["TodoUpdate"], "...on TodoUpdate">
 };
-	["User"]: {
-	__typename: "User",
-	_id: string,
-	username: string,
-	['...on User']: Omit<GraphQLTypes["User"], "...on User">
-};
-	["AuthorizedUserMutation"]: {
-	__typename: "AuthorizedUserMutation",
-	createTodo: string,
-	todoOps: GraphQLTypes["TodoOps"],
-	changePassword?: boolean | undefined | null,
-	['...on AuthorizedUserMutation']: Omit<GraphQLTypes["AuthorizedUserMutation"], "...on AuthorizedUserMutation">
+	["Mutation"]: {
+	__typename: "Mutation",
+	user?: GraphQLTypes["AuthorizedUserMutation"] | undefined | null,
+	login: string,
+	register: string,
+	['...on Mutation']: Omit<GraphQLTypes["Mutation"], "...on Mutation">
 };
 	["AuthorizedUserQuery"]: {
 	__typename: "AuthorizedUserQuery",
+	_?: string | undefined | null,
 	todos?: Array<GraphQLTypes["Todo"]> | undefined | null,
 	todo: GraphQLTypes["Todo"],
 	me: GraphQLTypes["User"],
 	['...on AuthorizedUserQuery']: Omit<GraphQLTypes["AuthorizedUserQuery"], "...on AuthorizedUserQuery">
 };
-	["Query"]: {
-	__typename: "Query",
-	user?: GraphQLTypes["AuthorizedUserQuery"] | undefined | null,
-	['...on Query']: Omit<GraphQLTypes["Query"], "...on Query">
+	["AuthorizedUserMutation"]: {
+	__typename: "AuthorizedUserMutation",
+	_?: string | undefined | null,
+	createTodo: string,
+	todoOps: GraphQLTypes["TodoOps"],
+	changePassword?: boolean | undefined | null,
+	['...on AuthorizedUserMutation']: Omit<GraphQLTypes["AuthorizedUserMutation"], "...on AuthorizedUserMutation">
 };
 	["Subscription"]: {
 	__typename: "Subscription",
@@ -1332,12 +1341,11 @@ export type GraphQLTypes = {
 	aiChat: GraphQLTypes["AIChatChunk"],
 	['...on Subscription']: Omit<GraphQLTypes["Subscription"], "...on Subscription">
 };
-	["Mutation"]: {
-	__typename: "Mutation",
-	user?: GraphQLTypes["AuthorizedUserMutation"] | undefined | null,
-	login: string,
-	register: string,
-	['...on Mutation']: Omit<GraphQLTypes["Mutation"], "...on Mutation">
+	["User"]: {
+	__typename: "User",
+	_id: string,
+	username: string,
+	['...on User']: Omit<GraphQLTypes["User"], "...on User">
 };
 	["AIChatMessage"]: {
 		role: string,

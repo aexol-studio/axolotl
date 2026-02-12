@@ -60,14 +60,14 @@ import { query, mutation } from '../api';
 // Fetching data
 const data = await query()({
   user: {
-    todos: { _id: true, content: true, done: true },
+    me: { _id: true, username: true },
   },
 });
 
 // Mutations
 await mutation()({
   user: {
-    createTodo: [{ content: 'New task' }, true],
+    updateUser: [{ username: 'new-name' }, true],
   },
 });
 
@@ -89,18 +89,19 @@ Selectors define reusable query shapes and derive TypeScript types:
 import { Selector, type FromSelector } from '../zeus/index.js';
 
 // Define selector
-const todoSelector = Selector('Todo')({
+const postSelector = Selector('Post')({
   _id: true,
+  title: true,
   content: true,
-  done: true,
+  published: true,
 });
 
 // Derive type from selector (instead of manual type definition)
-type TodoType = FromSelector<typeof todoSelector, 'Todo'>;
+type PostType = FromSelector<typeof postSelector, 'Post'>;
 
 // Use in query
 const data = await query()({
-  user: { todos: todoSelector },
+  user: { posts: postSelector },
 });
 ```
 
@@ -114,18 +115,19 @@ Shared selectors file (`api/selectors.ts`):
 ```typescript
 import { Selector, type FromSelector } from '../zeus/index.js';
 
-export const todoSelector = Selector('Todo')({
+export const postSelector = Selector('Post')({
   _id: true,
+  title: true,
   content: true,
-  done: true,
+  published: true,
 });
-export type TodoType = FromSelector<typeof todoSelector, 'Todo'>;
+export type PostType = FromSelector<typeof postSelector, 'Post'>;
 ```
 
 Re-export from `api/index.ts`:
 
 ```typescript
-export { todoSelector, type TodoType } from './selectors.js';
+export { postSelector, type PostType } from './selectors.js';
 ```
 
 ### GraphQL Variables with `$`
@@ -204,12 +206,12 @@ import { query } from '../api';
 const token = useAuthStore((s) => s.token);
 
 const { data, isLoading, error } = useQuery({
-  queryKey: ['todos'],
+  queryKey: ['posts'],
   queryFn: async () => {
     const data = await query()({
-      user: { todos: { _id: true, content: true, done: true } },
+      user: { posts: { _id: true, title: true, content: true, published: true } },
     });
-    return data.user?.todos ?? [];
+    return data.user?.posts ?? [];
   },
   enabled: !!token, // only fetch when authenticated
 });
@@ -225,21 +227,21 @@ import { mutation } from '../api';
 
 const queryClient = useQueryClient();
 
-const createTodoMutation = useMutation({
-  mutationFn: async (content: string) => {
+const createPostMutation = useMutation({
+  mutationFn: async (input: { title: string; content: string }) => {
     await mutation()({
-      user: { createTodo: [{ content }, true] },
+      user: { createPost: [input, true] },
     });
   },
   onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['todos'] });
+    queryClient.invalidateQueries({ queryKey: ['posts'] });
   },
 });
 
 // Use with .mutateAsync() for imperative flows
-const createTodo = async (content: string) => {
+const createPost = async (input: { title: string; content: string }) => {
   try {
-    await createTodoMutation.mutateAsync(content);
+    await createPostMutation.mutateAsync(input);
     return true;
   } catch {
     return false;
@@ -253,14 +255,14 @@ Query keys are simple string arrays:
 
 | Query Key   | Purpose                    |
 | ----------- | -------------------------- |
-| `['todos']` | Todo list data             |
+| `['posts']` | Post list data             |
 | `['me']`    | Current authenticated user |
 
-For more complex apps, consider a key factory pattern (e.g., `todoKeys.all()`, `todoKeys.detail(id)`).
+For more complex apps, consider a key factory pattern (e.g., `postKeys.all()`, `postKeys.detail(id)`).
 
 ### Cache Invalidation Patterns
 
-- **After mutations:** `queryClient.invalidateQueries({ queryKey: ['todos'] })`
+- **After mutations:** `queryClient.invalidateQueries({ queryKey: ['posts'] })`
 - **From subscriptions:** Same invalidation in subscription callbacks
 - **On logout:** `queryClient.clear()` (clears ALL cache -- security measure)
 
@@ -269,10 +271,10 @@ For more complex apps, consider a key factory pattern (e.g., `todoKeys.all()`, `
 ```typescript
 const queryClient = useQueryClient();
 
-useTodoSubscription({
+usePostSubscription({
   ownerId: user?._id ?? null,
-  onTodoCreated: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
-  onTodoUpdated: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
+  onPostCreated: () => queryClient.invalidateQueries({ queryKey: ['posts'] }),
+  onPostUpdated: () => queryClient.invalidateQueries({ queryKey: ['posts'] }),
 });
 ```
 
@@ -318,7 +320,7 @@ const error = queryError?.message ?? loginMutation.error?.message ?? registerMut
 10. **NEVER manually duplicate backend types** -- derive them from selectors
 11. **Selector used in 1 file** → keep local; **used in 2+ files** → put in `api/selectors.ts`
 12. **Use `$` function** for GraphQL variables when values come from user input or props
-13. **One hook per domain** — `useAuth` for authentication, `useTodos` for todo operations. Each hook owns its queries, mutations, error aggregation, and loading states. Keep components presentational — all data logic lives in hooks
+13. **One hook per domain** — `useAuth` for authentication, `usePosts` for post operations. Each hook owns its queries, mutations, error aggregation, and loading states. Keep components presentational — all data logic lives in hooks
 
 ---
 
@@ -326,7 +328,7 @@ const error = queryError?.message ?? loginMutation.error?.message ?? registerMut
 
 | Task                    | Code                                                             |
 | ----------------------- | ---------------------------------------------------------------- |
-| Create query            | `query()({ user: { todos: { _id: true } } })`                    |
+| Create query            | `query()({ user: { posts: { _id: true } } })`                    |
 | Create mutation         | `mutation()({ login: [{ username, password }, true] })`          |
 | Mutation with args      | `mutation()({ field: [{ arg: value }, selector] })`              |
 | Return scalar directly  | `field: [{ args }, true]`                                        |
@@ -334,8 +336,8 @@ const error = queryError?.message ?? loginMutation.error?.message ?? registerMut
 | Mutate with React Query | `useMutation({ mutationFn: (args) => mutation()({...}) })`       |
 | Invalidate cache        | `queryClient.invalidateQueries({ queryKey: ['key'] })`           |
 | Conditional query       | `useQuery({ ..., enabled: !!token })`                            |
-| Define selector         | `const sel = Selector('Todo')({ _id: true, ... })`               |
-| Derive type             | `type T = FromSelector<typeof sel, 'Todo'>`                      |
+| Define selector         | `const sel = Selector('Post')({ _id: true, ... })`               |
+| Derive type             | `type T = FromSelector<typeof sel, 'Post'>`                      |
 | Clear all cache         | `queryClient.clear()`                                            |
 
 ---
@@ -348,15 +350,6 @@ const error = queryError?.message ?? loginMutation.error?.message ?? registerMut
 
 ### Zeus files not found
 
-**Solution:** Ensure `backend/axolotl.json` has zeus configuration:
+> **Zeus Configuration:** See `AGENTS.md` → **Understanding axolotl.json** for the Zeus generation config. The `zeus` array in `axolotl.json` defines output paths for generated Zeus client files.
 
-```json
-{
-  "zeus": [
-    {
-      "generationPath": "../frontend/src",
-      "esModule": true
-    }
-  ]
-}
-```
+**Solution:** Verify `backend/axolotl.json` contains a `zeus` array pointing to your frontend source directory, then run `cd backend && npx @aexol/axolotl build` to regenerate.

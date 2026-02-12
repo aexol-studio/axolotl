@@ -25,11 +25,6 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
       args: Record<string, never>;
     };
   };
-  ['User']: {
-    _id: {
-      args: Record<string, never>;
-    };
-  };
   ['TodoOps']: {
     markDone: {
       args: Record<string, never>;
@@ -58,11 +53,6 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
       };
     };
   };
-  ['Query']: {
-    user: {
-      args: Record<string, never>;
-    };
-  };
   ['TodoUpdate']: {
     type: {
       args: Record<string, never>;
@@ -78,11 +68,6 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
       };
     };
   };
-  ['Mutation']: {
-    user: {
-      args: Record<string, never>;
-    };
-  };
 };
 
 export type Directives<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> = {
@@ -96,9 +81,6 @@ export interface Todo<S extends { [P in keyof Scalars]: any } = { [P in keyof Sc
   content: string;
   done?: boolean | undefined | null;
 }
-export interface User<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
-  _id: string;
-}
 export interface TodoOps<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   markDone?: boolean | undefined | null;
 }
@@ -110,16 +92,10 @@ export interface AuthorizedUserQuery<S extends { [P in keyof Scalars]: any } = {
   todos?: Array<Todo> | undefined | null;
   todo: Todo;
 }
-export interface Query<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
-  user?: AuthorizedUserQuery | undefined | null;
-}
 export interface TodoUpdate<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   type: TodoUpdateType;
   todo: Todo;
 }
 export interface Subscription<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   todoUpdates: TodoUpdate;
-}
-export interface Mutation<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
-  user?: AuthorizedUserMutation | undefined | null;
 }

@@ -11,12 +11,14 @@ Micro-federation is one of Axolotl's most powerful features, allowing you to com
 
 Micro-federation in Axolotl is a modular architecture pattern where:
 
-- Each domain (e.g., users, todos, products) has its own GraphQL schema and resolvers
+- Each domain (e.g., users, posts, products) has its own GraphQL schema and resolvers
 - Schemas are automatically merged into a single supergraph at build time
 - Each module maintains its own type safety with generated models
 - Resolvers are intelligently merged at runtime to handle overlapping types
 
 **Key Difference from Apollo Federation:** Axolotl's micro-federation is designed for **monorepo or single-project architectures** where all modules are built and deployed together, not for distributed microservices.
+
+> **Note:** The `auth` and `users` modules are **core modules**. The `todos` module is an **example module** included for demonstration — it can be safely removed. Throughout this skill, we use `posts` as a hypothetical domain to illustrate federation patterns.
 
 ### When to Use Micro-Federation
 
@@ -37,68 +39,21 @@ Micro-federation in Axolotl is a modular architecture pattern where:
 
 ### Federation Configuration
 
-**backend/axolotl.json:**
-
-```json
-{
-  "schema": "schema.graphql",
-  "models": "src/models.ts",
-  "federation": [
-    {
-      "schema": "src/todos/schema.graphql",
-      "models": "src/todos/models.ts"
-    },
-    {
-      "schema": "src/users/schema.graphql",
-      "models": "src/users/models.ts"
-    }
-  ]
-}
-```
+> **Configuration:** See `AGENTS.md` → **Understanding axolotl.json** for the complete configuration. Key federation fields:
+>
+> - `federation[]` — array of `{ schema, models }` objects, one per module
+> - `schema` — path to module's `.graphql` schema
+> - `models` — path to module's auto-generated `models.ts`
 
 ---
 
 ### Federation Directory Structure
 
-Recommended structure for a federated project:
-
-```
-project/
-├── backend/
-│   ├── axolotl.json              # Main config with federation array
-│   ├── schema.graphql            # Generated supergraph (don't edit manually)
-│   ├── src/
-│   │   ├── models.ts             # Generated supergraph models
-│   │   ├── axolotl.ts           # Main Axolotl instance
-│   │   ├── resolvers.ts         # Merged resolvers (calls mergeAxolotls)
-│   │   ├── index.ts             # Server entry point
-│   │   │
-│   │   ├── users/               # Users domain module
-│   │   │   ├── schema.graphql   # Users schema
-│   │   │   ├── models.ts        # Generated from users schema
-│   │   │   ├── axolotl.ts       # Users Axolotl instance
-│   │   │   ├── db.ts            # Users data layer
-│   │   │   └── resolvers/
-│   │   │       ├── resolvers.ts       # Main users resolvers export
-│   │   │       ├── Mutation/
-│   │   │       │   ├── resolvers.ts
-│   │   │       │   ├── login.ts
-│   │   │       │   └── register.ts
-│   │   │       └── Query/
-│   │   │           ├── resolvers.ts
-│   │   │           └── user.ts
-│   │   │
-│   │   └── todos/               # Todos domain module
-│   │       ├── schema.graphql
-│   │       ├── models.ts
-│   │       ├── axolotl.ts
-│   │       ├── db.ts
-│   │       └── resolvers/
-│   │           ├── resolvers.ts
-│   │           ├── AuthorizedUserMutation/
-│   │           ├── AuthorizedUserQuery/
-│   │           └── TodoOps/
-```
+> **Project Structure:** See `AGENTS.md` → **File Structure** section for the complete backend directory tree. Key points for federation:
+>
+> - Each module lives in `backend/src/modules/{name}/` with its own `schema.graphql`, `models.ts`, `axolotl.ts`, and `resolvers/`
+> - The root `backend/src/resolvers.ts` merges all modules via `mergeAxolotls()`
+> - `backend/axolotl.json` lists all federated modules
 
 ---
 
@@ -106,7 +61,28 @@ project/
 
 Each module defines its own schema:
 
-**src/users/schema.graphql:**
+**src/modules/auth/schema.graphql:**
+
+```graphql
+type Query {
+  user: AuthorizedUserQuery @resolver
+}
+
+type Mutation {
+  user: AuthorizedUserMutation @resolver
+}
+
+directive @resolver on FIELD_DEFINITION
+
+schema {
+  query: Query
+  mutation: Mutation
+}
+```
+
+> **Note:** The auth module owns the `Query.user` and `Mutation.user` gateway resolvers. These perform authentication and return the user object that becomes `source` for all child resolvers. Domain modules (e.g., users) should NOT duplicate these gateway fields.
+
+**src/modules/users/schema.graphql:**
 
 ```graphql
 type User {
@@ -117,10 +93,6 @@ type User {
 type Mutation {
   login(username: String!, password: String!): String! @resolver
   register(username: String!, password: String!): String! @resolver
-}
-
-type Query {
-  user: AuthorizedUserQuery! @resolver
 }
 
 type AuthorizedUserQuery {
@@ -135,38 +107,32 @@ schema {
 }
 ```
 
-**src/todos/schema.graphql:**
+**src/modules/posts/schema.graphql (example domain):**
 
 ```graphql
-type Todo {
+type Post {
   _id: String!
+  title: String!
   content: String!
-  done: Boolean
+  published: Boolean!
 }
 
 type AuthorizedUserMutation {
-  createTodo(content: String!): String! @resolver
-  todoOps(_id: String!): TodoOps! @resolver
+  createPost(title: String!, content: String!): String! @resolver
+  postOps(_id: String!): PostOps! @resolver
 }
 
 type AuthorizedUserQuery {
-  todos: [Todo!] @resolver
-  todo(_id: String!): Todo! @resolver
+  posts: [Post!] @resolver
+  post(_id: String!): Post! @resolver
 }
 
-type TodoOps {
-  markDone: Boolean @resolver
+type PostOps {
+  publish: Boolean @resolver
+  delete: Boolean @resolver
 }
 
 directive @resolver on FIELD_DEFINITION
-
-type Query {
-  user: AuthorizedUserQuery @resolver
-}
-
-type Mutation {
-  user: AuthorizedUserMutation @resolver
-}
 
 schema {
   query: Query
@@ -180,20 +146,20 @@ schema {
 
 Each module needs its own `axolotl.ts` file to create type-safe resolver helpers:
 
-**src/users/axolotl.ts:**
+**src/modules/users/axolotl.ts:**
 
 ```typescript
-import { Models } from '@/src/users/models.js';
+import { Models } from '@/src/modules/users/models.js';
 import { Axolotl } from '@aexol/axolotl-core';
 import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
 
 export const { createResolvers, createDirectives, applyMiddleware } = Axolotl(graphqlYogaAdapter)<Models, unknown>();
 ```
 
-**src/todos/axolotl.ts:**
+**src/modules/posts/axolotl.ts:**
 
 ```typescript
-import { Models } from '@/src/todos/models.js';
+import { Models } from '@/src/modules/posts/models.js';
 import { Axolotl } from '@aexol/axolotl-core';
 import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
 
@@ -215,13 +181,13 @@ When you run `cd backend && axolotl build`, schemas are merged using these rules
 **Example - Types get merged:**
 
 ```graphql
-# users/schema.graphql
+# modules/users/schema.graphql
 type User {
   _id: String!
   username: String!
 }
 
-# todos/schema.graphql
+# modules/posts/schema.graphql
 type User {
   _id: String!
 }
@@ -236,14 +202,14 @@ type User {
 **2. Root types (Query, Mutation, Subscription) are automatically merged:**
 
 ```graphql
-# users/schema.graphql
-type Query {
-  user: AuthorizedUserQuery! @resolver
-}
-
-# todos/schema.graphql
+# modules/auth/schema.graphql
 type Query {
   user: AuthorizedUserQuery @resolver
+}
+
+# modules/posts/schema.graphql
+type Query {
+  # No Query.user here — owned by auth module
 }
 
 # Merged result - fields combined
@@ -262,16 +228,16 @@ The `mergeAxolotls` function intelligently merges resolvers:
 
 ```typescript
 // users: { Mutation: { login: fn1 } }
-// todos: { Mutation: { createTodo: fn2 } }
-// Result: { Mutation: { login: fn1, createTodo: fn2 } }
+// posts: { Mutation: { createPost: fn2 } }
+// Result: { Mutation: { login: fn1, createPost: fn2 } }
 ```
 
 **2. Overlapping resolvers are executed in parallel and results are deep-merged:**
 
 ```typescript
 // users: { Query: { user: () => ({ username: "john" }) } }
-// todos: { Query: { user: () => ({ todos: [...] }) } }
-// Result: { Query: { user: () => ({ username: "john", todos: [...] }) } }
+// posts: { Query: { user: () => ({ posts: [...] }) } }
+// Result: { Query: { user: () => ({ username: "john", posts: [...] }) } }
 ```
 
 This allows multiple modules to contribute different fields to the same resolver!
@@ -286,21 +252,19 @@ This allows multiple modules to contribute different fields to the same resolver
 **Module resolvers example:**
 
 ```typescript
-// src/users/resolvers/resolvers.ts
+// src/modules/users/resolvers/resolvers.ts
 import { createResolvers } from '../axolotl.js';
 import Mutation from './Mutation/resolvers.js';
-import Query from './Query/resolvers.js';
 import AuthorizedUserQuery from './AuthorizedUserQuery/resolvers.js';
 
 export default createResolvers({
   ...Mutation,
-  ...Query,
   ...AuthorizedUserQuery,
 });
 ```
 
 ```typescript
-// src/users/resolvers/Mutation/login.ts
+// src/modules/users/resolvers/Mutation/login.ts
 import { createResolvers } from '../../axolotl.js';
 import { db } from '../../db.js';
 
@@ -319,10 +283,13 @@ export default createResolvers({
 ```typescript
 // src/resolvers.ts
 import { mergeAxolotls } from '@aexol/axolotl-core';
-import todosResolvers from '@/src/todos/resolvers/resolvers.js';
-import usersResolvers from '@/src/users/resolvers/resolvers.js';
+import authResolvers from '@/src/modules/auth/resolvers/resolvers.js';
+import usersResolvers from '@/src/modules/users/resolvers/resolvers.js';
 
-export default mergeAxolotls(todosResolvers, usersResolvers);
+// Add more modules as your application grows:
+// import postsResolvers from '@/src/modules/posts/resolvers/resolvers.js';
+
+export default mergeAxolotls(authResolvers, usersResolvers);
 ```
 
 ---
@@ -354,7 +321,7 @@ export default mergeAxolotls(todosResolvers, usersResolvers);
 When modules need to reference the same types, define them in each schema:
 
 ```graphql
-# src/users/schema.graphql
+# src/modules/users/schema.graphql
 type User {
   _id: String!
   username: String!
@@ -362,14 +329,16 @@ type User {
 ```
 
 ```graphql
-# src/todos/schema.graphql
+# src/modules/posts/schema.graphql
 type User {
   _id: String! # Shared fields must match exactly
 }
 
-type Todo {
+type Post {
   _id: String!
+  title: String!
   content: String!
+  published: Boolean!
   owner: User! # Reference the shared type
 }
 ```
@@ -378,42 +347,39 @@ The schemas will be merged, and the `User` type will contain all fields from bot
 
 #### Cross-Module Dependencies
 
-Modules can extend each other's types by defining resolvers for shared types:
+Modules can reference shared types and access data from the auth gateway via `source`:
 
 ```typescript
-// src/todos/resolvers/Query/user.ts
-import { createResolvers } from '@/src/axolotl.js';
-import { db as usersDb } from '@/src/users/db.js';
+// src/modules/posts/resolvers/AuthorizedUserQuery/posts.ts
+import { createResolvers } from '../../axolotl.js';
+import { prisma } from '@/src/db.js';
 
-// Todos module contributes to the Query.user resolver
+// Posts module adds the `posts` field to AuthorizedUserQuery
+// The auth gateway already validated the token and returned the user as `source`
 export default createResolvers({
-  Query: {
-    user: async (input) => {
-      // Gateway auth — validates token, returns user.
-      // See axolotl-resolvers skill for full pattern.
-      const token = input[2].request.headers.get('token');
-      const user = usersDb.users.find((u) => u.token === token);
-      if (!user) throw new Error('Not authorized');
-      return user;
+  AuthorizedUserQuery: {
+    posts: async ([source]) => {
+      const user = source as { _id: string };
+      return await prisma.post.findMany({ where: { authorId: user._id } });
     },
   },
 });
 ```
 
-> **Note:** The complete gateway authentication pattern (schema design, why it works, implementation) is documented in the **axolotl-resolvers** skill.
+> **CRITICAL:** Domain modules define resolvers for `AuthorizedUserQuery` / `AuthorizedUserMutation` fields. They **NEVER** define `Query.user` or `Mutation.user` — those gateway resolvers are owned exclusively by the auth module. See the `axolotl-resolvers` skill for the full gateway pattern.
 
-When multiple modules implement the same resolver, their results are deep-merged automatically.
+When multiple modules add fields to the same type (e.g., both users and posts modules add fields to `AuthorizedUserQuery`), Axolotl's schema merger combines all fields at build time, and `mergeAxolotls` handles resolver merging at runtime.
 
 #### Custom Scalars in Federation
 
 Define scalars in each module that uses them:
 
 ```graphql
-# src/todos/schema.graphql
+# src/modules/posts/schema.graphql
 scalar Secret
 
 type AuthorizedUserMutation {
-  createTodo(content: String!, secret: Secret): String! @resolver
+  createPost(title: String!, content: String!, secret: Secret): String! @resolver
 }
 ```
 
@@ -435,7 +401,7 @@ export const { adapter, createResolvers } = Axolotl(graphqlYogaAdapter)<
 Subscriptions work in federated setups, but each subscription field should only be defined in **one module**:
 
 ```typescript
-// src/users/resolvers/Subscription/countdown.ts
+// src/modules/users/resolvers/Subscription/countdown.ts
 import { createResolvers, createSubscriptionHandler } from '@aexol/axolotl-core';
 
 export default createResolvers({
@@ -532,8 +498,8 @@ type UserProfile {
 **Module-specific types - prefix with domain:**
 
 ```graphql
-type TodoItem { ... }
-type TodoFilter { ... }
+type PostItem { ... }
+type PostFilter { ... }
 ```
 
 **Performance Considerations:**
@@ -570,7 +536,7 @@ Fix by making them identical in both files.
 
 #### Type Generation Failures
 
-**Error:** `Cannot find module '@/src/users/models.js'`
+**Error:** `Cannot find module '@/src/modules/users/models.js'`
 
 **Solution:**
 
@@ -607,7 +573,7 @@ export default createResolvers({
 });
 
 // Ensure it's merged
-import usersResolvers from './users/resolvers/resolvers.js';
+import usersResolvers from './modules/users/resolvers/resolvers.js';
 export default mergeAxolotls(usersResolvers, ...otherResolvers);
 ```
 
@@ -631,6 +597,26 @@ export default mergeAxolotls(usersResolvers, ...otherResolvers);
 | **Complexity**         | Simple config            | Gateway + federation service |
 | **Use Case**           | Monorepo/single app      | Distributed microservices    |
 | **Independence**       | Shared codebase          | Fully independent services   |
+
+---
+
+### Auth Gateway Module Pattern
+
+The **auth module** (`src/modules/auth/`) is a dedicated federation module that owns the protected resolver gateway pattern. It exists to centralize authentication logic and prevent gateway resolver duplication across domain modules.
+
+**Why a separate auth module?**
+
+- **Single source of truth** for `Query.user` and `Mutation.user` gateway resolvers
+- **Eliminates duplication** — without a separate auth module, multiple domain modules might define `Query.user`, causing merge conflicts or redundant auth checks
+- **Clean separation** — domain modules (e.g., users, posts) focus purely on business logic; auth handles the gateway
+- **Deep merge works cleanly** — auth returns the authenticated user object, which becomes `source` for child resolvers in all domain modules
+
+**How it works:**
+
+1. Auth module defines `Query.user` / `Mutation.user` in its schema with `@resolver`
+2. Auth resolvers validate the token and return the authenticated user
+3. Domain modules define fields on `AuthorizedUserQuery` / `AuthorizedUserMutation` (but NOT the gateway fields themselves)
+4. `mergeAxolotls` combines everything — auth provides the gateway, domains provide the nested resolvers
 
 ---
 
@@ -665,24 +651,25 @@ mutation Login {
 
 # Set the token in headers: { "token": "your-token-here" }
 
-# Create a todo
-mutation CreateTodo {
+# Create a post
+mutation CreatePost {
   user {
-    createTodo(content: "Learn Axolotl Federation")
+    createPost(title: "Learn Axolotl Federation", content: "A guide to federation patterns")
   }
 }
 
-# Query merged data (comes from both users and todos modules!)
+# Query merged data (comes from both users and posts modules!)
 query MyData {
   user {
     me {
       _id
       username
     }
-    todos {
+    posts {
       _id
+      title
       content
-      done
+      published
     }
   }
 }

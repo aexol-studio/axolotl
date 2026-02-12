@@ -1,3 +1,7 @@
+type Query{
+	user: AuthorizedUserQuery @resolver
+}
+
 type Todo{
 	_id: String!
 	content: String!
@@ -20,12 +24,29 @@ type TodoUpdate{
 	todo: Todo!
 }
 
-type User{
-	_id: String!
-	username: String!
+type Mutation{
+	user: AuthorizedUserMutation @resolver
+	login(
+		username: String!
+		password: String!
+	): String! @resolver
+	register(
+		username: String!
+		password: String!
+	): String! @resolver
+}
+
+type AuthorizedUserQuery{
+	_: String
+	todos: [Todo!] @resolver
+	todo(
+		_id: String!
+	): Todo! @resolver
+	me: User! @resolver
 }
 
 type AuthorizedUserMutation{
+	_: String
 	createTodo(
 		content: String!
 		secret: Secret
@@ -38,19 +59,7 @@ type AuthorizedUserMutation{
 	): Boolean @resolver
 }
 
-type AuthorizedUserQuery{
-	todos: [Todo!] @resolver
-	todo(
-		_id: String!
-	): Todo! @resolver
-	me: User! @resolver
-}
-
 directive @resolver on FIELD_DEFINITION
-
-type Query{
-	user: AuthorizedUserQuery @resolver
-}
 
 type Subscription{
 	todoUpdates(
@@ -65,16 +74,9 @@ type Subscription{
 	): AIChatChunk! @resolver
 }
 
-type Mutation{
-	user: AuthorizedUserMutation @resolver
-	login(
-		username: String!
-		password: String!
-	): String! @resolver
-	register(
-		username: String!
-		password: String!
-	): String! @resolver
+type User{
+	_id: String!
+	username: String!
 }
 
 input AIChatMessage{

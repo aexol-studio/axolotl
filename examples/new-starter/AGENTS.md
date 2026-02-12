@@ -25,19 +25,36 @@ This is a fullstack project with an **Axolotl GraphQL backend** and a **React fr
 project/
 ├── backend/
 │   ├── axolotl.json      # Configuration file
-│   ├── schema.graphql    # GraphQL schema
+│   ├── schema.graphql    # Auto-generated merged schema
 │   ├── nodemon.json      # Dev watcher config
 │   ├── prisma.config.ts  # Prisma configuration
 │   ├── src/
 │   │   ├── axolotl.ts    # Framework initialization
 │   │   ├── models.ts     # Auto-generated types (DO NOT EDIT)
-│   │   ├── resolvers.ts  # Resolver implementations
-│   │   └── index.ts      # Server entry point
+│   │   ├── resolvers.ts  # mergeAxolotls(auth, users)
+│   │   ├── index.ts      # Server entry point
+│   │   ├── db.ts         # Shared Prisma client
+│   │   ├── lib/          # Shared utilities
+│   │   │   ├── context.ts
+│   │   │   └── cookies.ts
+│   │   └── modules/
+│   │       ├── auth/      # Auth gateway module
+│   │       │   ├── schema.graphql
+│   │       │   ├── models.ts
+│   │       │   ├── axolotl.ts
+│   │       │   └── resolvers/
+│   │       └── users/     # Users domain module
+│   │           ├── schema.graphql
+│   │           ├── models.ts
+│   │           ├── axolotl.ts
+│   │           └── resolvers/
 ├── frontend/
 │   ├── vite.config.ts    # Vite configuration
 │   ├── src/
 │   │   └── ...           # React app source
 ```
+
+> **Note:** The `auth` and `users` modules are **core modules** that provide authentication and user management. The `todos` module is an **example module** included for demonstration — it can be safely removed when building your own application.
 
 ### Critical Rules
 
@@ -55,6 +72,7 @@ project/
 10. **Use mergeAxolotls()** to combine multiple resolver sets
 11. **Return empty object `{}`** for nested resolver enablement
 12. **Context typing** requires `graphqlYogaWithContextAdapter<T>(contextFunction)`
+13. **Auth gateway module** (`src/modules/auth/`) owns the protected resolver gateway pattern (`Query.user`, `Mutation.user`) — domain modules (e.g., users) should NOT duplicate these gateway resolvers
 
 ### Understanding axolotl.json
 
@@ -66,8 +84,12 @@ The `axolotl.json` configuration file is located at `backend/axolotl.json` and d
   "models": "src/models.ts",
   "federation": [
     {
-      "schema": "src/todos/schema.graphql",
-      "models": "src/todos/models.ts"
+      "schema": "src/modules/auth/schema.graphql",
+      "models": "src/modules/auth/models.ts"
+    },
+    {
+      "schema": "src/modules/users/schema.graphql",
+      "models": "src/modules/users/models.ts"
     }
   ],
   "zeus": [
@@ -83,6 +105,8 @@ The `axolotl.json` configuration file is located at `backend/axolotl.json` and d
 - Read `backend/axolotl.json` first to understand project structure
 - NEVER edit `backend/axolotl.json` unless explicitly asked
 - Use paths from config to locate schema and models
+
+> Additional modules (e.g., the included `todos` example) are added to the `federation` array following the same pattern.
 
 ### Backend Workflow Checklist
 
@@ -147,40 +171,90 @@ Axolotl(adapter)<Models<{ MyScalar: string }>, Scalars>();
 ```
 frontend/
 ├── src/
-│   ├── api/                 # GraphQL client layer
-│   │   ├── client.ts        # Chain client creation
-│   │   ├── query.ts         # Query helper
-│   │   ├── mutation.ts      # Mutation helper
-│   │   ├── subscription.ts  # Subscription helper
-│   │   └── index.ts         # Re-exports
-│   ├── components/          # React components
-│   │   ├── AuthForm.tsx
-│   │   ├── Header.tsx
-│   │   ├── TodoForm.tsx
-│   │   ├── TodoItem.tsx
-│   │   ├── TodoList.tsx
+│   ├── api/                     # GraphQL client layer
+│   │   ├── client.ts            # Chain client creation
+│   │   ├── query.ts             # Query helper
+│   │   ├── mutation.ts          # Mutation helper
+│   │   ├── subscription.ts      # Subscription helper
+│   │   ├── selectors.ts         # Reusable query shape selectors
+│   │   ├── errors.ts            # GraphQL error extraction
+│   │   └── index.ts             # Re-exports
+│   ├── components/              # React components (atomic design)
+│   │   ├── atoms/               # Smallest reusable units
+│   │   │   ├── CodeSnippet.tsx
+│   │   │   ├── ErrorMessage.tsx
+│   │   │   ├── SectionCard.tsx
+│   │   │   ├── ThemeToggle.tsx
+│   │   │   └── index.ts
+│   │   ├── molecules/           # Composed atom groups
+│   │   │   └── index.ts
+│   │   ├── organisms/           # Complex UI sections
+│   │   │   └── index.ts
+│   │   ├── global/              # App-wide components
+│   │   │   ├── ThemeProvider.tsx
+│   │   │   ├── TopNav.tsx
+│   │   │   └── index.ts
+│   │   ├── ui/                  # shadcn/ui primitives (DO NOT EDIT)
+│   │   │   ├── Button.tsx, Card.tsx, Dialog.tsx, Form.tsx, ...
+│   │   │   └── index.ts
 │   │   └── index.ts
-│   ├── hooks/               # Custom React hooks
-│   │   ├── useAuth.ts       # Authentication logic
-│   │   ├── useTodos.ts      # Todo CRUD operations
-│   │   ├── useTodoSubscription.ts
+│   ├── contexts/                # React context providers
+│   │   └── AuthContext.tsx      # Auth context & provider
+│   ├── hooks/                   # Shared data-fetching hooks
+│   │   ├── useAuth.ts           # Authentication logic
+│   │   ├── useIsMobile.ts       # Responsive breakpoint hook
 │   │   └── index.ts
-│   ├── routes/              # Page components
-│   │   ├── Dashboard.tsx
-│   │   └── Landing.tsx
-│   ├── stores/              # Zustand state stores
-│   │   ├── authStore.ts     # Auth state (token, user)
+│   ├── lib/                     # Shared utilities
+│   │   ├── queryClient.ts       # React Query client config
+│   │   └── utils.ts             # cn() and general helpers
+│   ├── routes/                  # Route pages & layouts  # See frontend-navigation skill for full route details
+│   │   ├── index.tsx            # Route definitions
+│   │   ├── guest/               # Unauthenticated routes
+│   │   │   ├── Layout.tsx
+│   │   │   ├── landing/
+│   │   │   │   ├── Landing.page.tsx
+│   │   │   │   ├── Landing.data.ts
+│   │   │   │   └── index.ts
+│   │   │   ├── login/
+│   │   │   │   ├── Login.page.tsx
+│   │   │   │   └── index.ts
+│   │   │   └── index.ts
+│   │   ├── protected/           # Authenticated routes
+│   │   │   ├── Layout.tsx
+│   │   │   ├── dashboard/
+│   │   │   │   ├── Dashboard.page.tsx
+│   │   │   │   └── index.ts
+│   │   │   └── index.ts
+│   │   ├── public/              # Always-accessible routes
+│   │   │   └── examples/
+│   │   │       ├── Examples.page.tsx
+│   │   │       ├── Examples.schema.ts
+│   │   │       ├── Examples.data.ts
+│   │   │       ├── components/  # Route-scoped components
+│   │   │       │   ├── DataDisplaySection.tsx
+│   │   │       │   ├── graphql-showcase-tab/
+│   │   │       │   ├── forms-showcase-tab/
+│   │   │       │   └── index.ts
+│   │   │       └── index.ts
+│   │   └── not-found/
+│   │       ├── NotFound.page.tsx
+│   │       └── index.ts
+│   ├── stores/                  # Zustand state stores
+│   │   ├── authStore.ts         # Auth state (token, user)
 │   │   └── index.ts
-│   ├── zeus/                # Auto-generated (DO NOT EDIT)
+│   ├── zeus/                    # Auto-generated (DO NOT EDIT)
 │   │   ├── const.ts
 │   │   └── index.ts
-│   ├── types.ts             # Shared TypeScript types
-│   ├── App.tsx              # Root component
-│   ├── entry-client.tsx     # Client hydration entry
-│   └── entry-server.tsx     # SSR render entry
+│   ├── App.tsx                  # Root component
+│   ├── global.d.ts              # Global type declarations
+│   ├── index.css                # Tailwind v4 theme config
+│   ├── entry-client.tsx         # Client hydration entry
+│   └── entry-server.tsx         # SSR render entry
 ├── index.html
 └── tsconfig.json
 ```
+
+> **Note:** The `todos` backend module, todo-related hooks, and the `/examples` frontend route are **included for demonstration** and can be safely removed when building your own application.
 
 ### UI & Theming
 
@@ -203,8 +277,8 @@ frontend/
 8. **NEVER manually duplicate backend types** - derive them from selectors
 9. **Use `$` function** for GraphQL variables when values come from user input or props
 10. **ALWAYS use semantic color tokens** (`bg-primary`, `text-muted-foreground`, `border-border`, etc.) — avoid hardcoded Tailwind colors (`bg-blue-500`, `text-gray-400`) as they won't respond to theme changes
-11. **PascalCase for React component files** — `AuthForm.tsx`, `ThemeProvider.tsx`, `TodoList.tsx`. Hooks use `use` prefix with camelCase: `useAuth.ts`, `useTodos.ts`
-12. **Route pages use `.page.tsx` suffix** — each route gets its own folder with the page file inside: `routes/landing/Landing.page.tsx`, `routes/dashboard/Dashboard.page.tsx`. Sub-page content without its own route stays as regular `.tsx`
+11. **PascalCase for React component files** — `AuthForm.tsx`, `ThemeProvider.tsx`, `UserList.tsx`. Hooks use `use` prefix with camelCase: `useAuth.ts`, `useUsers.ts`
+12. **Route pages use `.page.tsx` suffix** — each route gets its own folder inside a route group: `routes/guest/landing/Landing.page.tsx`, `routes/protected/dashboard/Dashboard.page.tsx`. Route groups (`guest/`, `protected/`, `public/`) provide shared layouts. Sub-page content without its own route stays as regular `.tsx`
 13. **ALWAYS use arrow functions** — `const MyComponent = () => {}` instead of `function MyComponent() {}`. Applies to components, hooks, handlers, helpers — everything. Only exception: generator functions (`function*`)
 
 ### Component Architecture
@@ -226,8 +300,8 @@ This project uses **Sonner** (`sonner`) for toast notifications. Import `toast` 
 import { toast } from 'sonner';
 
 // Usage
-toast.success('Todo created!');
-toast.error('Failed to delete todo');
+toast.success('Changes saved!');
+toast.error('Failed to delete item');
 toast.info('Session expired, please log in again');
 toast('Default notification');
 ```
@@ -270,14 +344,14 @@ toast('Default notification');
 
 ### Frontend Quick Reference
 
-| Task                   | Code                                                    |
-| ---------------------- | ------------------------------------------------------- |
-| Create query           | `query()({ user: { todos: { _id: true } } })`           |
-| Create mutation        | `mutation()({ login: [{ username, password }, true] })` |
-| Access auth state      | `useAuthStore((s) => s.token)`                          |
-| Show toast (sonner)    | `toast.success('Done!')`                                |
-| Mutation with args     | `mutation()({ field: [{ arg: value }, selector] })`     |
-| Return scalar directly | `field: [{ args }, true]`                               |
+| Task                   | Code                                                       |
+| ---------------------- | ---------------------------------------------------------- |
+| Create query           | `query()({ user: { me: { _id: true, username: true } } })` |
+| Create mutation        | `mutation()({ login: [{ username, password }, true] })`    |
+| Access auth state      | `useAuthStore((s) => s.token)`                             |
+| Show toast (sonner)    | `toast.success('Done!')`                                   |
+| Mutation with args     | `mutation()({ field: [{ arg: value }, selector] })`        |
+| Return scalar directly | `field: [{ args }, true]`                                  |
 
 ---
 

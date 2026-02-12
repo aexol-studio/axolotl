@@ -4,13 +4,8 @@ type User {
 }
 
 type Mutation {
-  user: AuthorizedUserMutation! @resolver
   login(username: String!, password: String!): String! @resolver
   register(username: String!, password: String!): String! @resolver
-}
-
-type Query {
-  user: AuthorizedUserQuery! @resolver
 }
 
 type AuthorizedUserMutation {
@@ -34,7 +29,6 @@ type AIChatChunk {
 directive @resolver on FIELD_DEFINITION
 
 schema {
-  query: Query
   mutation: Mutation
   subscription: Subscription
 }

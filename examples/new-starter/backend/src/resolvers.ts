@@ -1,5 +1,6 @@
 import { mergeAxolotls } from '@aexol/axolotl-core';
-import todosResolvers from '@/src/todos/resolvers/resolvers.js';
-import usersResolvers from '@/src/users/resolvers/resolvers.js';
+import authResolvers from '@/src/modules/auth/resolvers/resolvers.js';
+import todosResolvers from '@/src/modules/todos/resolvers/resolvers.js';
+import usersResolvers from '@/src/modules/users/resolvers/resolvers.js';
 
-export default mergeAxolotls(todosResolvers, usersResolvers);
+export default mergeAxolotls(authResolvers, todosResolvers, usersResolvers);

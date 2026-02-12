@@ -71,14 +71,14 @@ GraphQL subscriptions automatically wrap yielded values. You should yield the **
 ```typescript
 // ✅ CORRECT - yield the value directly
 createSubscriptionHandler(async function* () {
-  yield { type: 'CREATED', todo: { _id: '123', content: 'Test' } };
-  // GraphQL returns: { "data": { "todoUpdates": { "type": "CREATED", "todo": {...} } } }
+  yield { type: 'CREATED', post: { _id: '123', title: 'Test' } };
+  // GraphQL returns: { "data": { "postUpdates": { "type": "CREATED", "post": {...} } } }
 });
 
 // ❌ WRONG - do NOT wrap in field name
 createSubscriptionHandler(async function* () {
-  yield { todoUpdates: { type: 'CREATED', todo: {...} } };
-  // This would result in: { "data": { "todoUpdates": { "todoUpdates": {...} } } }
+  yield { postUpdates: { type: 'CREATED', post: {...} } };
+  // This would result in: { "data": { "postUpdates": { "postUpdates": {...} } } }
 });
 ```
 
@@ -169,18 +169,18 @@ In federated setups, each subscription field should only be defined in **one mod
 
 ```typescript
 // ✅ CORRECT: Define in one module only
-// users/schema.graphql
+// modules/users/schema.graphql
 type Subscription {
   userStatusChanged(userId: String!): UserStatus @resolver
 }
 
 // ❌ WRONG: Multiple modules defining the same subscription
-// users/schema.graphql
+// modules/users/schema.graphql
 type Subscription {
   statusChanged: Status @resolver
 }
 
-// todos/schema.graphql
+// modules/posts/schema.graphql
 type Subscription {
   statusChanged: Status @resolver  # Conflict!
 }

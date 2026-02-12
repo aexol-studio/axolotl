@@ -1,0 +1,22 @@
+type Query {
+  user: AuthorizedUserQuery @resolver
+}
+
+type Mutation {
+  user: AuthorizedUserMutation @resolver
+}
+
+type AuthorizedUserQuery {
+  _: String
+}
+
+type AuthorizedUserMutation {
+  _: String
+}
+
+directive @resolver on FIELD_DEFINITION
+
+schema {
+  query: Query
+  mutation: Mutation
+}

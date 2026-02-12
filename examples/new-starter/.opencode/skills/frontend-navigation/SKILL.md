@@ -54,14 +54,14 @@ export const AppRoutes = () => (
 
 ### Route Map
 
-| Path              | Component        | Auth Required                        | Layout        | Purpose         |
-| ----------------- | ---------------- | ------------------------------------ | ------------- | --------------- |
-| `/`               | `Landing`        | No (redirects to `/app` if authed)   | `GuestLayout` | Login/Register  |
-| `/examples`       | `Examples`       | No                                   | None          | Public examples |
-| `/app`            | `Dashboard`      | Yes (redirects to `/` if not authed) | None          | Main todo app   |
-| `/admin`          | `AdminDashboard` | Yes (via ProtectedLayout)            | `AdminLayout` | Admin overview  |
-| `/admin/users`    | `AdminUsers`     | Yes (via ProtectedLayout)            | `AdminLayout` | User management |
-| `/admin/settings` | `AdminSettings`  | Yes (via ProtectedLayout)            | `AdminLayout` | App settings    |
+| Path              | Component        | Auth Required                        | Layout        | Purpose            |
+| ----------------- | ---------------- | ------------------------------------ | ------------- | ------------------ |
+| `/`               | `Landing`        | No (redirects to `/app` if authed)   | `GuestLayout` | Login/Register     |
+| `/examples`       | `Examples`       | No                                   | None          | Public examples    |
+| `/app`            | `Dashboard`      | Yes (redirects to `/` if not authed) | None          | Main app dashboard |
+| `/admin`          | `AdminDashboard` | Yes (via ProtectedLayout)            | `AdminLayout` | Admin overview     |
+| `/admin/users`    | `AdminUsers`     | Yes (via ProtectedLayout)            | `AdminLayout` | User management    |
+| `/admin/settings` | `AdminSettings`  | Yes (via ProtectedLayout)            | `AdminLayout` | App settings       |
 
 ---
 
@@ -288,6 +288,8 @@ frontend/src/
             ├── users/
             └── settings/
 ```
+
+> See **frontend-components** skill for atomic design structure, file splitting rules, and route-scoped component conventions.
 
 ---
 

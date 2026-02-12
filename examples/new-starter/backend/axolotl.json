@@ -3,12 +3,16 @@
   "models": "src/models.ts",
   "federation": [
     {
-      "schema": "src/todos/schema.graphql",
-      "models": "src/todos/models.ts"
+      "schema": "src/modules/auth/schema.graphql",
+      "models": "src/modules/auth/models.ts"
     },
     {
-      "schema": "src/users/schema.graphql",
-      "models": "src/users/models.ts"
+      "schema": "src/modules/todos/schema.graphql",
+      "models": "src/modules/todos/models.ts"
+    },
+    {
+      "schema": "src/modules/users/schema.graphql",
+      "models": "src/modules/users/models.ts"
     }
   ],
   "zeus": [

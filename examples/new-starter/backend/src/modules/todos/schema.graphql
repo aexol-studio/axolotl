@@ -4,10 +4,6 @@ type Todo {
   done: Boolean
 }
 
-type User {
-  _id: String!
-}
-
 type TodoOps {
   markDone: Boolean @resolver
 }
@@ -26,10 +22,6 @@ scalar Secret
 
 directive @resolver on FIELD_DEFINITION
 
-type Query {
-  user: AuthorizedUserQuery @resolver
-}
-
 enum TodoUpdateType {
   CREATED
   UPDATED
@@ -45,11 +37,5 @@ type Subscription {
 }
 
 schema {
-  query: Query
-  mutation: Mutation
   subscription: Subscription
-}
-
-type Mutation {
-  user: AuthorizedUserMutation @resolver
 }

@@ -1,6 +1,6 @@
 # new-starter (example)
 
-Federated GraphQL Yoga example built with Axolotl. Demonstrates user authentication, todo CRUD operations with PostgreSQL/Prisma 7, and a React frontend with Tailwind CSS v4 using the Zeus GraphQL client.
+Federated GraphQL Yoga example built with Axolotl. Demonstrates user authentication with PostgreSQL/Prisma 7, and a React frontend with Tailwind CSS v4 using the Zeus GraphQL client.
 
 ## Getting started
 
@@ -67,9 +67,12 @@ In development, Vite runs as Express middleware for HMR. In production, Express 
 ## Features
 
 - User registration and login with JWT tokens
-- Todo CRUD operations (create, read, mark as done)
 - Type-safe GraphQL client using Zeus
 - PostgreSQL persistence with Prisma 7
+
+## Included Examples
+
+The `todos` backend module (`backend/src/modules/todos/`) and the `/examples` frontend route are included for demonstration purposes. They can be safely removed when building your own application.
 
 ## Database Setup
 
