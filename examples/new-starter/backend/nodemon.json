@@ -1,0 +1,14 @@
+{
+  "exec": "cd backend && axolotl build -m ./src/models.ts -s schema.graphql && cd .. && tspc || exit 1 && node --env-file=.env lib/index.js",
+  "ignore": [
+    ".git",
+    "node_modules/**/node_modules",
+    "backend/src/models.ts",
+    "backend/src/**/models.ts",
+    "backend/src/zeus",
+    "frontend",
+    "dist"
+  ],
+  "watch": ["backend/src", "package.json", ".env*"],
+  "ext": "ts,mts,cts,graphql,json,js"
+}

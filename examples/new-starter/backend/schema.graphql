@@ -1,0 +1,114 @@
+type Query{
+	user: AuthorizedUserQuery @resolver
+}
+
+type Todo{
+	_id: String!
+	content: String!
+	done: Boolean
+}
+
+type TodoOps{
+	markDone: Boolean @resolver
+}
+
+scalar Secret
+
+enum TodoUpdateType{
+	CREATED
+	UPDATED
+}
+
+type TodoUpdate{
+	type: TodoUpdateType!
+	todo: Todo!
+}
+
+type Mutation{
+	user: AuthorizedUserMutation @resolver
+	login(
+		email: String!
+		password: String!
+	): String! @resolver
+	register(
+		email: String!
+		password: String!
+	): String! @resolver
+}
+
+type AuthorizedUserQuery{
+	_: String
+	todos: [Todo!] @resolver
+	todo(
+		_id: String!
+	): Todo! @resolver
+	me: User! @resolver
+	sessions: [Session!]! @resolver
+}
+
+type AuthorizedUserMutation{
+	_: String
+	createTodo(
+		content: String!
+		secret: Secret
+	): String! @resolver
+	todoOps(
+		_id: String!
+	): TodoOps! @resolver
+	changePassword(
+		oldPassword: String!
+		newPassword: String!
+	): Boolean @resolver
+	revokeSession(
+		sessionId: String!
+	): Boolean @resolver
+	revokeAllSessions: Boolean @resolver
+	deleteAccount(
+		password: String!
+	): Boolean @resolver
+}
+
+directive @resolver on FIELD_DEFINITION
+
+type Subscription{
+	todoUpdates(
+		ownerId: String!
+	): TodoUpdate! @resolver
+	countdown(
+		from: Int
+	): Int @resolver
+	aiChat(
+		messages: [AIChatMessage!]!
+		system: String
+	): AIChatChunk! @resolver
+}
+
+type User{
+	_id: String!
+	email: String!
+	createdAt: String!
+}
+
+type Session{
+	_id: String!
+	userAgent: String
+	createdAt: String!
+	expiresAt: String!
+	isCurrent: Boolean!
+}
+
+input AIChatMessage{
+	role: String!
+	content: String!
+}
+
+type AIChatChunk{
+	content: String!
+	done: Boolean!
+}
+
+schema{
+	query: Query
+	mutation: Mutation
+	subscription: Subscription
+}

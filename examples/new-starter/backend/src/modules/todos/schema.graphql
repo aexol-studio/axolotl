@@ -1,0 +1,41 @@
+type Todo {
+  _id: String!
+  content: String!
+  done: Boolean
+}
+
+type TodoOps {
+  markDone: Boolean @resolver
+}
+
+type AuthorizedUserMutation {
+  createTodo(content: String!, secret: Secret): String! @resolver
+  todoOps(_id: String!): TodoOps! @resolver
+}
+
+type AuthorizedUserQuery {
+  todos: [Todo!] @resolver
+  todo(_id: String!): Todo! @resolver
+}
+
+scalar Secret
+
+directive @resolver on FIELD_DEFINITION
+
+enum TodoUpdateType {
+  CREATED
+  UPDATED
+}
+
+type TodoUpdate {
+  type: TodoUpdateType!
+  todo: Todo!
+}
+
+type Subscription {
+  todoUpdates(ownerId: String!): TodoUpdate! @resolver
+}
+
+schema {
+  subscription: Subscription
+}

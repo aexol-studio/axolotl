@@ -1,0 +1,52 @@
+type User {
+  _id: String!
+  email: String!
+  createdAt: String!
+}
+
+type Session {
+  _id: String!
+  userAgent: String
+  createdAt: String!
+  expiresAt: String!
+  isCurrent: Boolean!
+}
+
+type Mutation {
+  login(email: String!, password: String!): String! @resolver
+  register(email: String!, password: String!): String! @resolver
+}
+
+type AuthorizedUserMutation {
+  changePassword(oldPassword: String!, newPassword: String!): Boolean @resolver
+  revokeSession(sessionId: String!): Boolean @resolver
+  revokeAllSessions: Boolean @resolver
+  deleteAccount(password: String!): Boolean @resolver
+}
+
+type AuthorizedUserQuery {
+  me: User! @resolver
+  sessions: [Session!]! @resolver
+}
+
+input AIChatMessage {
+  role: String!
+  content: String!
+}
+
+type AIChatChunk {
+  content: String!
+  done: Boolean!
+}
+
+directive @resolver on FIELD_DEFINITION
+
+schema {
+  mutation: Mutation
+  subscription: Subscription
+}
+
+type Subscription {
+  countdown(from: Int): Int @resolver
+  aiChat(messages: [AIChatMessage!]!, system: String): AIChatChunk! @resolver
+}

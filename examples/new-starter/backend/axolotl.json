@@ -1,0 +1,24 @@
+{
+  "schema": "schema.graphql",
+  "models": "src/models.ts",
+  "federation": [
+    {
+      "schema": "src/modules/auth/schema.graphql",
+      "models": "src/modules/auth/models.ts"
+    },
+    {
+      "schema": "src/modules/todos/schema.graphql",
+      "models": "src/modules/todos/models.ts"
+    },
+    {
+      "schema": "src/modules/users/schema.graphql",
+      "models": "src/modules/users/models.ts"
+    }
+  ],
+  "zeus": [
+    {
+      "generationPath": "../frontend/src",
+      "esModule": true
+    }
+  ]
+}

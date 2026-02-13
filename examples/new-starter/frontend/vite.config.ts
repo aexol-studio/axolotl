@@ -1,0 +1,27 @@
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+import path from 'path';
+
+export default defineConfig(({ isSsrBuild }) => ({
+  plugins: [react(), tailwindcss()],
+  root: path.resolve(__dirname, '.'),
+  build: {
+    outDir: isSsrBuild ? path.resolve(__dirname, '../dist/server') : path.resolve(__dirname, '../dist/client'),
+    emptyOutDir: true,
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+  server: {
+    // Proxy API requests to the backend during standalone Vite dev
+    proxy: {
+      '/graphql': 'http://localhost:4102',
+    },
+    hmr: {
+      port: 24702,
+    },
+  },
+}));
