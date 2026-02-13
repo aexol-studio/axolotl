@@ -16,9 +16,10 @@ const isProduction = process.env.NODE_ENV === 'production';
 // Cached production assets
 const templateHtml = isProduction ? await fs.readFile(resolve(__dirname, '../dist/client/index.html'), 'utf-8') : '';
 
-async function startServer() {
+const startServer = async () => {
   const app = express();
   const port = parseInt(process.env.PORT || '4102', 10);
+  const host = process.env.HOST || 'localhost';
 
   // Parse cookies from request headers
   app.use((req, _res, next) => {
@@ -174,13 +175,64 @@ mutation Register{
     }
   });
 
-  app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
-    console.log(`GraphQL Playground at http://localhost:${port}/graphql`);
+  const server = app.listen(port, host, () => {
+    const displayHost = host.includes(':') ? `[${host}]` : host;
+    console.log(`Server running at http://${displayHost}:${port}`);
+    console.log(`GraphQL Playground at http://${displayHost}:${port}/graphql`);
     console.log(`AI Chat available via GraphQL subscription: aiChat`);
     console.log(`Mode: ${isProduction ? 'production' : 'development'}`);
     console.log(`SSR: enabled`);
   });
-}
+
+  let isShuttingDown = false;
+  const shutdown = async (signal: string) => {
+    if (isShuttingDown) {
+      return;
+    }
+    isShuttingDown = true;
+    console.log(`Received ${signal}. Shutting down...`);
+
+    setTimeout(() => {
+      console.error('Shutdown timed out, forcing exit.');
+      process.exit(1);
+    }, 10_000).unref();
+
+    try {
+      await new Promise<void>((resolve, reject) => {
+        server.close((err) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          resolve();
+        });
+      });
+
+      if (vite) {
+        await vite.close();
+      }
+
+      if ('dispose' in yoga && typeof yoga.dispose === 'function') {
+        await yoga.dispose();
+      }
+
+      await prisma.$disconnect();
+
+      console.log('Shutdown complete.');
+      process.exit(0);
+    } catch (err) {
+      console.error('Error during shutdown:', err);
+      process.exit(1);
+    }
+  };
+
+  process.on('SIGINT', () => {
+    void shutdown('SIGINT');
+  });
+
+  process.on('SIGTERM', () => {
+    void shutdown('SIGTERM');
+  });
+};
 
 startServer().catch(console.error);
