@@ -19,3 +19,12 @@
 #     - when: never
 # variables:
 #   DOCKER_BUILD_ARGS: ENVFILE
+# deploy docker prod:
+#   variables:
+#     ENVFILE: prod
+# deploy docker qa:
+#   variables:
+#     ENVFILE: qa
+# deploy docker dev:
+#   variables:
+#     ENVFILE: dev

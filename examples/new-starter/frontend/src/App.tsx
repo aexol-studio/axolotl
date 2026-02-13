@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/Sonner';
 import { queryClient } from './lib/queryClient';
 
 export const App = () => {
+  console.log('API URL:', import.meta.env.VITE_API_URL); // Debug log for API URL
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <QueryClientProvider client={queryClient}>
