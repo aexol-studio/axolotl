@@ -180,7 +180,7 @@ export const GraphQLShowcaseTab = () => {
           <CardDescription>Update your password using a Zeus mutation.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <CodeSnippet code={`mutation()({ user: { changePassword: [{ newPassword }, true] } })`} />
+          <CodeSnippet code={`mutation()({ user: { changePassword: [{ oldPassword, newPassword }, true] } })`} />
 
           {!isAuthenticated ? (
             <Alert>
@@ -191,6 +191,25 @@ export const GraphQLShowcaseTab = () => {
           ) : (
             <Form {...changePasswordForm}>
               <form onSubmit={changePasswordForm.handleSubmit(onChangePasswordSubmit)} className="space-y-4">
+                <FormField
+                  control={changePasswordForm.control}
+                  name="oldPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Old Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="Enter current password"
+                          autoComplete="current-password"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={changePasswordForm.control}
                   name="password"

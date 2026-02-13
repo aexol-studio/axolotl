@@ -1,13 +1,35 @@
+import { z } from 'zod';
+import { GraphQLError } from 'graphql';
 import { createResolvers } from '../../axolotl.js';
 import { prisma } from '@/src/db.js';
 import { User } from '../../models.js';
-import { hashPassword, verifyToken } from '../../../../lib/auth.js';
-import { getTokenFromCookies } from '../../../../lib/cookies.js';
+import { hashPassword, verifyPassword, verifyToken } from '@/src/lib/auth.js';
+import { getTokenFromCookies } from '@/src/lib/cookies.js';
+import { parseInput, passwordSchema } from '@/src/lib/validation.js';
+
+const changePasswordSchema = z.object({
+  oldPassword: z.string().min(1, 'Current password is required'),
+  newPassword: passwordSchema,
+});
 
 export default createResolvers({
   AuthorizedUserMutation: {
-    changePassword: async ([source, , context], { newPassword }) => {
+    changePassword: async ([source, , context], { oldPassword: rawOldPassword, newPassword: rawNewPassword }) => {
+      const { oldPassword, newPassword } = parseInput(changePasswordSchema, {
+        oldPassword: rawOldPassword,
+        newPassword: rawNewPassword,
+      });
+
       const src = source as User;
+
+      // Fetch current user to verify old password
+      const user = await prisma.user.findUniqueOrThrow({ where: { id: src._id } });
+
+      // Verify old password matches before allowing change
+      const isValid = await verifyPassword(oldPassword, user.password);
+      if (!isValid) {
+        throw new GraphQLError('Current password is incorrect', { extensions: { code: 'INVALID_CREDENTIALS' } });
+      }
 
       // Hash the new password with bcrypt before storage
       const hashedPassword = await hashPassword(newPassword);

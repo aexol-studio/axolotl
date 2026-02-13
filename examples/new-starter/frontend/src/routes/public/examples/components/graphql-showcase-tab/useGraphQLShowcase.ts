@@ -15,13 +15,13 @@ export const useGraphQLShowcase = () => {
   // --- Change Password ---
   const changePasswordForm = useForm<ChangePasswordValues>({
     resolver: zodResolver(changePasswordSchema),
-    defaultValues: { password: '' },
+    defaultValues: { oldPassword: '', password: '' },
   });
 
   const onChangePasswordSubmit = async (values: ChangePasswordValues) => {
     try {
       await mutation()({
-        user: { changePassword: [{ newPassword: values.password }, true] },
+        user: { changePassword: [{ oldPassword: values.oldPassword, newPassword: values.password }, true] },
       });
       toast.success('Password changed successfully!');
       changePasswordForm.reset();

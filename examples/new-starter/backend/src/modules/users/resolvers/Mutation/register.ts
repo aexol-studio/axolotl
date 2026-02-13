@@ -1,19 +1,20 @@
 import { GraphQLError } from 'graphql';
+import { z } from 'zod';
 import { createResolvers } from '../../axolotl.js';
 import { prisma } from '@/src/db.js';
 import { serializeSetCookie } from '@/src/lib/cookies.js';
 import { hashPassword, signToken, generateSessionToken, getSessionExpiryDate } from '@/src/lib/auth.js';
+import { parseInput, emailSchema, passwordSchema } from '@/src/lib/validation.js';
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const registerSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+});
 
 export default createResolvers({
   Mutation: {
-    register: async (input, { password, email: rawEmail }) => {
-      const email = rawEmail.toLowerCase().trim();
-
-      if (!EMAIL_REGEX.test(email)) {
-        throw new GraphQLError('Invalid email format', { extensions: { code: 'INVALID_INPUT' } });
-      }
+    register: async (input, { password: rawPassword, email: rawEmail }) => {
+      const { email, password } = parseInput(registerSchema, { email: rawEmail, password: rawPassword });
 
       const userExists = await prisma.user.findFirst({
         where: { email },

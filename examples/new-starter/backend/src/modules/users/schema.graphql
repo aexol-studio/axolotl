@@ -9,7 +9,7 @@ type Mutation {
 }
 
 type AuthorizedUserMutation {
-  changePassword(newPassword: String!): Boolean @resolver
+  changePassword(oldPassword: String!, newPassword: String!): Boolean @resolver
 }
 
 type AuthorizedUserQuery {

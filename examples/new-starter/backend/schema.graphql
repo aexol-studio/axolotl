@@ -55,6 +55,7 @@ type AuthorizedUserMutation{
 		_id: String!
 	): TodoOps! @resolver
 	changePassword(
+		oldPassword: String!
 		newPassword: String!
 	): Boolean @resolver
 }

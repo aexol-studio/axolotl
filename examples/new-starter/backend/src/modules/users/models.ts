@@ -36,6 +36,7 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
   ['AuthorizedUserMutation']: {
     changePassword: {
       args: {
+        oldPassword: string;
         newPassword: string;
       };
     };

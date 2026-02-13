@@ -1124,7 +1124,7 @@ todo?: [{	_id: string | Variable<any, string>},ValueTypes["Todo"]],
 	_?:boolean | `@${string}`,
 createTodo?: [{	content: string | Variable<any, string>,	secret?: ValueTypes["Secret"] | undefined | null | Variable<any, string>},boolean | `@${string}`],
 todoOps?: [{	_id: string | Variable<any, string>},ValueTypes["TodoOps"]],
-changePassword?: [{	newPassword: string | Variable<any, string>},boolean | `@${string}`],
+changePassword?: [{	oldPassword: string | Variable<any, string>,	newPassword: string | Variable<any, string>},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`,
 	['...on AuthorizedUserMutation']?: Omit<ValueTypes["AuthorizedUserMutation"], "...on AuthorizedUserMutation">
 }>;
@@ -1193,7 +1193,7 @@ todo?: [{	_id: string},ResolverInputTypes["Todo"]],
 	_?:boolean | `@${string}`,
 createTodo?: [{	content: string,	secret?: ResolverInputTypes["Secret"] | undefined | null},boolean | `@${string}`],
 todoOps?: [{	_id: string},ResolverInputTypes["TodoOps"]],
-changePassword?: [{	newPassword: string},boolean | `@${string}`],
+changePassword?: [{	oldPassword: string,	newPassword: string},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`
 }>;
 	["Subscription"]: AliasType<{

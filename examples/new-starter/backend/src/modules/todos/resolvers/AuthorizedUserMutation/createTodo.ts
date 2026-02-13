@@ -1,11 +1,16 @@
+import { z } from 'zod';
 import { createResolvers } from '../../axolotl.js';
 import { User } from '../../../users/models.js';
 import { prisma } from '@/src/db.js';
 import { todoPubSub } from '../../pubsub.js';
+import { parseInput, todoContentSchema } from '@/src/lib/validation.js';
+
+const createTodoSchema = z.object({ content: todoContentSchema });
 
 export default createResolvers({
   AuthorizedUserMutation: {
-    createTodo: async ([source], { content }) => {
+    createTodo: async ([source], { content: rawContent }) => {
+      const { content } = parseInput(createTodoSchema, { content: rawContent });
       const src = source as User;
       const todo = await prisma.todo.create({
         data: {

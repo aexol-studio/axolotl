@@ -21,6 +21,7 @@ export const settingsFormSchema = z.object({
 export type SettingsFormValues = z.infer<typeof settingsFormSchema>;
 
 export const changePasswordSchema = z.object({
+  oldPassword: z.string().min(6, 'Old password must be at least 6 characters'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 

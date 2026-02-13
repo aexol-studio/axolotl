@@ -1,13 +1,17 @@
+import { z } from 'zod';
 import { GraphQLError } from 'graphql';
 import { createResolvers } from '../../axolotl.js';
 import { prisma } from '@/src/db.js';
 import { serializeSetCookie } from '@/src/lib/cookies.js';
 import { verifyPassword, signToken, generateSessionToken, getSessionExpiryDate } from '@/src/lib/auth.js';
+import { parseInput, emailSchema, passwordSchema } from '@/src/lib/validation.js';
+
+const loginSchema = z.object({ email: emailSchema, password: passwordSchema });
 
 export default createResolvers({
   Mutation: {
-    login: async (input, { password, email: rawEmail }) => {
-      const email = rawEmail.toLowerCase().trim();
+    login: async (input, { password: rawPassword, email: rawEmail }) => {
+      const { email, password } = parseInput(loginSchema, { email: rawEmail, password: rawPassword });
 
       const user = await prisma.user.findFirst({
         where: { email },
