@@ -2,12 +2,12 @@
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useQueryClient } from '@tanstack/react-query';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/Form';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { useAuth, useTodos, useTodoSubscription } from '@/hooks';
+import { useAuth } from '@/hooks';
 import { ErrorMessage } from '@/components';
+import { useDashboard } from './Dashboard.hook';
 import type { TodoType } from '@/api';
 
 // --- Types ---
@@ -132,15 +132,7 @@ const TodoForm = ({ onSubmit, isLoading }: TodoFormProps) => {
 
 export const Dashboard = () => {
   const { user, isLoading: authLoading, error: authError } = useAuth();
-  const { todos, isLoading: todosLoading, error: todosError, createTodo, markDone } = useTodos();
-  const queryClient = useQueryClient();
-
-  // Subscribe to todo updates - invalidate React Query cache on changes
-  useTodoSubscription({
-    ownerId: user?._id ?? null,
-    onTodoCreated: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
-    onTodoUpdated: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
-  });
+  const { todos, todosLoading, todosError, createTodo, markDone } = useDashboard({ ownerId: user?._id ?? null });
 
   const isLoading = authLoading || todosLoading;
   const error = authError || todosError;

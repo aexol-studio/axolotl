@@ -1117,6 +1117,7 @@ register?: [{	email: string | Variable<any, string>,	password: string | Variable
 	todos?:ValueTypes["Todo"],
 todo?: [{	_id: string | Variable<any, string>},ValueTypes["Todo"]],
 	me?:ValueTypes["User"],
+	sessions?:ValueTypes["Session"],
 		__typename?: boolean | `@${string}`,
 	['...on AuthorizedUserQuery']?: Omit<ValueTypes["AuthorizedUserQuery"], "...on AuthorizedUserQuery">
 }>;
@@ -1125,6 +1126,9 @@ todo?: [{	_id: string | Variable<any, string>},ValueTypes["Todo"]],
 createTodo?: [{	content: string | Variable<any, string>,	secret?: ValueTypes["Secret"] | undefined | null | Variable<any, string>},boolean | `@${string}`],
 todoOps?: [{	_id: string | Variable<any, string>},ValueTypes["TodoOps"]],
 changePassword?: [{	oldPassword: string | Variable<any, string>,	newPassword: string | Variable<any, string>},boolean | `@${string}`],
+revokeSession?: [{	sessionId: string | Variable<any, string>},boolean | `@${string}`],
+	revokeAllSessions?:boolean | `@${string}`,
+deleteAccount?: [{	password: string | Variable<any, string>},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`,
 	['...on AuthorizedUserMutation']?: Omit<ValueTypes["AuthorizedUserMutation"], "...on AuthorizedUserMutation">
 }>;
@@ -1138,8 +1142,18 @@ aiChat?: [{	messages: Array<ValueTypes["AIChatMessage"]> | Variable<any, string>
 	["User"]: AliasType<{
 	_id?:boolean | `@${string}`,
 	email?:boolean | `@${string}`,
+	createdAt?:boolean | `@${string}`,
 		__typename?: boolean | `@${string}`,
 	['...on User']?: Omit<ValueTypes["User"], "...on User">
+}>;
+	["Session"]: AliasType<{
+	_id?:boolean | `@${string}`,
+	userAgent?:boolean | `@${string}`,
+	createdAt?:boolean | `@${string}`,
+	expiresAt?:boolean | `@${string}`,
+	isCurrent?:boolean | `@${string}`,
+		__typename?: boolean | `@${string}`,
+	['...on Session']?: Omit<ValueTypes["Session"], "...on Session">
 }>;
 	["AIChatMessage"]: {
 	role: string | Variable<any, string>,
@@ -1187,6 +1201,7 @@ register?: [{	email: string,	password: string},boolean | `@${string}`],
 	todos?:ResolverInputTypes["Todo"],
 todo?: [{	_id: string},ResolverInputTypes["Todo"]],
 	me?:ResolverInputTypes["User"],
+	sessions?:ResolverInputTypes["Session"],
 		__typename?: boolean | `@${string}`
 }>;
 	["AuthorizedUserMutation"]: AliasType<{
@@ -1194,6 +1209,9 @@ todo?: [{	_id: string},ResolverInputTypes["Todo"]],
 createTodo?: [{	content: string,	secret?: ResolverInputTypes["Secret"] | undefined | null},boolean | `@${string}`],
 todoOps?: [{	_id: string},ResolverInputTypes["TodoOps"]],
 changePassword?: [{	oldPassword: string,	newPassword: string},boolean | `@${string}`],
+revokeSession?: [{	sessionId: string},boolean | `@${string}`],
+	revokeAllSessions?:boolean | `@${string}`,
+deleteAccount?: [{	password: string},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`
 }>;
 	["Subscription"]: AliasType<{
@@ -1205,6 +1223,15 @@ aiChat?: [{	messages: Array<ResolverInputTypes["AIChatMessage"]>,	system?: strin
 	["User"]: AliasType<{
 	_id?:boolean | `@${string}`,
 	email?:boolean | `@${string}`,
+	createdAt?:boolean | `@${string}`,
+		__typename?: boolean | `@${string}`
+}>;
+	["Session"]: AliasType<{
+	_id?:boolean | `@${string}`,
+	userAgent?:boolean | `@${string}`,
+	createdAt?:boolean | `@${string}`,
+	expiresAt?:boolean | `@${string}`,
+	isCurrent?:boolean | `@${string}`,
 		__typename?: boolean | `@${string}`
 }>;
 	["AIChatMessage"]: {
@@ -1252,13 +1279,17 @@ export type ModelTypes = {
 		_?: string | undefined | null,
 	todos?: Array<ModelTypes["Todo"]> | undefined | null,
 	todo: ModelTypes["Todo"],
-	me: ModelTypes["User"]
+	me: ModelTypes["User"],
+	sessions: Array<ModelTypes["Session"]>
 };
 	["AuthorizedUserMutation"]: {
 		_?: string | undefined | null,
 	createTodo: string,
 	todoOps: ModelTypes["TodoOps"],
-	changePassword?: boolean | undefined | null
+	changePassword?: boolean | undefined | null,
+	revokeSession?: boolean | undefined | null,
+	revokeAllSessions?: boolean | undefined | null,
+	deleteAccount?: boolean | undefined | null
 };
 	["Subscription"]: {
 		todoUpdates: ModelTypes["TodoUpdate"],
@@ -1267,7 +1298,15 @@ export type ModelTypes = {
 };
 	["User"]: {
 		_id: string,
-	email: string
+	email: string,
+	createdAt: string
+};
+	["Session"]: {
+		_id: string,
+	userAgent?: string | undefined | null,
+	createdAt: string,
+	expiresAt: string,
+	isCurrent: boolean
 };
 	["AIChatMessage"]: {
 	role: string,
@@ -1324,6 +1363,7 @@ export type GraphQLTypes = {
 	todos?: Array<GraphQLTypes["Todo"]> | undefined | null,
 	todo: GraphQLTypes["Todo"],
 	me: GraphQLTypes["User"],
+	sessions: Array<GraphQLTypes["Session"]>,
 	['...on AuthorizedUserQuery']: Omit<GraphQLTypes["AuthorizedUserQuery"], "...on AuthorizedUserQuery">
 };
 	["AuthorizedUserMutation"]: {
@@ -1332,6 +1372,9 @@ export type GraphQLTypes = {
 	createTodo: string,
 	todoOps: GraphQLTypes["TodoOps"],
 	changePassword?: boolean | undefined | null,
+	revokeSession?: boolean | undefined | null,
+	revokeAllSessions?: boolean | undefined | null,
+	deleteAccount?: boolean | undefined | null,
 	['...on AuthorizedUserMutation']: Omit<GraphQLTypes["AuthorizedUserMutation"], "...on AuthorizedUserMutation">
 };
 	["Subscription"]: {
@@ -1345,7 +1388,17 @@ export type GraphQLTypes = {
 	__typename: "User",
 	_id: string,
 	email: string,
+	createdAt: string,
 	['...on User']: Omit<GraphQLTypes["User"], "...on User">
+};
+	["Session"]: {
+	__typename: "Session",
+	_id: string,
+	userAgent?: string | undefined | null,
+	createdAt: string,
+	expiresAt: string,
+	isCurrent: boolean,
+	['...on Session']: Omit<GraphQLTypes["Session"], "...on Session">
 };
 	["AIChatMessage"]: {
 		role: string,

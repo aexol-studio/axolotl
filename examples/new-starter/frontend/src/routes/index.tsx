@@ -4,6 +4,7 @@ import { ProtectedLayout } from './protected';
 import { Landing } from './guest/landing';
 import { Login } from './guest/login/index.js';
 import { Dashboard } from './protected/dashboard';
+import { Settings } from './protected/settings';
 import { Examples } from './public/examples';
 import { NotFound } from './not-found';
 
@@ -22,6 +23,7 @@ export const AppRoutes = () => {
       {/* Protected — redirect to / if not authenticated */}
       <Route element={<ProtectedLayout />}>
         <Route path="/app" element={<Dashboard />} />
+        <Route path="/app/settings" element={<Settings />} />
       </Route>
 
       {/* Catch-all 404 */}

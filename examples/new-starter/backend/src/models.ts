@@ -80,6 +80,9 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
     me: {
       args: Record<string, never>;
     };
+    sessions: {
+      args: Record<string, never>;
+    };
   };
   ['AuthorizedUserMutation']: {
     _: {
@@ -100,6 +103,19 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
       args: {
         oldPassword: string;
         newPassword: string;
+      };
+    };
+    revokeSession: {
+      args: {
+        sessionId: string;
+      };
+    };
+    revokeAllSessions: {
+      args: Record<string, never>;
+    };
+    deleteAccount: {
+      args: {
+        password: string;
       };
     };
   };
@@ -126,6 +142,26 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
       args: Record<string, never>;
     };
     email: {
+      args: Record<string, never>;
+    };
+    createdAt: {
+      args: Record<string, never>;
+    };
+  };
+  ['Session']: {
+    _id: {
+      args: Record<string, never>;
+    };
+    userAgent: {
+      args: Record<string, never>;
+    };
+    createdAt: {
+      args: Record<string, never>;
+    };
+    expiresAt: {
+      args: Record<string, never>;
+    };
+    isCurrent: {
       args: Record<string, never>;
     };
   };
@@ -170,12 +206,16 @@ export interface AuthorizedUserQuery<S extends { [P in keyof Scalars]: any } = {
   todos?: Array<Todo> | undefined | null;
   todo: Todo;
   me: User;
+  sessions: Array<Session>;
 }
 export interface AuthorizedUserMutation<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   _?: string | undefined | null;
   createTodo: string;
   todoOps: TodoOps;
   changePassword?: boolean | undefined | null;
+  revokeSession?: boolean | undefined | null;
+  revokeAllSessions?: boolean | undefined | null;
+  deleteAccount?: boolean | undefined | null;
 }
 export interface Subscription<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   todoUpdates: TodoUpdate;
@@ -185,6 +225,14 @@ export interface Subscription<S extends { [P in keyof Scalars]: any } = { [P in 
 export interface User<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   _id: string;
   email: string;
+  createdAt: string;
+}
+export interface Session<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
+  _id: string;
+  userAgent?: string | undefined | null;
+  createdAt: string;
+  expiresAt: string;
+  isCurrent: boolean;
 }
 export interface AIChatChunk<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   content: string;

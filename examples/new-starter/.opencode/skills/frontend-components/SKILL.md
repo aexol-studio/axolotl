@@ -72,7 +72,7 @@ Component files **cannot exceed 400 lines**. Target **~300 lines per file**. If 
 
 Extract in this order. **NEVER skip to sub-components before exhausting steps 1–4.**
 
-1. **Extract logic → hook** — `useComponentName.ts` — state, effects, callbacks, useMemos, event handlers
+1. **Extract logic → hook** — `ComponentName.hook.ts` — state, effects, callbacks, useMemos, event handlers
 2. **Extract static/config data** — `ComponentName.data.ts` — arrays, navigation items, column definitions, config objects
 3. **Extract Zod/RHF schemas** — `ComponentName.schema.ts` — Zod schemas, form validation, type inference
 4. **Extract TypeScript types** — `ComponentName.types.ts` — interfaces, type aliases, enums
@@ -96,7 +96,7 @@ routes/examples/
 ├── components/
 │   └── component-showcase/              # Folder named after the component (kebab-case)
 │       ├── ComponentShowcase.tsx         # ~300 lines — main component with render + layout
-│       ├── useComponentShowcase.ts       # Hook with state, handlers, memos
+│       ├── ComponentShowcase.hook.ts      # Hook with state, handlers, memos
 │       ├── ComponentShowcase.data.ts     # Static showcase items, option arrays
 │       ├── ComponentShowcase.types.ts    # TypeScript interfaces
 │       └── components/                   # Sub-components (only if still needed after above extractions)
@@ -119,12 +119,14 @@ When a component needs splitting, create a folder for it:
 
 | Partition  | File name                      | Example                  |
 | ---------- | ------------------------------ | ------------------------ |
-| Logic hook | `use{ComponentName}.ts`        | `useAuthForm.ts`         |
+| Logic hook | `{ComponentName}.hook.ts`      | `AuthForm.hook.ts`       |
 | Schema     | `{ComponentName}.schema.ts`    | `AuthForm.schema.ts`     |
 | Types      | `{ComponentName}.types.ts`     | `AuthForm.types.ts`      |
 | Data       | `{ComponentName}.data.ts`      | `TopNav.data.ts`         |
 | Constants  | `{ComponentName}.constants.ts` | `Dashboard.constants.ts` |
 | Store      | `{ComponentName}.store.ts`     | `Examples.store.ts`      |
+
+> **Hook file convention:** Each `.hook.ts` file exports a **SINGLE hook** — not multiple small hooks. All related data fetching, mutations, state, and handlers for a view/component are consolidated into one hook that returns a flat object with all data and mutation results. The exported function still uses the `use` prefix per React convention (e.g., `useSettings` inside `Settings.hook.ts`, `useAuthForm` inside `AuthForm.hook.ts`).
 
 ### Co-Located Partitions Require a Folder
 
@@ -137,14 +139,14 @@ This applies regardless of whether the component itself exceeds 400 lines. The m
 components/
 ├── forms-showcase-tab/          # Has co-located hook → folder required
 │   ├── FormsShowcaseTab.tsx
-│   ├── useFormsShowcase.ts
+│   ├── FormsShowcaseTab.hook.ts
 │   └── index.ts
 └── DataDisplaySection.tsx       # No co-located files → stays as single file
 
 ❌ WRONG — component with hook sitting loose:
 components/
 ├── FormsShowcaseTab.tsx
-├── useFormsShowcase.ts          # Hook next to component without a folder!
+├── FormsShowcaseTab.hook.ts     # Hook next to component without a folder!
 └── DataDisplaySection.tsx
 ```
 
@@ -276,14 +278,14 @@ Does the component now need a folder (has partitions or sub-components)?
 
 3. **PascalCase for component files** — `EmptyState.tsx`, `SearchBar.tsx`, `TopNav.tsx`
 4. **Route pages use `.page.tsx` suffix** — any file that represents its own URL route gets the `.page.tsx` suffix: `Landing.page.tsx`, `Dashboard.page.tsx`, `Settings.page.tsx`. Sub-page content that doesn't have its own route (e.g., tab panels, showcase sections) stays as regular `.tsx`. Route folders use lowercase: `admin/`, `examples/`
-5. **camelCase for non-component partitions** — `useAuthForm.ts`, `authForm.schema.ts` (note: PascalCase prefix matches the component name)
+5. **PascalCase prefix for all partitions** — `AuthForm.hook.ts`, `AuthForm.schema.ts` — the PascalCase prefix always matches the component name
 6. **Co-located hooks are different from shared hooks** — extracted component hooks live NEXT to their component (inside the component's folder if it has one); shared data-fetching hooks live in `hooks/`
-7. **Co-location is universal — not just for components** — the same co-location and splitting rules apply to route pages, not only components in the atomic design system. A route page like `Landing.page.tsx` can have `useLanding.ts`, `landing.data.ts`, `Landing.schema.ts`, etc. next to it in the same route folder. If a page grows complex enough to need splitting, it gets its own kebab-case subfolder just like a component would. Example:
+7. **Co-location is universal — not just for components** — the same co-location and splitting rules apply to route pages, not only components in the atomic design system. A route page like `Landing.page.tsx` can have `Landing.hook.ts`, `Landing.data.ts`, `Landing.schema.ts`, etc. next to it in the same route folder. If a page grows complex enough to need splitting, it gets its own kebab-case subfolder just like a component would. Example:
    ```
    routes/guest/landing/
    ├── Landing.page.tsx          # The route page
-   ├── useLanding.ts             # Extracted page logic
-   ├── landing.data.ts           # Static data / config
+   ├── Landing.hook.ts           # Extracted page logic
+   ├── Landing.data.ts           # Static data / config
    ├── Landing.schema.ts         # Zod schemas for the page
    └── components/               # Page-scoped components
        └── HeroSection.tsx

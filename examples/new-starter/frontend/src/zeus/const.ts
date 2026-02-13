@@ -25,6 +25,12 @@ export const AllTypesProps: Record<string,any> = {
 		},
 		changePassword:{
 
+		},
+		revokeSession:{
+
+		},
+		deleteAccount:{
+
 		}
 	},
 	Subscription:{
@@ -70,13 +76,17 @@ export const ReturnTypes: Record<string,any> = {
 		_:"String",
 		todos:"Todo",
 		todo:"Todo",
-		me:"User"
+		me:"User",
+		sessions:"Session"
 	},
 	AuthorizedUserMutation:{
 		_:"String",
 		createTodo:"String",
 		todoOps:"TodoOps",
-		changePassword:"Boolean"
+		changePassword:"Boolean",
+		revokeSession:"Boolean",
+		revokeAllSessions:"Boolean",
+		deleteAccount:"Boolean"
 	},
 	resolver:{
 
@@ -88,7 +98,15 @@ export const ReturnTypes: Record<string,any> = {
 	},
 	User:{
 		_id:"String",
-		email:"String"
+		email:"String",
+		createdAt:"String"
+	},
+	Session:{
+		_id:"String",
+		userAgent:"String",
+		createdAt:"String",
+		expiresAt:"String",
+		isCurrent:"Boolean"
 	},
 	AIChatChunk:{
 		content:"String",

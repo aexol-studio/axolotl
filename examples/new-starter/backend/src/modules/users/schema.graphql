@@ -1,6 +1,15 @@
 type User {
   _id: String!
   email: String!
+  createdAt: String!
+}
+
+type Session {
+  _id: String!
+  userAgent: String
+  createdAt: String!
+  expiresAt: String!
+  isCurrent: Boolean!
 }
 
 type Mutation {
@@ -10,10 +19,14 @@ type Mutation {
 
 type AuthorizedUserMutation {
   changePassword(oldPassword: String!, newPassword: String!): Boolean @resolver
+  revokeSession(sessionId: String!): Boolean @resolver
+  revokeAllSessions: Boolean @resolver
+  deleteAccount(password: String!): Boolean @resolver
 }
 
 type AuthorizedUserQuery {
   me: User! @resolver
+  sessions: [Session!]! @resolver
 }
 
 input AIChatMessage {

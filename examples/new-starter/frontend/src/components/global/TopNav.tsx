@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router';
-import { Menu, User, LogOut, Home, ListTodo, Blocks, LogIn } from 'lucide-react';
+import { Menu, User, LogOut, Home, ListTodo, Blocks, LogIn, Settings as SettingsIcon } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { ThemeToggle } from '../atoms/ThemeToggle';
 import { cn } from '@/lib/utils';
@@ -114,6 +114,12 @@ export const TopNav = () => {
                   <span>{user?.email}</span>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link to="/app/settings">
+                    <SettingsIcon className="h-4 w-4" />
+                    <span>Settings</span>
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={logout} className="cursor-pointer">
                   <LogOut className="h-4 w-4" />
                   <span>Logout</span>
@@ -170,6 +176,14 @@ export const TopNav = () => {
                     <User className="h-4 w-4" />
                     <span>{user?.email}</span>
                   </div>
+                  <Link
+                    to="/app/settings"
+                    onClick={() => setSheetOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+                  >
+                    <SettingsIcon className="h-4 w-4" />
+                    <span>Settings</span>
+                  </Link>
                   <button
                     onClick={() => {
                       logout();

@@ -28,7 +28,7 @@ export const useAuth = () => {
     queryKey: ['me'],
     queryFn: async () => {
       const data = await query()({
-        user: { me: { _id: true, email: true } },
+        user: { me: { _id: true, email: true, createdAt: true } },
       });
       return data.user?.me ?? null;
     },

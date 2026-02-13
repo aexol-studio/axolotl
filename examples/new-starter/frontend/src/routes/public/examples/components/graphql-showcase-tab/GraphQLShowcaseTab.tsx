@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 import { CodeSnippet } from '@/components/atoms';
 
-import { useGraphQLShowcase } from './useGraphQLShowcase';
+import { useGraphQLShowcase } from './GraphQLShowcaseTab.hook';
 
 export const GraphQLShowcaseTab = () => {
   const {

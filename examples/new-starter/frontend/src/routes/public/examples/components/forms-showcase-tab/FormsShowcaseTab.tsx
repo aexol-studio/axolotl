@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/Separator';
 import { Switch } from '@/components/ui/Switch';
 import { Textarea } from '@/components/ui/Textarea';
 
-import { useFormsShowcase } from './useFormsShowcase';
+import { useFormsShowcase } from './FormsShowcaseTab.hook';
 
 export const FormsShowcaseTab = () => {
   const { contactForm, onContactSubmit, settingsForm, onSettingsSubmit } = useFormsShowcase();
