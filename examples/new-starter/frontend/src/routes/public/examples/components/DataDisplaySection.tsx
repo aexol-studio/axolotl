@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CalendarDays } from 'lucide-react';
+import { useDynamite } from '@aexol/dynamite';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/Accordion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
@@ -41,41 +42,43 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 import { SectionCard } from '@/components/atoms';
 
-import { SAMPLE_TABLE_DATA } from '../Examples.data';
+import { getSampleTableData } from '../Examples.data';
 
 export const DataDisplaySection = () => {
+  const { t } = useDynamite();
   const [sliderValue, setSliderValue] = useState([50]);
+  const sampleTableData = getSampleTableData(t);
 
   return (
     <>
       {/* Inputs & Controls */}
-      <SectionCard title="Inputs & Controls" description="Form elements for user input (display-only demos).">
+      <SectionCard title={t('Inputs & Controls')} description={t('Form elements for user input (display-only demos).')}>
         <div className="grid gap-6 md:grid-cols-2">
           {/* Text inputs */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="demo-input">Text Input</Label>
-              <Input id="demo-input" placeholder="Type something..." />
+              <Label htmlFor="demo-input">{t('Text Input')}</Label>
+              <Input id="demo-input" placeholder={t('Type something...')} />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="demo-email">Email Input</Label>
+              <Label htmlFor="demo-email">{t('Email Input')}</Label>
               <Input id="demo-email" type="email" placeholder="email@example.com" />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="demo-textarea">Textarea</Label>
-              <Textarea id="demo-textarea" placeholder="Write a longer message here..." />
+              <Label htmlFor="demo-textarea">{t('Textarea')}</Label>
+              <Textarea id="demo-textarea" placeholder={t('Write a longer message here...')} />
             </div>
           </div>
 
           {/* Selection controls */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Select</Label>
+              <Label>{t('Select')}</Label>
               <Select>
                 <SelectTrigger>
-                  <SelectValue placeholder="Choose an option" />
+                  <SelectValue placeholder={t('Choose an option')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="react">React</SelectItem>
@@ -87,19 +90,19 @@ export const DataDisplaySection = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>Radio Group</Label>
+              <Label>{t('Radio Group')}</Label>
               <RadioGroup defaultValue="option-1">
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="option-1" id="r1" />
-                  <Label htmlFor="r1">Option One</Label>
+                  <Label htmlFor="r1">{t('Option One')}</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="option-2" id="r2" />
-                  <Label htmlFor="r2">Option Two</Label>
+                  <Label htmlFor="r2">{t('Option Two')}</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="option-3" id="r3" />
-                  <Label htmlFor="r3">Option Three</Label>
+                  <Label htmlFor="r3">{t('Option Three')}</Label>
                 </div>
               </RadioGroup>
             </div>
@@ -112,17 +115,17 @@ export const DataDisplaySection = () => {
         <div className="grid gap-6 md:grid-cols-3">
           <div className="flex items-center space-x-2">
             <Checkbox id="demo-checkbox" />
-            <Label htmlFor="demo-checkbox">Accept terms and conditions</Label>
+            <Label htmlFor="demo-checkbox">{t('Accept terms and conditions')}</Label>
           </div>
 
           <div className="flex items-center space-x-2">
             <Switch id="demo-switch" />
-            <Label htmlFor="demo-switch">Enable notifications</Label>
+            <Label htmlFor="demo-switch">{t('Enable notifications')}</Label>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Volume</Label>
+              <Label>{t('Volume')}</Label>
               <span className="text-sm text-muted-foreground">{sliderValue[0]}%</span>
             </div>
             <Slider value={sliderValue} onValueChange={setSliderValue} max={100} step={1} />
@@ -131,13 +134,13 @@ export const DataDisplaySection = () => {
       </SectionCard>
 
       {/* Data Display */}
-      <SectionCard title="Data Display" description="Tables, progress bars, skeletons, and avatars.">
+      <SectionCard title={t('Data Display')} description={t('Tables, progress bars, skeletons, and avatars.')}>
         {/* Progress */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-muted-foreground">Progress Bar</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">{t('Progress Bar')}</h4>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Upload progress</span>
+              <span className="text-muted-foreground">{t('Upload progress')}</span>
               <span className="font-medium text-foreground">60%</span>
             </div>
             <Progress value={60} />
@@ -148,7 +151,7 @@ export const DataDisplaySection = () => {
 
         {/* Skeleton loading */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-muted-foreground">Skeleton Loading States</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">{t('Skeleton Loading States')}</h4>
           <div className="flex items-center space-x-4">
             <Skeleton className="h-12 w-12 rounded-full" />
             <div className="space-y-2">
@@ -163,7 +166,7 @@ export const DataDisplaySection = () => {
 
         {/* Avatars */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-muted-foreground">Avatars</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">{t('Avatars')}</h4>
           <div className="flex items-center gap-3">
             <Avatar>
               <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
@@ -185,22 +188,22 @@ export const DataDisplaySection = () => {
 
         {/* Table */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-muted-foreground">Table</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">{t('Table')}</h4>
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Role</TableHead>
+                  <TableHead>{t('Name')}</TableHead>
+                  <TableHead>{t('Status')}</TableHead>
+                  <TableHead>{t('Role')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {SAMPLE_TABLE_DATA.map((row) => (
+                {sampleTableData.map((row) => (
                   <TableRow key={row.name}>
                     <TableCell className="font-medium">{row.name}</TableCell>
                     <TableCell>
-                      <Badge variant={row.status === 'Active' ? 'default' : 'secondary'}>{row.status}</Badge>
+                      <Badge variant={row.status === t('Active') ? 'default' : 'secondary'}>{row.status}</Badge>
                     </TableCell>
                     <TableCell>{row.role}</TableCell>
                   </TableRow>
@@ -212,22 +215,25 @@ export const DataDisplaySection = () => {
       </SectionCard>
 
       {/* Navigation */}
-      <SectionCard title="Navigation" description="Accordions, tabs, and breadcrumbs for content organization.">
+      <SectionCard
+        title={t('Navigation')}
+        description={t('Accordions, tabs, and breadcrumbs for content organization.')}
+      >
         {/* Breadcrumb */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-muted-foreground">Breadcrumb</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">{t('Breadcrumb')}</h4>
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href="#">Home</BreadcrumbLink>
+                <BreadcrumbLink href="#">{t('Home')}</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink href="#">Documentation</BreadcrumbLink>
+                <BreadcrumbLink href="#">{t('Documentation')}</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>Components</BreadcrumbPage>
+                <BreadcrumbPage>{t('Components')}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -237,27 +243,30 @@ export const DataDisplaySection = () => {
 
         {/* Accordion */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-muted-foreground">Accordion</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">{t('Accordion')}</h4>
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="item-1">
-              <AccordionTrigger>What is Axolotl?</AccordionTrigger>
+              <AccordionTrigger>{t('What is Axolotl?')}</AccordionTrigger>
               <AccordionContent>
-                Axolotl is a type-safe, schema-first GraphQL framework. It generates TypeScript types from your GraphQL
-                schema and provides a fully typed resolver experience.
+                {t(
+                  'Axolotl is a type-safe, schema-first GraphQL framework. It generates TypeScript types from your GraphQL schema and provides a fully typed resolver experience.',
+                )}
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-2">
-              <AccordionTrigger>What is Zeus?</AccordionTrigger>
+              <AccordionTrigger>{t('What is Zeus?')}</AccordionTrigger>
               <AccordionContent>
-                Zeus is a type-safe GraphQL client that generates TypeScript types from your schema. It allows you to
-                write queries using plain JavaScript objects instead of GraphQL strings.
+                {t(
+                  'Zeus is a type-safe GraphQL client that generates TypeScript types from your schema. It allows you to write queries using plain JavaScript objects instead of GraphQL strings.',
+                )}
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-3">
-              <AccordionTrigger>What is shadcn/ui?</AccordionTrigger>
+              <AccordionTrigger>{t('What is shadcn/ui?')}</AccordionTrigger>
               <AccordionContent>
-                shadcn/ui is a collection of re-usable components built with Radix UI and Tailwind CSS. Components are
-                copied into your project, giving you full ownership and control.
+                {t(
+                  'shadcn/ui is a collection of re-usable components built with Radix UI and Tailwind CSS. Components are copied into your project, giving you full ownership and control.',
+                )}
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -267,26 +276,28 @@ export const DataDisplaySection = () => {
 
         {/* Nested Tabs */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-muted-foreground">Nested Tabs</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">{t('Nested Tabs')}</h4>
           <Tabs defaultValue="overview" className="w-full">
             <TabsList>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="features">Features</TabsTrigger>
-              <TabsTrigger value="docs">Documentation</TabsTrigger>
+              <TabsTrigger value="overview">{t('Overview')}</TabsTrigger>
+              <TabsTrigger value="features">{t('Features')}</TabsTrigger>
+              <TabsTrigger value="docs">{t('Documentation')}</TabsTrigger>
             </TabsList>
             <TabsContent value="overview" className="rounded-md border p-4">
               <p className="text-sm text-muted-foreground">
-                This is the overview tab content. Tabs are great for organizing related content into switchable panels.
+                {t(
+                  'This is the overview tab content. Tabs are great for organizing related content into switchable panels.',
+                )}
               </p>
             </TabsContent>
             <TabsContent value="features" className="rounded-md border p-4">
               <p className="text-sm text-muted-foreground">
-                Feature highlights: type-safe queries, auto-generated types, schema-first development, and more.
+                {t('Feature highlights: type-safe queries, auto-generated types, schema-first development, and more.')}
               </p>
             </TabsContent>
             <TabsContent value="docs" className="rounded-md border p-4">
               <p className="text-sm text-muted-foreground">
-                Visit the documentation for detailed guides, API references, and best practices.
+                {t('Visit the documentation for detailed guides, API references, and best practices.')}
               </p>
             </TabsContent>
           </Tabs>
@@ -294,26 +305,26 @@ export const DataDisplaySection = () => {
       </SectionCard>
 
       {/* Overlays & Dialogs */}
-      <SectionCard title="Overlays & Dialogs" description="Modals, popovers, tooltips, and hover cards.">
+      <SectionCard title={t('Overlays & Dialogs')} description={t('Modals, popovers, tooltips, and hover cards.')}>
         <div className="flex flex-wrap gap-3">
           {/* Dialog */}
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline">Open Dialog</Button>
+              <Button variant="outline">{t('Open Dialog')}</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Example Dialog</DialogTitle>
+                <DialogTitle>{t('Example Dialog')}</DialogTitle>
                 <DialogDescription>
-                  This is a modal dialog. It overlays the page content and requires interaction before returning.
+                  {t('This is a modal dialog. It overlays the page content and requires interaction before returning.')}
                 </DialogDescription>
               </DialogHeader>
               <p className="text-sm text-muted-foreground">
-                Dialogs are great for confirmations, forms, or detailed views that need focused attention.
+                {t('Dialogs are great for confirmations, forms, or detailed views that need focused attention.')}
               </p>
               <DialogFooter>
-                <Button variant="outline">Cancel</Button>
-                <Button>Continue</Button>
+                <Button variant="outline">{t('Cancel')}</Button>
+                <Button>{t('Continue')}</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -321,14 +332,15 @@ export const DataDisplaySection = () => {
           {/* Popover */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline">Open Popover</Button>
+              <Button variant="outline">{t('Open Popover')}</Button>
             </PopoverTrigger>
             <PopoverContent className="w-80">
               <div className="space-y-2">
-                <h4 className="font-medium leading-none">Popover Content</h4>
+                <h4 className="font-medium leading-none">{t('Popover Content')}</h4>
                 <p className="text-sm text-muted-foreground">
-                  Popovers are non-modal and appear adjacent to their trigger element. Great for additional context or
-                  quick actions.
+                  {t(
+                    'Popovers are non-modal and appear adjacent to their trigger element. Great for additional context or quick actions.',
+                  )}
                 </p>
               </div>
             </PopoverContent>
@@ -338,10 +350,10 @@ export const DataDisplaySection = () => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline">Hover for Tooltip</Button>
+                <Button variant="outline">{t('Hover for Tooltip')}</Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>This is a tooltip with helpful information</p>
+                <p>{t('This is a tooltip with helpful information')}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -359,11 +371,11 @@ export const DataDisplaySection = () => {
                 <div className="space-y-1">
                   <h4 className="text-sm font-semibold">@axolotl</h4>
                   <p className="text-sm text-muted-foreground">
-                    A type-safe, schema-first GraphQL framework for building modern APIs.
+                    {t('A type-safe, schema-first GraphQL framework for building modern APIs.')}
                   </p>
                   <div className="flex items-center pt-2">
                     <CalendarDays className="mr-2 h-4 w-4 opacity-70" />
-                    <span className="text-xs text-muted-foreground">Created December 2023</span>
+                    <span className="text-xs text-muted-foreground">{t('Created December 2023')}</span>
                   </div>
                 </div>
               </div>

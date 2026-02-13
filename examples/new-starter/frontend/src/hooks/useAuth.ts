@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useDynamite } from '@aexol/dynamite';
 import { useAuthStore } from '../stores';
 import { query, mutation, getGraphQLErrorMessage } from '../api';
 import { useInitialAuth } from '../contexts/AuthContext';
@@ -7,6 +8,7 @@ import { useInitialAuth } from '../contexts/AuthContext';
 export type AuthMode = 'login' | 'register';
 
 export const useAuth = () => {
+  const { t } = useDynamite();
   const storeIsAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const setAuthenticated = useAuthStore((s) => s.setAuthenticated);
   const storeLogout = useAuthStore((s) => s.logout);
@@ -47,7 +49,7 @@ export const useAuth = () => {
     onSuccess: () => {
       setAuthenticated(true);
       queryClient.invalidateQueries({ queryKey: ['me'] });
-      toast.success('Welcome back!');
+      toast.success(t('Welcome back!'));
     },
   });
 
@@ -62,7 +64,7 @@ export const useAuth = () => {
     onSuccess: () => {
       setAuthenticated(true);
       queryClient.invalidateQueries({ queryKey: ['me'] });
-      toast.success('Account created successfully!');
+      toast.success(t('Account created successfully!'));
     },
   });
 

@@ -1,27 +1,29 @@
 import { User, Calendar } from 'lucide-react';
+import { useDynamite } from '@aexol/dynamite';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useAuth } from '@/hooks';
-
-const formatDate = (dateString: string): string => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-};
 
 const getInitials = (email: string): string => {
   return email.slice(0, 2).toUpperCase();
 };
 
 export const ProfileSection = () => {
+  const { t, locale } = useDynamite();
   const { user, isLoading } = useAuth();
+
+  const formatDate = (dateString: string): string => {
+    return new Date(dateString).toLocaleDateString(locale === 'pl' ? 'pl-PL' : 'en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Profile</CardTitle>
+        <CardTitle className="text-lg">{t('Profile')}</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -45,13 +47,15 @@ export const ProfileSection = () => {
               {user.createdAt && (
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Member since {formatDate(user.createdAt)}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t('Member since {{date}}', { date: formatDate(user.createdAt) })}
+                  </span>
                 </div>
               )}
             </div>
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">Unable to load profile information.</p>
+          <p className="text-sm text-muted-foreground">{t('Unable to load profile information.')}</p>
         )}
       </CardContent>
     </Card>

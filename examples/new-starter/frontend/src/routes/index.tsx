@@ -23,7 +23,7 @@ export const AppRoutes = () => {
       {/* Protected — redirect to / if not authenticated */}
       <Route element={<ProtectedLayout />}>
         <Route path="/app" element={<Dashboard />} />
-        <Route path="/app/settings" element={<Settings />} />
+        <Route path="/settings" element={<Settings />} />
       </Route>
 
       {/* Catch-all 404 */}

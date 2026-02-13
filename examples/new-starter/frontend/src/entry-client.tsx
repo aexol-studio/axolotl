@@ -6,13 +6,15 @@ import { App } from './App';
 import { AuthProvider } from './contexts/AuthContext';
 
 const initialAuth = window.__INITIAL_AUTH__ ?? { isAuthenticated: false };
+const initialTranslations = window.__INITIAL_TRANSLATIONS__ ?? {};
+const initialLocale = window.__INITIAL_LOCALE__ ?? 'en';
 
 hydrateRoot(
   document.getElementById('root')!,
   <StrictMode>
     <BrowserRouter>
       <AuthProvider value={initialAuth}>
-        <App />
+        <App initialTranslations={initialTranslations} initialLocale={initialLocale} />
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>,

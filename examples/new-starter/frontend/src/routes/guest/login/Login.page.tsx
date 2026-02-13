@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useDynamite } from '@aexol/dynamite';
 import { useAuth } from '@/hooks/useAuth.js';
 import { ErrorMessage } from '@/components/atoms/ErrorMessage';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -10,15 +11,20 @@ import { Button } from '@/components/ui/Button';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/Form';
 import type { AuthMode } from '@/hooks/useAuth.js';
 
-const authFormSchema = z.object({
-  email: z.string().email('Please enter a valid email'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
-type AuthFormValues = z.infer<typeof authFormSchema>;
+const createAuthFormSchema = (t: (key: string) => string) =>
+  z.object({
+    email: z.string().email(t('Please enter a valid email')),
+    password: z.string().min(6, t('Password must be at least 6 characters')),
+  });
+
+type AuthFormValues = z.infer<ReturnType<typeof createAuthFormSchema>>;
 
 export const Login = () => {
   const { authenticate, isLoading, error } = useAuth();
   const [authMode, setAuthMode] = useState<AuthMode>('login');
+  const { t } = useDynamite();
+
+  const authFormSchema = createAuthFormSchema(t);
 
   const form = useForm<AuthFormValues>({
     resolver: zodResolver(authFormSchema),
@@ -38,14 +44,14 @@ export const Login = () => {
       <div className="w-full max-w-md">
         <section id="auth" className="space-y-6 py-4">
           <div className="text-center space-y-2">
-            <h2 className="text-3xl font-bold text-foreground">Ready to Start?</h2>
-            <p className="text-muted-foreground">Create an account or sign in to get started.</p>
+            <h2 className="text-3xl font-bold text-foreground">{t('Ready to Start?')}</h2>
+            <p className="text-muted-foreground">{t('Create an account or sign in to get started.')}</p>
           </div>
 
           <Card className="w-full max-w-md mx-auto">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl font-bold">Todo App</CardTitle>
-              <CardDescription>Manage your tasks efficiently</CardDescription>
+              <CardTitle className="text-2xl font-bold">{t('Todo App')}</CardTitle>
+              <CardDescription>{t('Manage your tasks efficiently')}</CardDescription>
             </CardHeader>
             <CardContent>
               <ErrorMessage message={error} />
@@ -59,7 +65,7 @@ export const Login = () => {
                       : 'bg-muted text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  Login
+                  {t('Login')}
                 </button>
                 <button
                   onClick={() => setAuthMode('register')}
@@ -69,7 +75,7 @@ export const Login = () => {
                       : 'bg-muted text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  Register
+                  {t('Register')}
                 </button>
               </div>
 
@@ -80,9 +86,9 @@ export const Login = () => {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel>{t('Email')}</FormLabel>
                         <FormControl>
-                          <Input {...field} type="email" placeholder="you@example.com" autoComplete="email" />
+                          <Input {...field} type="email" placeholder={t('you@example.com')} autoComplete="email" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -93,12 +99,12 @@ export const Login = () => {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel>{t('Password')}</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             type="password"
-                            placeholder="Password"
+                            placeholder={t('Password')}
                             autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
                           />
                         </FormControl>
@@ -107,13 +113,13 @@ export const Login = () => {
                     )}
                   />
                   <Button className="w-full" disabled={isLoading || form.formState.isSubmitting}>
-                    {isLoading ? 'Loading...' : authMode === 'login' ? 'Sign In' : 'Sign Up'}
+                    {isLoading ? t('Loading...') : authMode === 'login' ? t('Sign In') : t('Sign Up')}
                   </Button>
                 </form>
               </Form>
 
               <p className="text-muted-foreground text-xs text-center mt-8">
-                GraphQL endpoint: <code className="text-primary">/graphql</code>
+                {t('GraphQL endpoint:')} <code className="text-primary">/graphql</code>
               </p>
             </CardContent>
           </Card>

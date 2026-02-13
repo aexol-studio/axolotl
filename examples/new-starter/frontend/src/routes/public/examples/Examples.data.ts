@@ -16,9 +16,15 @@ export const techStack = [
   'Lucide Icons',
 ];
 
-export const SAMPLE_TABLE_DATA = [
-  { name: 'Alice Johnson', status: 'Active', role: 'Admin' },
-  { name: 'Bob Smith', status: 'Inactive', role: 'Editor' },
-  { name: 'Carol Williams', status: 'Active', role: 'Viewer' },
-  { name: 'David Brown', status: 'Active', role: 'Editor' },
-] as const;
+export type SampleTableRow = {
+  name: string;
+  status: string;
+  role: string;
+};
+
+export const getSampleTableData = (t: (key: string) => string): SampleTableRow[] => [
+  { name: 'Alice Johnson', status: t('Active'), role: t('Admin') },
+  { name: 'Bob Smith', status: t('Inactive'), role: t('Editor') },
+  { name: 'Carol Williams', status: t('Active'), role: t('Viewer') },
+  { name: 'David Brown', status: t('Active'), role: t('Editor') },
+];

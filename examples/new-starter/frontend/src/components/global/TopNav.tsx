@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { Menu, User, LogOut, Home, ListTodo, Blocks, LogIn, Settings as SettingsIcon } from 'lucide-react';
+import { useDynamite } from '@aexol/dynamite';
 import { useAuth } from '../../hooks/useAuth';
 import { ThemeToggle } from '../atoms/ThemeToggle';
+import { LanguageSwitcher } from '../atoms/LanguageSwitcher';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import {
@@ -24,14 +26,13 @@ type NavItem = {
   authRequired?: boolean;
 };
 
-const getNavItems = (isAuthenticated: boolean): NavItem[] => [
-  ...(isAuthenticated ? [] : [{ path: '/', label: 'Home', icon: Home } as const satisfies NavItem]),
-  { path: '/app', label: 'My Todos', icon: ListTodo, authRequired: true },
-  { path: '/examples', label: 'Examples', icon: Blocks },
+const getNavItems = (isAuthenticated: boolean, t: (key: string) => string): NavItem[] => [
+  ...(isAuthenticated ? [] : [{ path: '/', label: t('Home'), icon: Home } as const satisfies NavItem]),
+  { path: '/app', label: t('My Todos'), icon: ListTodo, authRequired: true },
+  { path: '/examples', label: t('Examples'), icon: Blocks },
 ];
 
-const isLinkActive = (pathname: string, itemPath: string): boolean =>
-  itemPath === '/' ? pathname === '/' : pathname.startsWith(itemPath);
+const isLinkActive = (pathname: string, itemPath: string): boolean => pathname === itemPath;
 
 const getVisibleNavItems = (items: NavItem[], isAuthenticated: boolean): NavItem[] =>
   items.filter((item) => !item.authRequired || isAuthenticated);
@@ -42,15 +43,16 @@ export const TopNav = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const { t } = useDynamite();
 
-  const visibleItems = getVisibleNavItems(getNavItems(isAuthenticated), isAuthenticated);
+  const visibleItems = getVisibleNavItems(getNavItems(isAuthenticated, t), isAuthenticated);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-lg">
       <div className="container flex h-16 items-center justify-between px-4 mx-auto">
         {/* Mobile: hamburger + logo + theme toggle */}
         <div className="flex items-center gap-2 md:hidden">
-          <Button variant="ghost" size="icon" onClick={() => setSheetOpen(true)} aria-label="Open menu">
+          <Button variant="ghost" size="icon" onClick={() => setSheetOpen(true)} aria-label={t('Open menu')}>
             <Menu className="h-5 w-5" />
           </Button>
           <Link to={isAuthenticated ? '/app' : '/'} className="text-lg font-bold text-foreground">
@@ -90,12 +92,13 @@ export const TopNav = () => {
 
         {/* Desktop: right section */}
         <div className="hidden md:flex items-center gap-2">
+          <LanguageSwitcher />
           <ThemeToggle />
           {!isAuthenticated && (
             <Button variant="default" size="sm" asChild>
               <Link to="/login">
                 <LogIn />
-                Sign In
+                {t('Sign In')}
               </Link>
             </Button>
           )}
@@ -115,22 +118,23 @@ export const TopNav = () => {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild className="cursor-pointer">
-                  <Link to="/app/settings">
+                  <Link to="/settings">
                     <SettingsIcon className="h-4 w-4" />
-                    <span>Settings</span>
+                    <span>{t('Settings')}</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={logout} className="cursor-pointer">
                   <LogOut className="h-4 w-4" />
-                  <span>Logout</span>
+                  <span>{t('Logout')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
         </div>
 
-        {/* Mobile: theme toggle (always visible) */}
-        <div className="flex items-center md:hidden">
+        {/* Mobile: theme toggle and language switcher (always visible) */}
+        <div className="flex items-center gap-1 md:hidden">
+          <LanguageSwitcher />
           <ThemeToggle />
         </div>
       </div>
@@ -177,12 +181,12 @@ export const TopNav = () => {
                     <span>{user?.email}</span>
                   </div>
                   <Link
-                    to="/app/settings"
+                    to="/settings"
                     onClick={() => setSheetOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
                   >
                     <SettingsIcon className="h-4 w-4" />
-                    <span>Settings</span>
+                    <span>{t('Settings')}</span>
                   </Link>
                   <button
                     onClick={() => {
@@ -192,7 +196,7 @@ export const TopNav = () => {
                     className="flex w-full items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
                   >
                     <LogOut className="h-4 w-4" />
-                    <span>Logout</span>
+                    <span>{t('Logout')}</span>
                   </button>
                 </div>
               ) : (
@@ -202,7 +206,7 @@ export const TopNav = () => {
                   className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
                 >
                   <User className="h-4 w-4" />
-                  <span>Login</span>
+                  <span>{t('Login')}</span>
                 </Link>
               )}
             </div>

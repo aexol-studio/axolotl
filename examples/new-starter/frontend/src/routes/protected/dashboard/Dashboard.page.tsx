@@ -2,6 +2,7 @@
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useDynamite } from '@aexol/dynamite';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/Form';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -31,18 +32,23 @@ type TodoListProps = {
 
 // --- Form Schema ---
 
-const todoFormSchema = z.object({
-  content: z
-    .string()
-    .transform((val) => val.trim())
-    .pipe(z.string().min(1, 'Todo content is required').max(500, 'Todo content must be 500 characters or less')),
-});
+const createTodoFormSchema = (t: (key: string) => string) =>
+  z.object({
+    content: z
+      .string()
+      .transform((val) => val.trim())
+      .pipe(
+        z.string().min(1, t('Todo content is required')).max(500, t('Todo content must be 500 characters or less')),
+      ),
+  });
 
-type TodoFormValues = z.infer<typeof todoFormSchema>;
+type TodoFormValues = z.infer<ReturnType<typeof createTodoFormSchema>>;
 
 // --- Sub-components (private to this file) ---
 
 const TodoItem = ({ todo, onMarkDone, isLoading }: TodoItemProps) => {
+  const { t } = useDynamite();
+
   return (
     <li
       className={`flex items-center gap-3 p-4 rounded-xl transition-colors ${
@@ -65,20 +71,26 @@ const TodoItem = ({ todo, onMarkDone, isLoading }: TodoItemProps) => {
         )}
       </button>
       <span className={`flex-1 ${todo.done ? 'text-primary line-through' : 'text-foreground'}`}>{todo.content}</span>
-      {todo.done && <span className="text-primary text-xs font-medium px-2 py-1 bg-primary/10 rounded">Done</span>}
+      {todo.done && (
+        <span className="text-primary text-xs font-medium px-2 py-1 bg-primary/10 rounded">{t('Done')}</span>
+      )}
     </li>
   );
 };
 
 const TodoList = ({ todos, onMarkDone, isLoading }: TodoListProps) => {
+  const { t } = useDynamite();
+
   return (
     <div className="bg-card backdrop-blur-lg rounded-2xl p-6 shadow-2xl border border-border">
-      <h2 className="text-lg font-semibold text-card-foreground mb-4">Your Todos ({todos.length})</h2>
+      <h2 className="text-lg font-semibold text-card-foreground mb-4">
+        {t('Your Todos ({{count}})', { count: todos.length })}
+      </h2>
 
       {isLoading && todos.length === 0 ? (
-        <p className="text-muted-foreground text-center py-8">Loading...</p>
+        <p className="text-muted-foreground text-center py-8">{t('Loading...')}</p>
       ) : todos.length === 0 ? (
-        <p className="text-muted-foreground text-center py-8">No todos yet. Create one above!</p>
+        <p className="text-muted-foreground text-center py-8">{t('No todos yet. Create one above!')}</p>
       ) : (
         <ul className="space-y-3">
           {todos.map((todo) => (
@@ -91,6 +103,9 @@ const TodoList = ({ todos, onMarkDone, isLoading }: TodoListProps) => {
 };
 
 const TodoForm = ({ onSubmit, isLoading }: TodoFormProps) => {
+  const { t } = useDynamite();
+  const todoFormSchema = createTodoFormSchema(t);
+
   const form = useForm<TodoFormValues>({
     resolver: zodResolver(todoFormSchema),
     defaultValues: { content: '' },
@@ -103,7 +118,7 @@ const TodoForm = ({ onSubmit, isLoading }: TodoFormProps) => {
 
   return (
     <div className="bg-card backdrop-blur-lg rounded-2xl p-6 shadow-2xl border border-border mb-6">
-      <h2 className="text-lg font-semibold text-card-foreground mb-4">Add New Todo</h2>
+      <h2 className="text-lg font-semibold text-card-foreground mb-4">{t('Add New Todo')}</h2>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmitHandler)} className="flex gap-3">
           <FormField
@@ -111,16 +126,16 @@ const TodoForm = ({ onSubmit, isLoading }: TodoFormProps) => {
             name="content"
             render={({ field }) => (
               <FormItem className="flex-1">
-                <FormLabel className="sr-only">Todo content</FormLabel>
+                <FormLabel className="sr-only">{t('Todo content')}</FormLabel>
                 <FormControl>
-                  <Input {...field} type="text" placeholder="What needs to be done?" autoComplete="off" />
+                  <Input {...field} type="text" placeholder={t('What needs to be done?')} autoComplete="off" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
           <Button type="submit" disabled={isLoading || form.formState.isSubmitting}>
-            Add
+            {t('Add')}
           </Button>
         </form>
       </Form>
@@ -133,6 +148,7 @@ const TodoForm = ({ onSubmit, isLoading }: TodoFormProps) => {
 export const Dashboard = () => {
   const { user, isLoading: authLoading, error: authError } = useAuth();
   const { todos, todosLoading, todosError, createTodo, markDone } = useDashboard({ ownerId: user?._id ?? null });
+  const { t } = useDynamite();
 
   const isLoading = authLoading || todosLoading;
   const error = authError || todosError;
@@ -141,8 +157,8 @@ export const Dashboard = () => {
     <div className="min-h-full bg-background p-4">
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight">My Todos</h1>
-          {user && <p className="text-muted-foreground text-sm">Welcome, {user.email}</p>}
+          <h1 className="text-2xl font-bold tracking-tight">{t('My Todos')}</h1>
+          {user && <p className="text-muted-foreground text-sm">{t('Welcome, {{email}}', { email: user.email })}</p>}
         </div>
 
         <ErrorMessage message={error} />
@@ -151,7 +167,9 @@ export const Dashboard = () => {
 
         <TodoList todos={todos} onMarkDone={markDone} isLoading={isLoading} />
 
-        <p className="text-muted-foreground text-xs text-center mt-6">Powered by Axolotl + GraphQL Yoga + Zeus</p>
+        <p className="text-muted-foreground text-xs text-center mt-6">
+          {t('Powered by Axolotl + GraphQL Yoga + Zeus')}
+        </p>
       </div>
     </div>
   );

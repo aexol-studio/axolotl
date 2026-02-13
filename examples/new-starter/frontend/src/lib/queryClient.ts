@@ -3,6 +3,10 @@ import { toast } from 'sonner';
 import { isAuthError, getGraphQLErrorMessage } from '../api/errors';
 import { useAuthStore } from '../stores';
 
+// NOTE: QueryClient is created outside React component tree, so useDynamite() hook
+// cannot be used here. These toast strings remain in English as global fallbacks.
+// The keys are registered in public/locales/en/common.json for completeness.
+
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
