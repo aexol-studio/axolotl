@@ -18,8 +18,7 @@ const templateHtml = isProduction ? await fs.readFile(resolve(__dirname, '../dis
 
 const startServer = async () => {
   const app = express();
-  const port = parseInt(process.env.PORT || '4102', 10);
-  const host = process.env.HOST || 'localhost';
+  const port = parseInt(process.env.PORT || '8080', 10);
 
   // Parse cookies from request headers
   app.use((req, _res, next) => {
@@ -175,10 +174,9 @@ mutation Register{
     }
   });
 
-  const server = app.listen(port, host, () => {
-    const displayHost = host.includes(':') ? `[${host}]` : host;
-    console.log(`Server running at http://${displayHost}:${port}`);
-    console.log(`GraphQL Playground at http://${displayHost}:${port}/graphql`);
+  const server = app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+    console.log(`GraphQL Playground at http://localhost:${port}/graphql`);
     console.log(`AI Chat available via GraphQL subscription: aiChat`);
     console.log(`Mode: ${isProduction ? 'production' : 'development'}`);
     console.log(`SSR: enabled`);
