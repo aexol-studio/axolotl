@@ -18,7 +18,7 @@ const templateHtml = isProduction ? await fs.readFile(resolve(__dirname, '../dis
 
 const startServer = async () => {
   const app = express();
-  const port = parseInt(process.env.PORT || '4102', 10);
+  const port = parseInt(process.env.PORT || '8080', 10);
   const host = process.env.HOST || 'localhost';
 
   // Parse cookies from request headers
