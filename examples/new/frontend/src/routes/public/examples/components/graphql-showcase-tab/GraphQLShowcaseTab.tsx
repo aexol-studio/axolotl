@@ -1,4 +1,5 @@
 import { AlertCircle, Bot, CheckCircle2, KeyRound, ListTodo, Loader2, LogIn, Timer, User } from 'lucide-react';
+import { useDynamite } from '@aexol/dynamite';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/Alert';
 import { Badge } from '@/components/ui/Badge';
@@ -15,6 +16,7 @@ import { CodeSnippet } from '@/components/atoms';
 import { useGraphQLShowcase } from './GraphQLShowcaseTab.hook';
 
 export const GraphQLShowcaseTab = () => {
+  const { t } = useDynamite();
   const {
     isAuthenticated,
     userData,
@@ -47,12 +49,9 @@ export const GraphQLShowcaseTab = () => {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h3 className="text-lg font-semibold text-foreground">Live GraphQL Demos</h3>
+        <h3 className="text-lg font-semibold text-foreground">{t('Live GraphQL Demos')}</h3>
         <p className="text-sm text-muted-foreground">
-          Interactive demos of <span className="font-medium text-foreground">queries</span>,{' '}
-          <span className="font-medium text-foreground">mutations</span>, and{' '}
-          <span className="font-medium text-foreground">subscriptions</span> powered by{' '}
-          <span className="font-medium text-foreground">Zeus</span> type-safe GraphQL client.
+          {t('Interactive demos of queries, mutations, and subscriptions powered by Zeus type-safe GraphQL client.')}
         </p>
       </div>
 
@@ -64,9 +63,9 @@ export const GraphQLShowcaseTab = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <User className="h-5 w-5" />
-              User Query
+              {t('User Query')}
             </CardTitle>
-            <CardDescription>Fetch your profile using a Zeus query.</CardDescription>
+            <CardDescription>{t('Fetch your profile using a Zeus query.')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <CodeSnippet code={`query()({ user: { me: { _id: true, email: true } } })`} />
@@ -74,14 +73,14 @@ export const GraphQLShowcaseTab = () => {
             {!isAuthenticated ? (
               <Alert>
                 <LogIn className="h-4 w-4" />
-                <AlertTitle>Authentication Required</AlertTitle>
-                <AlertDescription>Log in to try this demo.</AlertDescription>
+                <AlertTitle>{t('Authentication Required')}</AlertTitle>
+                <AlertDescription>{t('Log in to try this demo.')}</AlertDescription>
               </Alert>
             ) : (
               <>
                 <Button onClick={fetchProfile} disabled={isUserLoading}>
                   {isUserLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <User className="h-4 w-4" />}
-                  Fetch My Profile
+                  {t('Fetch My Profile')}
                 </Button>
 
                 {userError && (
@@ -98,7 +97,7 @@ export const GraphQLShowcaseTab = () => {
                       <Badge variant="outline">{userData._id}</Badge>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">Email:</span>
+                      <span className="text-sm text-muted-foreground">{t('Email')}:</span>
                       <span className="text-sm font-medium text-foreground">{userData.email}</span>
                     </div>
                   </div>
@@ -113,9 +112,9 @@ export const GraphQLShowcaseTab = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <ListTodo className="h-5 w-5" />
-              Todos Query
+              {t('Todos Query')}
             </CardTitle>
-            <CardDescription>Fetch your todos list using a Zeus query.</CardDescription>
+            <CardDescription>{t('Fetch your todos list using a Zeus query.')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <CodeSnippet code={`query()({ user: { todos: { _id: true, content: true, done: true } } })`} />
@@ -123,14 +122,14 @@ export const GraphQLShowcaseTab = () => {
             {!isAuthenticated ? (
               <Alert>
                 <LogIn className="h-4 w-4" />
-                <AlertTitle>Authentication Required</AlertTitle>
-                <AlertDescription>Log in to try this demo.</AlertDescription>
+                <AlertTitle>{t('Authentication Required')}</AlertTitle>
+                <AlertDescription>{t('Log in to try this demo.')}</AlertDescription>
               </Alert>
             ) : (
               <>
                 <Button onClick={fetchTodos} disabled={isTodosLoading}>
                   {isTodosLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ListTodo className="h-4 w-4" />}
-                  Fetch My Todos
+                  {t('Fetch My Todos')}
                 </Button>
 
                 {todosError && (
@@ -145,8 +144,8 @@ export const GraphQLShowcaseTab = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Content</TableHead>
-                          <TableHead className="w-24">Status</TableHead>
+                          <TableHead>{t('Content')}</TableHead>
+                          <TableHead className="w-24">{t('Status')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -155,7 +154,7 @@ export const GraphQLShowcaseTab = () => {
                             <TableCell className="font-medium">{todo.content}</TableCell>
                             <TableCell>
                               <Badge variant={todo.done ? 'default' : 'secondary'}>
-                                {todo.done ? 'Done' : 'Pending'}
+                                {todo.done ? t('Done') : t('Pending')}
                               </Badge>
                             </TableCell>
                           </TableRow>
@@ -175,9 +174,9 @@ export const GraphQLShowcaseTab = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <KeyRound className="h-5 w-5" />
-            Change Password Mutation
+            {t('Change Password Mutation')}
           </CardTitle>
-          <CardDescription>Update your password using a Zeus mutation.</CardDescription>
+          <CardDescription>{t('Update your password using a Zeus mutation.')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <CodeSnippet code={`mutation()({ user: { changePassword: [{ oldPassword, newPassword }, true] } })`} />
@@ -185,8 +184,8 @@ export const GraphQLShowcaseTab = () => {
           {!isAuthenticated ? (
             <Alert>
               <LogIn className="h-4 w-4" />
-              <AlertTitle>Authentication Required</AlertTitle>
-              <AlertDescription>Log in to try this demo.</AlertDescription>
+              <AlertTitle>{t('Authentication Required')}</AlertTitle>
+              <AlertDescription>{t('Log in to try this demo.')}</AlertDescription>
             </Alert>
           ) : (
             <Form {...changePasswordForm}>
@@ -196,11 +195,11 @@ export const GraphQLShowcaseTab = () => {
                   name="oldPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Old Password</FormLabel>
+                      <FormLabel>{t('Old Password')}</FormLabel>
                       <FormControl>
                         <Input
                           type="password"
-                          placeholder="Enter current password"
+                          placeholder={t('Enter current password')}
                           autoComplete="current-password"
                           {...field}
                         />
@@ -215,11 +214,11 @@ export const GraphQLShowcaseTab = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>New Password</FormLabel>
+                      <FormLabel>{t('New Password')}</FormLabel>
                       <FormControl>
                         <Input
                           type="password"
-                          placeholder="Enter new password"
+                          placeholder={t('Enter new password')}
                           autoComplete="new-password"
                           {...field}
                         />
@@ -235,7 +234,7 @@ export const GraphQLShowcaseTab = () => {
                   ) : (
                     <KeyRound className="h-4 w-4" />
                   )}
-                  Change Password
+                  {t('Change Password')}
                 </Button>
               </form>
             </Form>
@@ -249,9 +248,9 @@ export const GraphQLShowcaseTab = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Timer className="h-5 w-5" />
-              Countdown Subscription
+              {t('Countdown Subscription')}
             </CardTitle>
-            <CardDescription>Live countdown using a GraphQL SSE subscription. No auth required.</CardDescription>
+            <CardDescription>{t('Live countdown using a GraphQL SSE subscription. No auth required.')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <CodeSnippet code={`subscription()({ countdown: [{ from: ${startFrom} }, true] })`} />
@@ -259,7 +258,7 @@ export const GraphQLShowcaseTab = () => {
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <label htmlFor="countdown-start" className="text-sm text-muted-foreground whitespace-nowrap">
-                  Start from:
+                  {t('Start from:')}
                 </label>
                 <Input
                   id="countdown-start"
@@ -275,12 +274,12 @@ export const GraphQLShowcaseTab = () => {
 
               {isCountdownRunning ? (
                 <Button variant="destructive" onClick={stopCountdown}>
-                  Stop
+                  {t('Stop')}
                 </Button>
               ) : (
                 <Button onClick={startCountdown}>
                   <Timer className="h-4 w-4" />
-                  Start Countdown
+                  {t('Start Countdown')}
                 </Button>
               )}
             </div>
@@ -288,9 +287,9 @@ export const GraphQLShowcaseTab = () => {
             {(currentValue !== null || isCountdownDone) && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Progress</span>
+                  <span className="text-muted-foreground">{t('Progress')}</span>
                   <span className="font-medium text-foreground">
-                    {isCountdownDone ? 'Complete' : `${currentValue} / ${startFrom}`}
+                    {isCountdownDone ? t('Complete') : `${currentValue} / ${startFrom}`}
                   </span>
                 </div>
                 <Progress value={countdownProgress} />
@@ -298,7 +297,7 @@ export const GraphQLShowcaseTab = () => {
                 {isCountdownDone && (
                   <div className="flex items-center gap-2 text-sm text-primary font-medium">
                     <CheckCircle2 className="h-4 w-4" />
-                    Done!
+                    {t('Done!')}
                   </div>
                 )}
               </div>
@@ -311,9 +310,11 @@ export const GraphQLShowcaseTab = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Bot className="h-5 w-5" />
-              AI Chat Subscription
+              {t('AI Chat Subscription')}
             </CardTitle>
-            <CardDescription>Stream AI responses using a GraphQL SSE subscription. No auth required.</CardDescription>
+            <CardDescription>
+              {t('Stream AI responses using a GraphQL SSE subscription. No auth required.')}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <CodeSnippet
@@ -327,7 +328,7 @@ export const GraphQLShowcaseTab = () => {
 
             <div className="flex items-center gap-3">
               <Input
-                placeholder="Type a message for the AI..."
+                placeholder={t('Type a message for the AI...')}
                 value={aiMessage}
                 onChange={(e) => setAiMessage(e.target.value)}
                 onKeyDown={(e) => {
@@ -337,12 +338,12 @@ export const GraphQLShowcaseTab = () => {
               />
               {isAiStreaming ? (
                 <Button variant="destructive" onClick={stopAiStreaming}>
-                  Stop
+                  {t('Stop')}
                 </Button>
               ) : (
                 <Button onClick={sendAiMessage} disabled={!aiMessage.trim()}>
                   <Bot className="h-4 w-4" />
-                  Send to AI
+                  {t('Send to AI')}
                 </Button>
               )}
             </div>
@@ -350,7 +351,7 @@ export const GraphQLShowcaseTab = () => {
             {aiError && (
               <Alert>
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Unavailable</AlertTitle>
+                <AlertTitle>{t('Unavailable')}</AlertTitle>
                 <AlertDescription>{aiError}</AlertDescription>
               </Alert>
             )}
@@ -358,7 +359,7 @@ export const GraphQLShowcaseTab = () => {
             {aiResponse && (
               <div className="rounded-md border p-4 space-y-2">
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary">AI Response</Badge>
+                  <Badge variant="secondary">{t('AI Response')}</Badge>
                   {isAiStreaming && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
                 </div>
                 <p className="text-sm text-foreground whitespace-pre-wrap">{aiResponse}</p>

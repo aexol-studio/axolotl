@@ -35,6 +35,8 @@
   "dependencies": {
     "@aexol/axolotl-core": "^2.1.9",
     "@aexol/axolotl-graphql-yoga": "^2.1.9",
+    "@aexol/dynamite": "^0.4.2",
+    "@aexol/vite-plugin-dev-translate": "^0.4.2",
     "@ai-sdk/openai": "^1.0.0",
     "@graphql-tools/utils": "^10.11.0",
     "@hookform/resolvers": "^5.2.2",

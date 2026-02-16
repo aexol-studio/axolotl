@@ -12,7 +12,7 @@
     "start": "NODE_ENV=production node lib/index.js",
     "build": "tspc && npm run build:client && npm run build:server",
     "build:backend": "tspc",
-"build:client": "vite build --config frontend/vite.config.ts --mode ${VITE_MODE:-prod}",
+    "build:client": "vite build --config frontend/vite.config.ts --mode ${VITE_MODE:-prod}",
     "build:server": "vite build --config frontend/vite.config.ts --ssr src/entry-server.tsx --mode ${VITE_MODE:-prod}",
     "watch": "tspc --watch",
     "models": "axolotl build",

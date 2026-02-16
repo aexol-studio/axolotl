@@ -6,7 +6,7 @@ import { dirname, resolve } from 'path';
 import { adapter } from '@/src/axolotl.js';
 import resolvers from '@/src/resolvers.js';
 import directives from './directives.js';
-import { parseCookies, getTokenFromCookies, serializeClearCookie } from './lib/cookies.js';
+import { parseCookies, getTokenFromCookies, serializeClearCookie, getLocaleFromCookies } from './lib/cookies.js';
 import { verifyToken } from './lib/auth.js';
 import { prisma } from './db.js';
 
@@ -19,6 +19,7 @@ const templateHtml = isProduction ? await fs.readFile(resolve(__dirname, '../dis
 const startServer = async () => {
   const app = express();
   const port = parseInt(process.env.PORT || '8080', 10);
+  const host = process.env.HOST || 'localhost';
 
   // Parse cookies from request headers
   app.use((req, _res, next) => {
@@ -35,7 +36,7 @@ const startServer = async () => {
       },
       yoga: {
         graphqlEndpoint: '/graphql',
-        graphiql: {
+        graphiql: !isProduction && {
           defaultQuery: `query MyTodos{
   user{
     todos{
@@ -126,7 +127,10 @@ mutation Register{
       const url = req.originalUrl;
 
       let template: string;
-      let render: (url: string, options?: { isAuthenticated: boolean }) => { html: string; head?: string };
+      let render: (
+        url: string,
+        options?: { isAuthenticated: boolean; locale?: string },
+      ) => { html: string; head?: string; translations?: Record<string, string>; locale?: string };
 
       if (!isProduction) {
         // Always read fresh template in development
@@ -157,16 +161,25 @@ mutation Register{
         }
       }
 
-      const rendered = await render(url, { isAuthenticated });
+      const rendered = await render(url, { isAuthenticated, locale: getLocaleFromCookies(req.cookies) });
 
-      const initialStateScript = `<script>window.__INITIAL_AUTH__=${JSON.stringify({ isAuthenticated })}</script>`;
+      const initialStateScript = [
+        `<script>`,
+        `window.__INITIAL_AUTH__=${JSON.stringify({ isAuthenticated })};`,
+        `window.__INITIAL_TRANSLATIONS__=${JSON.stringify(rendered.translations ?? {})};`,
+        `window.__INITIAL_LOCALE__=${JSON.stringify(rendered.locale ?? 'en')};`,
+        `</script>`,
+      ].join('');
 
-      const html = template
+      let resultHtml = template
         .replace(`<!--app-head-->`, rendered.head ?? '')
         .replace(`<!--app-initial-state-->`, initialStateScript)
         .replace(`<!--app-html-->`, rendered.html ?? '');
 
-      res.status(200).set({ 'Content-Type': 'text/html' }).send(html);
+      // Set the HTML lang attribute to match the rendered locale
+      resultHtml = resultHtml.replace('lang="en"', `lang="${rendered.locale ?? 'en'}"`);
+
+      res.status(200).set({ 'Content-Type': 'text/html' }).send(resultHtml);
     } catch (e) {
       vite?.ssrFixStacktrace(e as Error);
       console.error((e as Error).stack);
@@ -174,9 +187,10 @@ mutation Register{
     }
   });
 
-  const server = app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
-    console.log(`GraphQL Playground at http://localhost:${port}/graphql`);
+  const server = app.listen(port, host, () => {
+    const displayHost = host.includes(':') ? `[${host}]` : host;
+    console.log(`Server running at http://${displayHost}:${port}`);
+    console.log(`GraphQL Playground at http://${displayHost}:${port}/graphql`);
     console.log(`AI Chat available via GraphQL subscription: aiChat`);
     console.log(`Mode: ${isProduction ? 'production' : 'development'}`);
     console.log(`SSR: enabled`);

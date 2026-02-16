@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { AlertTriangle } from 'lucide-react';
+import { useDynamite } from '@aexol/dynamite';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -18,6 +19,7 @@ import { useSettings } from '../Settings.hook';
 import { useAuth } from '@/hooks';
 
 export const DeleteAccountSection = () => {
+  const { t } = useDynamite();
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState('');
   const { deleteAccount } = useSettings();
@@ -30,7 +32,7 @@ export const DeleteAccountSection = () => {
     try {
       await deleteAccount.mutateAsync(password);
       setOpen(false);
-      toast.info('Account deleted');
+      toast.info(t('Account deleted'));
       await logout();
       navigate('/');
     } catch {
@@ -49,9 +51,9 @@ export const DeleteAccountSection = () => {
   return (
     <Card className="border-destructive/50">
       <CardHeader>
-        <CardTitle className="text-lg text-destructive-foreground">Danger Zone</CardTitle>
+        <CardTitle className="text-lg text-destructive-foreground">{t('Danger Zone')}</CardTitle>
         <CardDescription>
-          Permanently delete your account and all associated data. This action cannot be undone.
+          {t('Permanently delete your account and all associated data. This action cannot be undone.')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -59,43 +61,46 @@ export const DeleteAccountSection = () => {
           <DialogTrigger asChild>
             <Button variant="destructive">
               <AlertTriangle className="h-4 w-4" />
-              Delete Account
+              {t('Delete Account')}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Are you absolutely sure?</DialogTitle>
+              <DialogTitle>{t('Are you absolutely sure?')}</DialogTitle>
               <DialogDescription>
-                This will permanently delete your account, all your data, and revoke all active sessions. This action
-                cannot be undone.
+                {t(
+                  'This will permanently delete your account, all your data, and revoke all active sessions. This action cannot be undone.',
+                )}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2 py-2">
               <label htmlFor="delete-password" className="text-sm font-medium text-foreground">
-                Enter your password to confirm
+                {t('Enter your password to confirm')}
               </label>
               <Input
                 id="delete-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Your password"
+                placeholder={t('Your password')}
                 autoComplete="current-password"
               />
               {deleteAccount.isError && (
-                <p className="text-sm text-destructive">Deletion failed. Please check your password and try again.</p>
+                <p className="text-sm text-destructive">
+                  {t('Deletion failed. Please check your password and try again.')}
+                </p>
               )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => handleOpenChange(false)}>
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="destructive"
                 onClick={handleDelete}
                 disabled={!password.trim() || deleteAccount.isPending}
               >
-                {deleteAccount.isPending ? 'Deleting...' : 'Delete Permanently'}
+                {deleteAccount.isPending ? t('Deleting...') : t('Delete Permanently')}
               </Button>
             </DialogFooter>
           </DialogContent>

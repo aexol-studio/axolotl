@@ -2,19 +2,22 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
+import { useDynamite } from '@aexol/dynamite';
 
 import { query, mutation, subscription, todoSelector, type TodoType } from '@/api';
 import { useAuthStore } from '@/stores';
 
-import { changePasswordSchema, type ChangePasswordValues } from '../../Examples.schema';
+import { createChangePasswordSchema, type ChangePasswordValues } from '../../Examples.schema';
 
 export const useGraphQLShowcase = () => {
+  const { t } = useDynamite();
+
   // --- Auth ---
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   // --- Change Password ---
   const changePasswordForm = useForm<ChangePasswordValues>({
-    resolver: zodResolver(changePasswordSchema),
+    resolver: zodResolver(createChangePasswordSchema(t)),
     defaultValues: { oldPassword: '', password: '' },
   });
 
@@ -23,10 +26,10 @@ export const useGraphQLShowcase = () => {
       await mutation()({
         user: { changePassword: [{ oldPassword: values.oldPassword, newPassword: values.password }, true] },
       });
-      toast.success('Password changed successfully!');
+      toast.success(t('Password changed successfully!'));
       changePasswordForm.reset();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to change password';
+      const message = err instanceof Error ? err.message : t('Failed to change password');
       toast.error(message);
     }
   };
@@ -44,15 +47,15 @@ export const useGraphQLShowcase = () => {
         user: { me: { _id: true, email: true } },
       });
       setUserData(data.user?.me ?? null);
-      toast.success('Profile fetched successfully!');
+      toast.success(t('Profile fetched successfully!'));
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to fetch profile';
+      const message = err instanceof Error ? err.message : t('Failed to fetch profile');
       setUserError(message);
       toast.error(message);
     } finally {
       setIsUserLoading(false);
     }
-  }, []);
+  }, [t]);
 
   // --- Todos Query Demo ---
   const [todos, setTodos] = useState<TodoType[]>([]);
@@ -67,15 +70,16 @@ export const useGraphQLShowcase = () => {
         user: { todos: todoSelector },
       });
       setTodos(data.user?.todos ?? []);
-      toast.success(`Fetched ${data.user?.todos?.length ?? 0} todos`);
+      const count = data.user?.todos?.length ?? 0;
+      toast.success(t('Fetched {{count}} todos', { count }));
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to fetch todos';
+      const message = err instanceof Error ? err.message : t('Failed to fetch todos');
       setTodosError(message);
       toast.error(message);
     } finally {
       setIsTodosLoading(false);
     }
-  }, []);
+  }, [t]);
 
   // --- Countdown Subscription ---
   const [startFrom, setStartFrom] = useState(10);
@@ -117,7 +121,7 @@ export const useGraphQLShowcase = () => {
       sub.error((err: unknown) => {
         console.error('[CountdownDemo] Subscription error:', err);
         setIsCountdownRunning(false);
-        toast.error('Countdown subscription failed');
+        toast.error(t('Countdown subscription failed'));
       });
 
       sub.off(() => {
@@ -129,9 +133,9 @@ export const useGraphQLShowcase = () => {
     } catch (err) {
       console.error('[CountdownDemo] Failed to start subscription:', err);
       setIsCountdownRunning(false);
-      toast.error('Failed to start countdown');
+      toast.error(t('Failed to start countdown'));
     }
-  }, [startFrom, cleanupCountdown]);
+  }, [startFrom, cleanupCountdown, t]);
 
   const stopCountdown = useCallback(() => {
     cleanupCountdown();
@@ -186,7 +190,7 @@ export const useGraphQLShowcase = () => {
       sub.error((err: unknown) => {
         console.error('[AiChatDemo] Subscription error:', err);
         setIsAiStreaming(false);
-        setAiError('AI endpoint not configured or unavailable.');
+        setAiError(t('AI endpoint not configured or unavailable.'));
       });
 
       sub.off(() => {
@@ -198,9 +202,9 @@ export const useGraphQLShowcase = () => {
     } catch (err) {
       console.error('[AiChatDemo] Failed to start subscription:', err);
       setIsAiStreaming(false);
-      setAiError('AI endpoint not configured or unavailable.');
+      setAiError(t('AI endpoint not configured or unavailable.'));
     }
-  }, [aiMessage, cleanupAiChat]);
+  }, [aiMessage, cleanupAiChat, t]);
 
   const stopAiStreaming = useCallback(() => {
     cleanupAiChat();

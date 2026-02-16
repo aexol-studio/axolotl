@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useDynamite } from '@aexol/dynamite';
 import { useAuthStore } from '@/stores';
 import { query, mutation, subscription, getGraphQLErrorMessage, todoSelector, type TodoType } from '@/api';
 
@@ -20,6 +21,7 @@ interface UseDashboardOptions {
 }
 
 export const useDashboard = ({ ownerId }: UseDashboardOptions) => {
+  const { t } = useDynamite();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const queryClient = useQueryClient();
 
@@ -50,7 +52,7 @@ export const useDashboard = ({ ownerId }: UseDashboardOptions) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['todos'] });
-      toast.success('Todo created!');
+      toast.success(t('Todo created!'));
     },
   });
 
@@ -64,7 +66,7 @@ export const useDashboard = ({ ownerId }: UseDashboardOptions) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['todos'] });
-      toast.success('Todo updated!');
+      toast.success(t('Todo updated!'));
     },
   });
 
@@ -103,7 +105,6 @@ export const useDashboard = ({ ownerId }: UseDashboardOptions) => {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const subscriptionRef = useRef<any>(null);
-
   useEffect(() => {
     // Invalidate todo query cache on any subscription event
     const invalidateTodos = () => queryClient.invalidateQueries({ queryKey: ['todos'] });
@@ -132,17 +133,17 @@ export const useDashboard = ({ ownerId }: UseDashboardOptions) => {
         const { type, todo } = data.todoUpdates;
 
         if (type === 'CREATED') {
-          toast.success(`New todo: "${todo.content}"`);
+          toast.success(t('New todo: "{{content}}"', { content: todo.content }));
           invalidateTodos();
         } else if (type === 'UPDATED') {
-          toast.info(`Todo completed: "${todo.content}"`);
+          toast.info(t('Todo completed: "{{content}}"', { content: todo.content }));
           invalidateTodos();
         }
       });
 
       sub.error((err: unknown) => {
         console.error('[useDashboard] Subscription error:', err);
-        toast.error('Lost connection to live updates. Refresh the page to reconnect.');
+        toast.error(t('Lost connection to live updates. Refresh the page to reconnect.'));
       });
 
       sub.off(() => {
@@ -161,7 +162,7 @@ export const useDashboard = ({ ownerId }: UseDashboardOptions) => {
         subscriptionRef.current = null;
       }
     };
-  }, [ownerId, queryClient]);
+  }, [ownerId, queryClient, t]);
 
   return {
     todos,

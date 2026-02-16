@@ -7,35 +7,35 @@ export type Feature = {
   icon: LucideIcon;
 };
 
-export const features: Feature[] = [
+export const getFeatures = (t: (key: string) => string): Feature[] => [
   {
-    title: 'Schema-First Development',
-    description: 'Define your GraphQL schema first, get fully typed resolvers automatically.',
+    title: t('Schema-First Development'),
+    description: t('Define your GraphQL schema first, get fully typed resolvers automatically.'),
     icon: FileCode2,
   },
   {
-    title: 'Type-Safe Client with Zeus',
-    description: 'End-to-end type safety from schema to frontend with Zeus GraphQL client.',
+    title: t('Type-Safe Client with Zeus'),
+    description: t('End-to-end type safety from schema to frontend with Zeus GraphQL client.'),
     icon: Zap,
   },
   {
-    title: 'Real-Time Subscriptions',
-    description: 'Built-in support for GraphQL subscriptions with WebSocket transport.',
+    title: t('Real-Time Subscriptions'),
+    description: t('Built-in support for GraphQL subscriptions with WebSocket transport.'),
     icon: Radio,
   },
   {
-    title: 'Micro-Federation',
-    description: 'Split your API into independent modules that merge seamlessly.',
+    title: t('Micro-Federation'),
+    description: t('Split your API into independent modules that merge seamlessly.'),
     icon: Puzzle,
   },
   {
-    title: 'SSR Ready',
-    description: 'Server-side rendering with Vite for fast initial loads and SEO.',
+    title: t('SSR Ready'),
+    description: t('Server-side rendering with Vite for fast initial loads and SEO.'),
     icon: Globe,
   },
   {
-    title: 'Beautiful UI',
-    description: 'shadcn/ui components with dark mode and full theme customization.',
+    title: t('Beautiful UI'),
+    description: t('shadcn/ui components with dark mode and full theme customization.'),
     icon: Palette,
   },
 ];

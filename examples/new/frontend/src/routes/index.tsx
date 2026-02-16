@@ -1,12 +1,12 @@
 import { Routes, Route } from 'react-router';
-import { GuestLayout } from './guest';
-import { ProtectedLayout } from './protected';
-import { Landing } from './guest/landing';
+import { GuestLayout } from './guest/index.js';
+import { ProtectedLayout } from './protected/index.js';
+import { Landing } from './guest/landing/index.js';
 import { Login } from './guest/login/index.js';
-import { Dashboard } from './protected/dashboard';
-import { Settings } from './protected/settings';
-import { Examples } from './public/examples';
-import { NotFound } from './not-found';
+import { Dashboard } from './protected/dashboard/index.js';
+import { Settings } from './protected/settings/index.js';
+import { Examples } from './public/examples/index.js';
+import { NotFound } from './not-found/index.js';
 
 export const AppRoutes = () => {
   return (
@@ -23,7 +23,7 @@ export const AppRoutes = () => {
       {/* Protected — redirect to / if not authenticated */}
       <Route element={<ProtectedLayout />}>
         <Route path="/app" element={<Dashboard />} />
-        <Route path="/app/settings" element={<Settings />} />
+        <Route path="/settings" element={<Settings />} />
       </Route>
 
       {/* Catch-all 404 */}

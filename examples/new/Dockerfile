@@ -34,6 +34,8 @@ COPY --from=builder /app/backend/src/prisma/migrations ./backend/src/prisma/migr
 COPY --from=builder /app/prisma.config.ts ./
 COPY --from=builder /app/backend/schema.graphql ./backend/
 
-EXPOSE 8080
+ENV HOST="::"
+
+EXPOSE 4102
 
 CMD ["node", "lib/index.js"]

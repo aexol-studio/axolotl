@@ -1,5 +1,8 @@
 import { GraphQLError } from '@/zeus/index.js';
 
+// NOTE: These error constants are used outside React context (e.g., in queryClient.ts).
+// Translation should happen at the display/render site where useDynamite() is available.
+// The keys are registered in public/locales/en/common.json for completeness.
 const MASKED_ERROR = 'Unexpected error.';
 const GENERIC_ERROR = 'An unexpected error occurred';
 

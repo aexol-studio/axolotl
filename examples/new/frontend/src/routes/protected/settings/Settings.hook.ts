@@ -1,8 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useDynamite } from '@aexol/dynamite';
 import { query, mutation, sessionSelector } from '@/api';
 
 export const useSettings = () => {
+  const { t } = useDynamite();
   const queryClient = useQueryClient();
 
   const { data: sessions, isLoading: isLoadingSessions } = useQuery({
@@ -19,7 +21,7 @@ export const useSettings = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
-      toast.success('Session revoked');
+      toast.success(t('Session revoked'));
     },
   });
 
@@ -29,7 +31,7 @@ export const useSettings = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
-      toast.success('All other sessions revoked');
+      toast.success(t('All other sessions revoked'));
     },
   });
 
@@ -38,7 +40,7 @@ export const useSettings = () => {
       await mutation()({ user: { changePassword: [{ oldPassword, newPassword }, true] } });
     },
     onSuccess: () => {
-      toast.success('Password changed successfully');
+      toast.success(t('Password changed successfully'));
     },
   });
 
