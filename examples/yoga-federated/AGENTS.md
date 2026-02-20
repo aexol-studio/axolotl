@@ -636,29 +636,9 @@ export default createResolvers({
 
 1. **Always use `createSubscriptionHandler`** - It wraps your async generator function
 2. **Use async generators** - Functions with `async function*` that yield values
-3. **Yield values directly** - GraphQL automatically wraps the yielded value in `{ [fieldName]: yieldedValue }` format
+3. **Return values directly** - The framework handles wrapping in the subscription field
 4. **Access context** - Same `[source, args, context]` signature as regular resolvers
 5. **Works with GraphQL Yoga** - Supports both SSE and WebSocket transports
-
-### CRITICAL: Subscription Return Format
-
-GraphQL subscriptions automatically wrap yielded values. You should yield the **value directly**, NOT wrapped in the field name:
-
-```typescript
-// ✅ CORRECT - yield the value directly
-createSubscriptionHandler(async function* () {
-  yield { type: 'CREATED', todo: { _id: '123', content: 'Test' } };
-  // GraphQL returns: { "data": { "todoUpdates": { "type": "CREATED", "todo": {...} } } }
-});
-
-// ❌ WRONG - do NOT wrap in field name
-createSubscriptionHandler(async function* () {
-  yield { todoUpdates: { type: 'CREATED', todo: {...} } };
-  // This would result in: { "data": { "todoUpdates": { "todoUpdates": {...} } } }
-});
-```
-
-The GraphQL layer handles the `{ data: { fieldName: ... } }` wrapping automatically.
 
 ### Example: Real-Time Counter
 

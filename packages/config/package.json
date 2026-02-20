@@ -1,6 +1,6 @@
 {
   "name": "@aexol/axolotl-config",
-  "version": "2.1.9",
+  "version": "2.2.0",
   "private": false,
   "main": "./lib/index.js",
   "author": "Aexol, Artur Czemiel",
