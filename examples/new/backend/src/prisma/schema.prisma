@@ -12,6 +12,7 @@ model User {
   email     String    @unique
   password  String
   todos     Todo[]
+  notes     Note[]
   sessions  Session[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -37,4 +38,21 @@ model Todo {
   ownerId   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum NoteStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+model Note {
+  id        String     @id @default(cuid())
+  content   String
+  status    NoteStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notes")
 }

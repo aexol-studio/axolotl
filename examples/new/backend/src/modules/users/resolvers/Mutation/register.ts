@@ -5,6 +5,7 @@ import { prisma } from '@/src/db.js';
 import { serializeSetCookie } from '@/src/lib/cookies.js';
 import { hashPassword, signToken, generateSessionToken, getSessionExpiryDate } from '@/src/lib/auth.js';
 import { parseInput, emailSchema, passwordSchema } from '@/src/lib/validation.js';
+import type { AppContext } from '@/src/lib/context.js';
 
 const registerSchema = z.object({
   email: emailSchema,
@@ -26,6 +27,7 @@ export default createResolvers({
       const sessionToken = generateSessionToken();
 
       // Create user and session atomically
+      const context = input[2] as AppContext;
       const { user, session } = await prisma.$transaction(async (tx) => {
         const user = await tx.user.create({
           data: { email, password: hashedPassword },
@@ -35,7 +37,7 @@ export default createResolvers({
             token: sessionToken,
             userId: user.id,
             expiresAt: getSessionExpiryDate(),
-            userAgent: input[2].request.headers.get('user-agent') || undefined,
+            userAgent: context.request.headers.get('user-agent') || undefined,
           },
         });
         return { user, session };
@@ -45,7 +47,6 @@ export default createResolvers({
       const jwt = signToken({ userId: user.id, email: user.email, jti: session.token });
 
       // Set auth cookie on the response so the browser stores the JWT automatically
-      const context = input[2];
       const { res } = context;
       if (res) {
         res.setHeader('Set-Cookie', serializeSetCookie(jwt));

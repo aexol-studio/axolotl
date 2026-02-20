@@ -10,4 +10,7 @@ export {
   type UserType,
   sessionSelector,
   type SessionType,
+  noteSelector,
+  type NoteItem,
+  NoteStatus,
 } from './selectors.js';

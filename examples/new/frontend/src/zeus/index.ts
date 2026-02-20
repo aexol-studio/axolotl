@@ -1112,26 +1112,6 @@ register?: [{	email: string | Variable<any, string>,	password: string | Variable
 		__typename?: boolean | `@${string}`,
 	['...on Mutation']?: Omit<ValueTypes["Mutation"], "...on Mutation">
 }>;
-	["AuthorizedUserQuery"]: AliasType<{
-	_?:boolean | `@${string}`,
-	todos?:ValueTypes["Todo"],
-todo?: [{	_id: string | Variable<any, string>},ValueTypes["Todo"]],
-	me?:ValueTypes["User"],
-	sessions?:ValueTypes["Session"],
-		__typename?: boolean | `@${string}`,
-	['...on AuthorizedUserQuery']?: Omit<ValueTypes["AuthorizedUserQuery"], "...on AuthorizedUserQuery">
-}>;
-	["AuthorizedUserMutation"]: AliasType<{
-	_?:boolean | `@${string}`,
-createTodo?: [{	content: string | Variable<any, string>,	secret?: ValueTypes["Secret"] | undefined | null | Variable<any, string>},boolean | `@${string}`],
-todoOps?: [{	_id: string | Variable<any, string>},ValueTypes["TodoOps"]],
-changePassword?: [{	oldPassword: string | Variable<any, string>,	newPassword: string | Variable<any, string>},boolean | `@${string}`],
-revokeSession?: [{	sessionId: string | Variable<any, string>},boolean | `@${string}`],
-	revokeAllSessions?:boolean | `@${string}`,
-deleteAccount?: [{	password: string | Variable<any, string>},boolean | `@${string}`],
-		__typename?: boolean | `@${string}`,
-	['...on AuthorizedUserMutation']?: Omit<ValueTypes["AuthorizedUserMutation"], "...on AuthorizedUserMutation">
-}>;
 	["Subscription"]: AliasType<{
 todoUpdates?: [{	ownerId: string | Variable<any, string>},ValueTypes["TodoUpdate"]],
 countdown?: [{	from?: number | undefined | null | Variable<any, string>},boolean | `@${string}`],
@@ -1165,6 +1145,44 @@ aiChat?: [{	messages: Array<ValueTypes["AIChatMessage"]> | Variable<any, string>
 		__typename?: boolean | `@${string}`,
 	['...on AIChatChunk']?: Omit<ValueTypes["AIChatChunk"], "...on AIChatChunk">
 }>;
+	["AuthorizedUserQuery"]: AliasType<{
+	_?:boolean | `@${string}`,
+	todos?:ValueTypes["Todo"],
+todo?: [{	_id: string | Variable<any, string>},ValueTypes["Todo"]],
+	me?:ValueTypes["User"],
+	sessions?:ValueTypes["Session"],
+	notes?:ValueTypes["Note"],
+note?: [{	id: ValueTypes["ID"] | Variable<any, string>},ValueTypes["Note"]],
+		__typename?: boolean | `@${string}`,
+	['...on AuthorizedUserQuery']?: Omit<ValueTypes["AuthorizedUserQuery"], "...on AuthorizedUserQuery">
+}>;
+	["AuthorizedUserMutation"]: AliasType<{
+	_?:boolean | `@${string}`,
+createTodo?: [{	content: string | Variable<any, string>,	secret?: ValueTypes["Secret"] | undefined | null | Variable<any, string>},boolean | `@${string}`],
+todoOps?: [{	_id: string | Variable<any, string>},ValueTypes["TodoOps"]],
+changePassword?: [{	oldPassword: string | Variable<any, string>,	newPassword: string | Variable<any, string>},boolean | `@${string}`],
+revokeSession?: [{	sessionId: string | Variable<any, string>},boolean | `@${string}`],
+	revokeAllSessions?:boolean | `@${string}`,
+deleteAccount?: [{	password: string | Variable<any, string>},boolean | `@${string}`],
+createNote?: [{	input: ValueTypes["CreateNoteInput"] | Variable<any, string>},ValueTypes["Note"]],
+deleteNote?: [{	id: ValueTypes["ID"] | Variable<any, string>},boolean | `@${string}`],
+		__typename?: boolean | `@${string}`,
+	['...on AuthorizedUserMutation']?: Omit<ValueTypes["AuthorizedUserMutation"], "...on AuthorizedUserMutation">
+}>;
+	["NoteStatus"]:NoteStatus;
+	["Note"]: AliasType<{
+	id?:boolean | `@${string}`,
+	content?:boolean | `@${string}`,
+	status?:boolean | `@${string}`,
+	createdAt?:boolean | `@${string}`,
+	updatedAt?:boolean | `@${string}`,
+		__typename?: boolean | `@${string}`,
+	['...on Note']?: Omit<ValueTypes["Note"], "...on Note">
+}>;
+	["CreateNoteInput"]: {
+	content: string | Variable<any, string>,
+	status?: ValueTypes["NoteStatus"] | undefined | null | Variable<any, string>
+};
 	["ID"]:unknown
   }
 
@@ -1196,24 +1214,6 @@ login?: [{	email: string,	password: string},boolean | `@${string}`],
 register?: [{	email: string,	password: string},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`
 }>;
-	["AuthorizedUserQuery"]: AliasType<{
-	_?:boolean | `@${string}`,
-	todos?:ResolverInputTypes["Todo"],
-todo?: [{	_id: string},ResolverInputTypes["Todo"]],
-	me?:ResolverInputTypes["User"],
-	sessions?:ResolverInputTypes["Session"],
-		__typename?: boolean | `@${string}`
-}>;
-	["AuthorizedUserMutation"]: AliasType<{
-	_?:boolean | `@${string}`,
-createTodo?: [{	content: string,	secret?: ResolverInputTypes["Secret"] | undefined | null},boolean | `@${string}`],
-todoOps?: [{	_id: string},ResolverInputTypes["TodoOps"]],
-changePassword?: [{	oldPassword: string,	newPassword: string},boolean | `@${string}`],
-revokeSession?: [{	sessionId: string},boolean | `@${string}`],
-	revokeAllSessions?:boolean | `@${string}`,
-deleteAccount?: [{	password: string},boolean | `@${string}`],
-		__typename?: boolean | `@${string}`
-}>;
 	["Subscription"]: AliasType<{
 todoUpdates?: [{	ownerId: string},ResolverInputTypes["TodoUpdate"]],
 countdown?: [{	from?: number | undefined | null},boolean | `@${string}`],
@@ -1243,6 +1243,41 @@ aiChat?: [{	messages: Array<ResolverInputTypes["AIChatMessage"]>,	system?: strin
 	done?:boolean | `@${string}`,
 		__typename?: boolean | `@${string}`
 }>;
+	["AuthorizedUserQuery"]: AliasType<{
+	_?:boolean | `@${string}`,
+	todos?:ResolverInputTypes["Todo"],
+todo?: [{	_id: string},ResolverInputTypes["Todo"]],
+	me?:ResolverInputTypes["User"],
+	sessions?:ResolverInputTypes["Session"],
+	notes?:ResolverInputTypes["Note"],
+note?: [{	id: ResolverInputTypes["ID"]},ResolverInputTypes["Note"]],
+		__typename?: boolean | `@${string}`
+}>;
+	["AuthorizedUserMutation"]: AliasType<{
+	_?:boolean | `@${string}`,
+createTodo?: [{	content: string,	secret?: ResolverInputTypes["Secret"] | undefined | null},boolean | `@${string}`],
+todoOps?: [{	_id: string},ResolverInputTypes["TodoOps"]],
+changePassword?: [{	oldPassword: string,	newPassword: string},boolean | `@${string}`],
+revokeSession?: [{	sessionId: string},boolean | `@${string}`],
+	revokeAllSessions?:boolean | `@${string}`,
+deleteAccount?: [{	password: string},boolean | `@${string}`],
+createNote?: [{	input: ResolverInputTypes["CreateNoteInput"]},ResolverInputTypes["Note"]],
+deleteNote?: [{	id: ResolverInputTypes["ID"]},boolean | `@${string}`],
+		__typename?: boolean | `@${string}`
+}>;
+	["NoteStatus"]:NoteStatus;
+	["Note"]: AliasType<{
+	id?:boolean | `@${string}`,
+	content?:boolean | `@${string}`,
+	status?:boolean | `@${string}`,
+	createdAt?:boolean | `@${string}`,
+	updatedAt?:boolean | `@${string}`,
+		__typename?: boolean | `@${string}`
+}>;
+	["CreateNoteInput"]: {
+	content: string,
+	status?: ResolverInputTypes["NoteStatus"] | undefined | null
+};
 	["schema"]: AliasType<{
 	query?:ResolverInputTypes["Query"],
 	mutation?:ResolverInputTypes["Mutation"],
@@ -1275,22 +1310,6 @@ export type ModelTypes = {
 	login: string,
 	register: string
 };
-	["AuthorizedUserQuery"]: {
-		_?: string | undefined | null,
-	todos?: Array<ModelTypes["Todo"]> | undefined | null,
-	todo: ModelTypes["Todo"],
-	me: ModelTypes["User"],
-	sessions: Array<ModelTypes["Session"]>
-};
-	["AuthorizedUserMutation"]: {
-		_?: string | undefined | null,
-	createTodo: string,
-	todoOps: ModelTypes["TodoOps"],
-	changePassword?: boolean | undefined | null,
-	revokeSession?: boolean | undefined | null,
-	revokeAllSessions?: boolean | undefined | null,
-	deleteAccount?: boolean | undefined | null
-};
 	["Subscription"]: {
 		todoUpdates: ModelTypes["TodoUpdate"],
 	countdown?: number | undefined | null,
@@ -1315,6 +1334,38 @@ export type ModelTypes = {
 	["AIChatChunk"]: {
 		content: string,
 	done: boolean
+};
+	["AuthorizedUserQuery"]: {
+		_?: string | undefined | null,
+	todos?: Array<ModelTypes["Todo"]> | undefined | null,
+	todo: ModelTypes["Todo"],
+	me: ModelTypes["User"],
+	sessions: Array<ModelTypes["Session"]>,
+	notes: Array<ModelTypes["Note"]>,
+	note?: ModelTypes["Note"] | undefined | null
+};
+	["AuthorizedUserMutation"]: {
+		_?: string | undefined | null,
+	createTodo: string,
+	todoOps: ModelTypes["TodoOps"],
+	changePassword?: boolean | undefined | null,
+	revokeSession?: boolean | undefined | null,
+	revokeAllSessions?: boolean | undefined | null,
+	deleteAccount?: boolean | undefined | null,
+	createNote: ModelTypes["Note"],
+	deleteNote: boolean
+};
+	["NoteStatus"]:NoteStatus;
+	["Note"]: {
+		id: ModelTypes["ID"],
+	content: string,
+	status: ModelTypes["NoteStatus"],
+	createdAt: string,
+	updatedAt: string
+};
+	["CreateNoteInput"]: {
+	content: string,
+	status?: ModelTypes["NoteStatus"] | undefined | null
 };
 	["schema"]: {
 	query?: ModelTypes["Query"] | undefined | null,
@@ -1357,26 +1408,6 @@ export type GraphQLTypes = {
 	register: string,
 	['...on Mutation']: Omit<GraphQLTypes["Mutation"], "...on Mutation">
 };
-	["AuthorizedUserQuery"]: {
-	__typename: "AuthorizedUserQuery",
-	_?: string | undefined | null,
-	todos?: Array<GraphQLTypes["Todo"]> | undefined | null,
-	todo: GraphQLTypes["Todo"],
-	me: GraphQLTypes["User"],
-	sessions: Array<GraphQLTypes["Session"]>,
-	['...on AuthorizedUserQuery']: Omit<GraphQLTypes["AuthorizedUserQuery"], "...on AuthorizedUserQuery">
-};
-	["AuthorizedUserMutation"]: {
-	__typename: "AuthorizedUserMutation",
-	_?: string | undefined | null,
-	createTodo: string,
-	todoOps: GraphQLTypes["TodoOps"],
-	changePassword?: boolean | undefined | null,
-	revokeSession?: boolean | undefined | null,
-	revokeAllSessions?: boolean | undefined | null,
-	deleteAccount?: boolean | undefined | null,
-	['...on AuthorizedUserMutation']: Omit<GraphQLTypes["AuthorizedUserMutation"], "...on AuthorizedUserMutation">
-};
 	["Subscription"]: {
 	__typename: "Subscription",
 	todoUpdates: GraphQLTypes["TodoUpdate"],
@@ -1410,16 +1441,60 @@ export type GraphQLTypes = {
 	done: boolean,
 	['...on AIChatChunk']: Omit<GraphQLTypes["AIChatChunk"], "...on AIChatChunk">
 };
+	["AuthorizedUserQuery"]: {
+	__typename: "AuthorizedUserQuery",
+	_?: string | undefined | null,
+	todos?: Array<GraphQLTypes["Todo"]> | undefined | null,
+	todo: GraphQLTypes["Todo"],
+	me: GraphQLTypes["User"],
+	sessions: Array<GraphQLTypes["Session"]>,
+	notes: Array<GraphQLTypes["Note"]>,
+	note?: GraphQLTypes["Note"] | undefined | null,
+	['...on AuthorizedUserQuery']: Omit<GraphQLTypes["AuthorizedUserQuery"], "...on AuthorizedUserQuery">
+};
+	["AuthorizedUserMutation"]: {
+	__typename: "AuthorizedUserMutation",
+	_?: string | undefined | null,
+	createTodo: string,
+	todoOps: GraphQLTypes["TodoOps"],
+	changePassword?: boolean | undefined | null,
+	revokeSession?: boolean | undefined | null,
+	revokeAllSessions?: boolean | undefined | null,
+	deleteAccount?: boolean | undefined | null,
+	createNote: GraphQLTypes["Note"],
+	deleteNote: boolean,
+	['...on AuthorizedUserMutation']: Omit<GraphQLTypes["AuthorizedUserMutation"], "...on AuthorizedUserMutation">
+};
+	["NoteStatus"]: NoteStatus;
+	["Note"]: {
+	__typename: "Note",
+	id: GraphQLTypes["ID"],
+	content: string,
+	status: GraphQLTypes["NoteStatus"],
+	createdAt: string,
+	updatedAt: string,
+	['...on Note']: Omit<GraphQLTypes["Note"], "...on Note">
+};
+	["CreateNoteInput"]: {
+		content: string,
+	status?: GraphQLTypes["NoteStatus"] | undefined | null
+};
 	["ID"]: "scalar" & { name: "ID" }
     }
 export enum TodoUpdateType {
 	CREATED = "CREATED",
 	UPDATED = "UPDATED"
 }
+export enum NoteStatus {
+	ACTIVE = "ACTIVE",
+	ARCHIVED = "ARCHIVED"
+}
 
 type ZEUS_VARIABLES = {
 	["Secret"]: ValueTypes["Secret"];
 	["TodoUpdateType"]: ValueTypes["TodoUpdateType"];
 	["AIChatMessage"]: ValueTypes["AIChatMessage"];
+	["NoteStatus"]: ValueTypes["NoteStatus"];
+	["CreateNoteInput"]: ValueTypes["CreateNoteInput"];
 	["ID"]: ValueTypes["ID"];
 }

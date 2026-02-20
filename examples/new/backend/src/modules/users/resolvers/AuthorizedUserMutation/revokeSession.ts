@@ -4,10 +4,12 @@ import { User } from '../../models.js';
 import { prisma } from '@/src/db.js';
 import { verifyToken } from '@/src/lib/auth.js';
 import { getTokenFromCookies } from '@/src/lib/cookies.js';
+import type { AppContext } from '@/src/lib/context.js';
 
 export default createResolvers({
   AuthorizedUserMutation: {
-    revokeSession: async ([source, , context], { sessionId }) => {
+    revokeSession: async ([source, , ctx], { sessionId }) => {
+      const context = ctx as AppContext;
       const src = source as User;
 
       // Determine current session JTI from cookie

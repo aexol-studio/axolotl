@@ -79,8 +79,7 @@ mutation Register{
   );
 
   // Mount GraphQL at /graphql (includes AI chat via subscription)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  app.use('/graphql', yoga as any);
+  app.use('/graphql', yoga as unknown as express.RequestHandler);
 
   // Logout endpoint — deletes session from DB and clears the auth cookie
   app.post('/api/logout', async (req, res) => {

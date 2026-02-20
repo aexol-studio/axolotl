@@ -1,0 +1,27 @@
+enum NoteStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+type Note {
+  id: ID!
+  content: String!
+  status: NoteStatus!
+  createdAt: String!
+  updatedAt: String!
+}
+
+input CreateNoteInput {
+  content: String!
+  status: NoteStatus
+}
+
+type AuthorizedUserQuery {
+  notes: [Note!]!
+  note(id: ID!): Note
+}
+
+type AuthorizedUserMutation {
+  createNote(input: CreateNoteInput!): Note!
+  deleteNote(id: ID!): Boolean!
+}

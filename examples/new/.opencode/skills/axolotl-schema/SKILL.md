@@ -191,9 +191,10 @@ export default createResolvers({
 
 1. Add `@resolver` directives to schema fields
 2. Run `cd backend && npx @aexol/axolotl build` to update types
-3. Run `cd backend && npx @aexol/axolotl resolvers` to scaffold structure
-4. Implement TODO sections in generated resolver files
-5. Import and use `resolvers/resolvers.ts` in your server
+3. If Prisma schema was modified, run `cd backend && npx prisma generate` to regenerate the Prisma client
+4. Run `cd backend && npx @aexol/axolotl resolvers` to scaffold structure
+5. Implement TODO sections in generated resolver files
+6. Import and use `resolvers/resolvers.ts` in your server
 
 **Note for Federated Projects:**
 
@@ -212,6 +213,9 @@ cd backend && npx @aexol/axolotl build
 
 # Generate models with custom directory
 npx @aexol/axolotl build --cwd path/to/project
+
+# Regenerate Prisma client (after schema.prisma changes)
+cd backend && npx prisma generate
 
 # Generate resolver boilerplate from @resolver directives
 cd backend && npx @aexol/axolotl resolvers
@@ -258,9 +262,10 @@ Total: 3 resolver(s) to implement
 
 ## Quick Reference
 
-| Task               | Command/Code                                                              |
-| ------------------ | ------------------------------------------------------------------------- |
-| Initialize project | `npx @aexol/axolotl create-yoga <name>`                                   |
-| Generate types     | `cd backend && npx @aexol/axolotl build`                                  |
-| Scaffold resolvers | `cd backend && npx @aexol/axolotl resolvers`                              |
-| Inspect resolvers  | `cd backend && npx @aexol/axolotl inspect -s schema.graphql -r resolvers` |
+| Task                     | Command/Code                                                              |
+| ------------------------ | ------------------------------------------------------------------------- |
+| Initialize project       | `npx @aexol/axolotl create-yoga <name>`                                   |
+| Generate types           | `cd backend && npx @aexol/axolotl build`                                  |
+| Scaffold resolvers       | `cd backend && npx @aexol/axolotl resolvers`                              |
+| Regenerate Prisma client | `cd backend && npx prisma generate`                                       |
+| Inspect resolvers        | `cd backend && npx @aexol/axolotl inspect -s schema.graphql -r resolvers` |

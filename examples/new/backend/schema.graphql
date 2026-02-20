@@ -36,38 +36,6 @@ type Mutation{
 	): String! @resolver
 }
 
-type AuthorizedUserQuery{
-	_: String
-	todos: [Todo!] @resolver
-	todo(
-		_id: String!
-	): Todo! @resolver
-	me: User! @resolver
-	sessions: [Session!]! @resolver
-}
-
-type AuthorizedUserMutation{
-	_: String
-	createTodo(
-		content: String!
-		secret: Secret
-	): String! @resolver
-	todoOps(
-		_id: String!
-	): TodoOps! @resolver
-	changePassword(
-		oldPassword: String!
-		newPassword: String!
-	): Boolean @resolver
-	revokeSession(
-		sessionId: String!
-	): Boolean @resolver
-	revokeAllSessions: Boolean @resolver
-	deleteAccount(
-		password: String!
-	): Boolean @resolver
-}
-
 directive @resolver on FIELD_DEFINITION
 
 type Subscription{
@@ -105,6 +73,66 @@ input AIChatMessage{
 type AIChatChunk{
 	content: String!
 	done: Boolean!
+}
+
+type AuthorizedUserQuery{
+	_: String
+	todos: [Todo!] @resolver
+	todo(
+		_id: String!
+	): Todo! @resolver
+	me: User! @resolver
+	sessions: [Session!]! @resolver
+	notes: [Note!]!
+	note(
+		id: ID!
+	): Note
+}
+
+type AuthorizedUserMutation{
+	_: String
+	createTodo(
+		content: String!
+		secret: Secret
+	): String! @resolver
+	todoOps(
+		_id: String!
+	): TodoOps! @resolver
+	changePassword(
+		oldPassword: String!
+		newPassword: String!
+	): Boolean @resolver
+	revokeSession(
+		sessionId: String!
+	): Boolean @resolver
+	revokeAllSessions: Boolean @resolver
+	deleteAccount(
+		password: String!
+	): Boolean @resolver
+	createNote(
+		input: CreateNoteInput!
+	): Note!
+	deleteNote(
+		id: ID!
+	): Boolean!
+}
+
+enum NoteStatus{
+	ACTIVE
+	ARCHIVED
+}
+
+type Note{
+	id: ID!
+	content: String!
+	status: NoteStatus!
+	createdAt: String!
+	updatedAt: String!
+}
+
+input CreateNoteInput{
+	content: String!
+	status: NoteStatus
 }
 
 schema{

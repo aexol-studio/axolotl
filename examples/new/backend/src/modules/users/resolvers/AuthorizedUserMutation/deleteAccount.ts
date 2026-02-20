@@ -6,6 +6,7 @@ import { prisma } from '@/src/db.js';
 import { verifyPassword } from '@/src/lib/auth.js';
 import { serializeClearCookie } from '@/src/lib/cookies.js';
 import { parseInput } from '@/src/lib/validation.js';
+import type { AppContext } from '@/src/lib/context.js';
 
 const deleteAccountSchema = z.object({
   password: z.string().min(1, 'Password is required'),
@@ -13,7 +14,8 @@ const deleteAccountSchema = z.object({
 
 export default createResolvers({
   AuthorizedUserMutation: {
-    deleteAccount: async ([source, , context], { password: rawPassword }) => {
+    deleteAccount: async ([source, , ctx], { password: rawPassword }) => {
+      const context = ctx as AppContext;
       const { password } = parseInput(deleteAccountSchema, { password: rawPassword });
 
       const src = source as User;

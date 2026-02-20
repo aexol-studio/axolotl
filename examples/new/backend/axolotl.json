@@ -13,6 +13,10 @@
     {
       "schema": "src/modules/users/schema.graphql",
       "models": "src/modules/users/models.ts"
+    },
+    {
+      "schema": "src/modules/notes/schema.graphql",
+      "models": "src/modules/notes/models.ts"
     }
   ],
   "zeus": [

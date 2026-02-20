@@ -11,8 +11,25 @@ export const AllTypesProps: Record<string,any> = {
 
 		}
 	},
+	Subscription:{
+		todoUpdates:{
+
+		},
+		countdown:{
+
+		},
+		aiChat:{
+			messages:"AIChatMessage"
+		}
+	},
+	AIChatMessage:{
+
+	},
 	AuthorizedUserQuery:{
 		todo:{
+
+		},
+		note:{
 
 		}
 	},
@@ -31,21 +48,17 @@ export const AllTypesProps: Record<string,any> = {
 		},
 		deleteAccount:{
 
+		},
+		createNote:{
+			input:"CreateNoteInput"
+		},
+		deleteNote:{
+
 		}
 	},
-	Subscription:{
-		todoUpdates:{
-
-		},
-		countdown:{
-
-		},
-		aiChat:{
-			messages:"AIChatMessage"
-		}
-	},
-	AIChatMessage:{
-
+	NoteStatus: "enum" as const,
+	CreateNoteInput:{
+		status:"NoteStatus"
 	},
 	ID: `scalar.ID` as const
 }
@@ -72,22 +85,6 @@ export const ReturnTypes: Record<string,any> = {
 		login:"String",
 		register:"String"
 	},
-	AuthorizedUserQuery:{
-		_:"String",
-		todos:"Todo",
-		todo:"Todo",
-		me:"User",
-		sessions:"Session"
-	},
-	AuthorizedUserMutation:{
-		_:"String",
-		createTodo:"String",
-		todoOps:"TodoOps",
-		changePassword:"Boolean",
-		revokeSession:"Boolean",
-		revokeAllSessions:"Boolean",
-		deleteAccount:"Boolean"
-	},
 	resolver:{
 
 	},
@@ -111,6 +108,33 @@ export const ReturnTypes: Record<string,any> = {
 	AIChatChunk:{
 		content:"String",
 		done:"Boolean"
+	},
+	AuthorizedUserQuery:{
+		_:"String",
+		todos:"Todo",
+		todo:"Todo",
+		me:"User",
+		sessions:"Session",
+		notes:"Note",
+		note:"Note"
+	},
+	AuthorizedUserMutation:{
+		_:"String",
+		createTodo:"String",
+		todoOps:"TodoOps",
+		changePassword:"Boolean",
+		revokeSession:"Boolean",
+		revokeAllSessions:"Boolean",
+		deleteAccount:"Boolean",
+		createNote:"Note",
+		deleteNote:"Boolean"
+	},
+	Note:{
+		id:"ID",
+		content:"String",
+		status:"NoteStatus",
+		createdAt:"String",
+		updatedAt:"String"
 	},
 	ID: `scalar.ID` as const
 }

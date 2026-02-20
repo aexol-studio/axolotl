@@ -26,7 +26,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/ToggleGroup';
 import { SectionCard } from '@/components/atoms';
 
 import { techStack } from './Examples.data';
-import { DataDisplaySection, FormsShowcaseTab, GraphQLShowcaseTab } from './components';
+import { DataDisplaySection, FormsShowcaseTab, GraphQLShowcaseTab, NotesShowcase } from './components';
 
 export const ExamplesPage = () => {
   const { t } = useDynamite();
@@ -59,10 +59,11 @@ export const ExamplesPage = () => {
 
       {/* Tabbed Showcase */}
       <Tabs defaultValue="components" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="components">{t('Components')}</TabsTrigger>
           <TabsTrigger value="forms">{t('Forms')}</TabsTrigger>
           <TabsTrigger value="graphql">GraphQL</TabsTrigger>
+          <TabsTrigger value="notes">{t('Notes')}</TabsTrigger>
         </TabsList>
 
         {/* ==================== COMPONENTS TAB ==================== */}
@@ -242,6 +243,11 @@ export const ExamplesPage = () => {
         {/* ==================== GRAPHQL TAB ==================== */}
         <TabsContent value="graphql" className="space-y-6 mt-6">
           <GraphQLShowcaseTab />
+        </TabsContent>
+
+        {/* ==================== NOTES TAB ==================== */}
+        <TabsContent value="notes" className="space-y-6 mt-6">
+          <NotesShowcase />
         </TabsContent>
       </Tabs>
     </div>

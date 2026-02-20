@@ -97,6 +97,178 @@ export const { createResolvers, adapter } = Axolotl(graphqlYogaWithContextAdapte
 
 > This approach runs auth on **every** request at the context level. This project instead uses gateway resolvers to authenticate only the operations that need it — see the Authentication Architecture section in AGENTS.md for details.
 
+> For multi-tenant applications where tenant must be resolved and validated per request, see the **Multi-Tenant Context Pattern** below — it uses the same `buildContext` approach to enrich context with tenant membership.
+
+### Multi-Tenant Context Pattern
+
+When your application serves multiple tenants (clinics, organizations, workspaces), follow this **single canonical flow**. There are no alternatives — this is the correct way.
+
+#### The Flow
+
+```
+HTTP Request (X-Tenant-Id: <tenantId>)
+       ↓
+buildContext()              — validates tenant membership ONCE per request
+       ↓
+AppContext.tenant           — resolved, validated tenant stored in context
+       ↓
+Gateway resolver            — enriches source with tenantId from context
+       ↓
+Child resolvers             — read tenantId from [source], never from args
+       ↓
+Prisma queries              — scoped to tenantId automatically
+```
+
+#### Step 1: Extend AppContext with tenant
+
+```typescript
+// src/lib/context.ts
+export interface AppContext extends YogaInitialContext {
+  req: IncomingMessage;
+  res: ServerResponse;
+  tenant: { id: string } | null;
+}
+```
+
+#### Step 2: Validate tenant membership in buildContext
+
+This is the **only place** where tenant validation happens. Do it once, do it here.
+
+```typescript
+const yogaAdapter = graphqlYogaWithContextAdapter<AppContext>(async (initial) => {
+  const req = initial.request;
+
+  // 1. Resolve tenantId from header
+  const tenantId = req.headers.get('x-tenant-id') ?? null;
+
+  // 2. Verify JWT and get userId (reuse your existing auth.ts helpers)
+  const token = parseCookies(req.headers.get('cookie') ?? '')[COOKIE_NAME] ?? null;
+  const payload = token ? verifyToken(token) : null;
+
+  // 3. Validate tenant membership — does this user belong to this tenant?
+  let tenant: { id: string } | null = null;
+  if (tenantId && payload) {
+    const assignment = await prisma.tenantMembership.findFirst({
+      where: { userId: payload.userId, tenantId },
+    });
+    if (assignment) tenant = { id: tenantId };
+  }
+
+  return {
+    ...initial,
+    tenant,
+    // req and res come from ...initial spread — Yoga's Node adapter attaches them at runtime
+  };
+});
+```
+
+> **Why here and not in resolvers?** Validation in `buildContext` runs once per request regardless of how many resolvers execute. If you validated in each resolver, a single request with 10 fields would hit the DB 10 times for the same check.
+
+#### Step 3: Gateway resolver enriches source with tenantId
+
+The gateway is the single choke point for all authenticated operations. Enrich the source here so every child resolver gets `tenantId` automatically — without touching the context again.
+
+```typescript
+// modules/auth/resolvers/Query/user.ts
+import { createResolvers } from '../../axolotl.js';
+import type { AppContext } from '@/src/lib/context.js';
+import { verifyAuth } from '../../lib/verifyAuth.js';
+import { GraphQLError } from 'graphql';
+
+export default createResolvers({
+  Query: {
+    user: async (input) => {
+      const context = input[2] as AppContext;
+      const verified = await verifyAuth(context); // { _id, email }
+
+      // Tenant is already validated by buildContext — just forward it
+      if (!context.tenant) throw new GraphQLError('No active tenant', { extensions: { code: 'FORBIDDEN' } });
+
+      return {
+        _id: verified._id,
+        email: verified.email,
+        tenantId: context.tenant.id, // ← injected into source once, used everywhere
+      };
+    },
+  },
+});
+```
+
+#### Step 4: Child resolvers read tenantId from [source]
+
+The object returned by the gateway resolver (`{ _id, email, tenantId }`) becomes `source` for every child resolver under `AuthorizedUserQuery`. This is how `tenantId` arrives in child resolvers — not through args, not through context.
+
+```typescript
+// Any domain resolver — no context access needed, no args needed
+AuthorizedUserQuery: {
+  appointments: async ([source]) => {
+    const { _id, tenantId } = source as { _id: string; email: string; tenantId: string };
+    return prisma.appointment.findMany({
+      where: { tenantId, userId: _id },
+      orderBy: { createdAt: 'desc' },
+    });
+  },
+
+  patients: async ([source]) => {
+    const { tenantId } = source as { _id: string; email: string; tenantId: string };
+    return prisma.patient.findMany({ where: { tenantId } });
+  },
+},
+```
+
+#### What NOT to do
+
+**❌ Never pass tenantId as a GraphQL argument:**
+
+```graphql
+# WRONG — schema pollution, client-controlled, cannot be trusted
+type AuthorizedUserQuery {
+  appointments(clinicId: ID!): [Appointment!]!
+  patients(clinicId: ID!): [Patient!]!
+  createAppointment(input: CreateAppointmentInput!): Appointment!
+}
+
+input CreateAppointmentInput {
+  clinicId: ID!   # WRONG
+  ...
+}
+```
+
+```typescript
+// WRONG — resolver trusts client-supplied clinicId with no server-side enforcement
+appointments: async ([source], { clinicId }) => {
+  return prisma.appointment.findMany({ where: { clinicId } }); // any clinicId works!
+};
+```
+
+**✅ Correct — tenantId never appears in schema args:**
+
+```graphql
+# CORRECT — tenant is implicit, resolved server-side
+type AuthorizedUserQuery {
+  appointments: [Appointment!]!
+  patients: [Patient!]!
+  createAppointment(input: CreateAppointmentInput!): Appointment!
+}
+
+input CreateAppointmentInput {
+  # no tenantId here — it comes from context/source
+  patientId: ID!
+  date: String!
+}
+```
+
+#### Why this flow is correct
+
+| Concern                                 | Where it's handled                               |
+| --------------------------------------- | ------------------------------------------------ |
+| "Is the user authenticated?"            | `verifyAuth()` in gateway resolver               |
+| "Does this user belong to this tenant?" | `buildContext()` — once per request              |
+| "Which tenant scopes this query?"       | `[source].tenantId` — forwarded from gateway     |
+| "Can the client lie about tenantId?"    | No — client never sends tenantId in GraphQL args |
+
+The tenant is resolved and validated entirely server-side. The frontend only sets the `X-Tenant-Id` header — it cannot inject a tenantId into GraphQL operations.
+
 **Key Components:**
 
 1. **Import Models, Scalars & Directives** from generated `models.ts`
@@ -146,6 +318,27 @@ server.listen(4000, () => {
   console.log('Server running on http://localhost:4000');
 });
 ```
+
+### Integrating with Express (SSR projects)
+
+When the Axolotl/Yoga server is mounted inside an Express app (for SSR), there is a structural type incompatibility between `YogaServer` and Express's `RequestHandler`. Use `as unknown as express.RequestHandler` — **not** `as any`:
+
+```typescript
+import express from 'express';
+const { yoga } = adapter({ resolvers }, { yoga: { graphqlEndpoint: '/graphql' } });
+
+// ✅ CORRECT — explicit double-cast communicates intent
+app.use('/graphql', yoga as unknown as express.RequestHandler);
+
+// ✅ Also acceptable — @ts-expect-error will error if types ever become compatible
+// @ts-expect-error — YogaServer satisfies RequestHandler at runtime but types are structurally incompatible
+app.use('/graphql', yoga);
+
+// ❌ WRONG — as any silences all type checking, hides all errors
+app.use('/graphql', yoga as any);
+```
+
+> **Why `as unknown as T` instead of `as any`?** `as any` silences ALL type errors on the value. `as unknown as RequestHandler` is the TypeScript-idiomatic double-cast that explicitly says "I know this isn't provably assignable, but I assert the runtime contract holds." If you use `as any` and later introduce a real mistake on the same value, TypeScript won't catch it.
 
 ### With Custom Scalars
 

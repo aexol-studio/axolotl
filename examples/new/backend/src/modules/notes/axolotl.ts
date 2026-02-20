@@ -1,8 +1,8 @@
-import { Models } from '@/src/modules/todos/models.js';
+import { Models } from '@/src/modules/notes/models.js';
 import { Axolotl } from '@aexol/axolotl-core';
 import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
 
 export const { applyMiddleware, createResolvers, createDirectives, adapter } = Axolotl(graphqlYogaAdapter)<
-  Models<{ Secret: number; ID: string }>,
+  Models<{ ID: string }>,
   unknown
 >();

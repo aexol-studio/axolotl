@@ -1,11 +1,8 @@
 import { Models } from '@/src/modules/auth/models.js';
 import { Axolotl } from '@aexol/axolotl-core';
-import { graphqlYogaWithContextAdapter } from '@aexol/axolotl-graphql-yoga';
-import { AppContext } from '@/src/lib/context.js';
+import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
 
-const yogaAdapter = graphqlYogaWithContextAdapter<AppContext>((initial) => initial as AppContext);
-
-export const { applyMiddleware, createResolvers, createDirectives, adapter } = Axolotl(yogaAdapter)<
+export const { applyMiddleware, createResolvers, createDirectives, adapter } = Axolotl(graphqlYogaAdapter)<
   Models<{ Secret: number; ID: string }>,
   unknown
 >();

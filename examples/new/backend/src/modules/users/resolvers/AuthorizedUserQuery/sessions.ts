@@ -3,6 +3,7 @@ import { User } from '../../models.js';
 import { prisma } from '@/src/db.js';
 import { verifyToken } from '@/src/lib/auth.js';
 import { getTokenFromCookies } from '@/src/lib/cookies.js';
+import type { AppContext } from '@/src/lib/context.js';
 
 /**
  * Extracts the current session's JTI from the request cookie.
@@ -22,7 +23,8 @@ const getCurrentJti = (cookieHeader: string | null): string | null => {
 
 export default createResolvers({
   AuthorizedUserQuery: {
-    sessions: async ([source, , context]) => {
+    sessions: async ([source, , ctx]) => {
+      const context = ctx as AppContext;
       const src = source as User;
 
       const currentJti = getCurrentJti(context.request.headers.get('cookie'));

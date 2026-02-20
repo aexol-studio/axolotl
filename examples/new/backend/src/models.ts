@@ -12,10 +12,18 @@ export enum TodoUpdateType {
   CREATED = 'CREATED',
   UPDATED = 'UPDATED',
 }
+export enum NoteStatus {
+  ACTIVE = 'ACTIVE',
+  ARCHIVED = 'ARCHIVED',
+}
 
 export interface AIChatMessage<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   role: string;
   content: string;
+}
+export interface CreateNoteInput<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
+  content: string;
+  status?: NoteStatus | undefined | null;
 }
 
 export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> = {
@@ -61,60 +69,6 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
     register: {
       args: {
         email: string;
-        password: string;
-      };
-    };
-  };
-  ['AuthorizedUserQuery']: {
-    _: {
-      args: Record<string, never>;
-    };
-    todos: {
-      args: Record<string, never>;
-    };
-    todo: {
-      args: {
-        _id: string;
-      };
-    };
-    me: {
-      args: Record<string, never>;
-    };
-    sessions: {
-      args: Record<string, never>;
-    };
-  };
-  ['AuthorizedUserMutation']: {
-    _: {
-      args: Record<string, never>;
-    };
-    createTodo: {
-      args: {
-        content: string;
-        secret?: S['Secret'] | undefined | null;
-      };
-    };
-    todoOps: {
-      args: {
-        _id: string;
-      };
-    };
-    changePassword: {
-      args: {
-        oldPassword: string;
-        newPassword: string;
-      };
-    };
-    revokeSession: {
-      args: {
-        sessionId: string;
-      };
-    };
-    revokeAllSessions: {
-      args: Record<string, never>;
-    };
-    deleteAccount: {
-      args: {
         password: string;
       };
     };
@@ -173,6 +127,95 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
       args: Record<string, never>;
     };
   };
+  ['AuthorizedUserQuery']: {
+    _: {
+      args: Record<string, never>;
+    };
+    todos: {
+      args: Record<string, never>;
+    };
+    todo: {
+      args: {
+        _id: string;
+      };
+    };
+    me: {
+      args: Record<string, never>;
+    };
+    sessions: {
+      args: Record<string, never>;
+    };
+    notes: {
+      args: Record<string, never>;
+    };
+    note: {
+      args: {
+        id: S['ID'];
+      };
+    };
+  };
+  ['AuthorizedUserMutation']: {
+    _: {
+      args: Record<string, never>;
+    };
+    createTodo: {
+      args: {
+        content: string;
+        secret?: S['Secret'] | undefined | null;
+      };
+    };
+    todoOps: {
+      args: {
+        _id: string;
+      };
+    };
+    changePassword: {
+      args: {
+        oldPassword: string;
+        newPassword: string;
+      };
+    };
+    revokeSession: {
+      args: {
+        sessionId: string;
+      };
+    };
+    revokeAllSessions: {
+      args: Record<string, never>;
+    };
+    deleteAccount: {
+      args: {
+        password: string;
+      };
+    };
+    createNote: {
+      args: {
+        input: CreateNoteInput;
+      };
+    };
+    deleteNote: {
+      args: {
+        id: S['ID'];
+      };
+    };
+  };
+  ['Note']: {
+    id: {
+      args: Record<string, never>;
+    };
+    content: {
+      args: Record<string, never>;
+    };
+    status: {
+      args: Record<string, never>;
+    };
+    createdAt: {
+      args: Record<string, never>;
+    };
+    updatedAt: {
+      args: Record<string, never>;
+    };
+  };
 };
 
 export type Directives<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> = {
@@ -201,22 +244,6 @@ export interface Mutation<S extends { [P in keyof Scalars]: any } = { [P in keyo
   login: string;
   register: string;
 }
-export interface AuthorizedUserQuery<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
-  _?: string | undefined | null;
-  todos?: Array<Todo> | undefined | null;
-  todo: Todo;
-  me: User;
-  sessions: Array<Session>;
-}
-export interface AuthorizedUserMutation<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
-  _?: string | undefined | null;
-  createTodo: string;
-  todoOps: TodoOps;
-  changePassword?: boolean | undefined | null;
-  revokeSession?: boolean | undefined | null;
-  revokeAllSessions?: boolean | undefined | null;
-  deleteAccount?: boolean | undefined | null;
-}
 export interface Subscription<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   todoUpdates: TodoUpdate;
   countdown?: number | undefined | null;
@@ -237,4 +264,31 @@ export interface Session<S extends { [P in keyof Scalars]: any } = { [P in keyof
 export interface AIChatChunk<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   content: string;
   done: boolean;
+}
+export interface AuthorizedUserQuery<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
+  _?: string | undefined | null;
+  todos?: Array<Todo> | undefined | null;
+  todo: Todo;
+  me: User;
+  sessions: Array<Session>;
+  notes: Array<Note>;
+  note?: Note | undefined | null;
+}
+export interface AuthorizedUserMutation<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
+  _?: string | undefined | null;
+  createTodo: string;
+  todoOps: TodoOps;
+  changePassword?: boolean | undefined | null;
+  revokeSession?: boolean | undefined | null;
+  revokeAllSessions?: boolean | undefined | null;
+  deleteAccount?: boolean | undefined | null;
+  createNote: Note;
+  deleteNote: boolean;
+}
+export interface Note<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
+  id: S['ID'];
+  content: string;
+  status: NoteStatus;
+  createdAt: string;
+  updatedAt: string;
 }

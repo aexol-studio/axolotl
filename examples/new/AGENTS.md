@@ -76,6 +76,12 @@ project/
 11. **Return empty object `{}`** for nested resolver enablement
 12. **Context typing** requires `graphqlYogaWithContextAdapter<T>(contextFunction)`
 13. **Auth gateway module** (`src/modules/auth/`) owns the protected resolver gateway pattern (`Query.user`, `Mutation.user`) — domain modules (e.g., users) should NOT duplicate these gateway resolvers
+14. **NEVER use `as any` in resolvers or backend code** — use named type assertions instead:
+    - For Prisma mapper functions: import types from `@/src/prisma/generated/prisma/index.js` and use them directly
+    - For Prisma model access: use `prisma.modelName` (camelCase of model name) — `@@map()` only changes the DB table name, NOT the TypeScript accessor
+    - For Prisma enum mismatches: import the Prisma enum and cast as `value as SpecificEnum` or use `SpecificEnum.VALUE`
+    - For generated input types: trust the fields in `models.ts` — `input.firstName` is typed, `(input as any).firstName` is unnecessary
+    - For Express/Yoga bridge in `index.ts`: use `yoga as unknown as express.RequestHandler` (NOT `yoga as any`)
 
 ### Understanding axolotl.json
 
@@ -145,6 +151,21 @@ Axolotl(adapter)<Models<{ MyScalar: string }>, Scalars>();
 #### Context properties undefined
 
 **Solution:** Make sure you spread `...initial` when building context
+
+#### Prisma model accessor not recognized / `prisma.overtimeRecord` type error
+
+**Problem:** TypeScript doesn't know about `prisma.overtimeRecord`, `prisma.surveyResponse`, etc.
+**Solution:** These ARE on the typed Prisma client — `prisma.[camelCaseModelName]`. The `@@map()` decorator only renames the database table, not the client property. NEVER use `const db = prisma as any`.
+
+#### TypeScript complains assigning a string to a Prisma enum field
+
+**Problem:** `role: prismaRole` errors — "Type 'string' is not assignable to type 'StaffRole'"
+**Solution:** Import the Prisma enum and cast: `import { StaffRole } from '@/src/prisma/generated/prisma/index.js'` then `role: prismaRole as StaffRole`. Or use the enum member directly: `type: CommissionType.VISIT`.
+
+#### Type errors accessing optional fields on generated input types
+
+**Problem:** TypeScript doesn't find `input.firstName` — using `(input as any).firstName` as workaround
+**Solution:** The generated interfaces in `models.ts` already have those fields (e.g., `firstName?: string | undefined | null`). Access them directly: `input.firstName ?? null`. No cast needed.
 
 ### Backend Quick Reference
 

@@ -6,6 +6,7 @@ import { User } from '../../models.js';
 import { hashPassword, verifyPassword, verifyToken } from '@/src/lib/auth.js';
 import { getTokenFromCookies } from '@/src/lib/cookies.js';
 import { parseInput, passwordSchema } from '@/src/lib/validation.js';
+import type { AppContext } from '@/src/lib/context.js';
 
 const changePasswordSchema = z.object({
   oldPassword: z.string().min(1, 'Current password is required'),
@@ -14,7 +15,8 @@ const changePasswordSchema = z.object({
 
 export default createResolvers({
   AuthorizedUserMutation: {
-    changePassword: async ([source, , context], { oldPassword: rawOldPassword, newPassword: rawNewPassword }) => {
+    changePassword: async ([source, , ctx], { oldPassword: rawOldPassword, newPassword: rawNewPassword }) => {
+      const context = ctx as AppContext;
       const { oldPassword, newPassword } = parseInput(changePasswordSchema, {
         oldPassword: rawOldPassword,
         newPassword: rawNewPassword,

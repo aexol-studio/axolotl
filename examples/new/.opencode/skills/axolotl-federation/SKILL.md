@@ -166,11 +166,57 @@ import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
 export const { createResolvers, createDirectives, applyMiddleware } = Axolotl(graphqlYogaAdapter)<Models, unknown>();
 ```
 
+### Module Adapter Usage (Critical)
+
+Modules **MUST** use `graphqlYogaAdapter` (the basic adapter without context). The context-aware adapter `graphqlYogaWithContextAdapter<T>(buildContext)` is used **ONLY** in the root `backend/src/axolotl.ts`.
+
+Context is initialized once by the root adapter and automatically flows to all module resolvers — modules never need to set up context themselves.
+
+**Correct usage:**
+
+```typescript
+// ✅ CORRECT — Module axolotl.ts uses basic adapter
+// src/modules/posts/axolotl.ts
+import { Models } from '@/src/modules/posts/models.js';
+import { Axolotl } from '@aexol/axolotl-core';
+import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
+
+export const { createResolvers } = Axolotl(graphqlYogaAdapter)<Models, unknown>();
+
+// ✅ CORRECT — Only root axolotl.ts uses context adapter
+// src/axolotl.ts
+import { graphqlYogaWithContextAdapter } from '@aexol/axolotl-graphql-yoga';
+const yogaAdapter = graphqlYogaWithContextAdapter<AppContext>(buildContext);
+export const { createResolvers, adapter } = Axolotl(yogaAdapter)<Models, Scalars>();
+```
+
+**Incorrect usage:**
+
+```typescript
+// ❌ WRONG — Module should NOT use context adapter
+// src/modules/posts/axolotl.ts
+import { graphqlYogaWithContextAdapter } from '@aexol/axolotl-graphql-yoga';
+const yogaAdapter = graphqlYogaWithContextAdapter<AppContext>(buildContext);
+export const { createResolvers } = Axolotl(yogaAdapter)<Models, unknown>();
+// This is wrong because:
+// 1. Context is already initialized by the root adapter
+// 2. Module resolvers automatically receive the context from the root
+// 3. Duplicating context setup is redundant and error-prone
+```
+
+> **Why this works:** Context flows through Axolotl like this: the root `adapter()` initializes the GraphQL Yoga server with the context function → every incoming request runs `buildContext()` once → the resulting context object is available as `input[2]` in ALL resolvers, regardless of which module defined them. Modules only define resolver logic — they don't need to know how context is constructed.
+
+**Accessing context in module resolvers:**
+
+- Module resolvers access context via `input[2]` (or destructured as `[, , context]`)
+- The context type comes from the root `axolotl.ts` — modules get it automatically
+- If modules need typed access to custom context fields, import the context type: `const ctx = input[2] as AppContext`
+
 ---
 
 ### Schema Merging Rules
 
-When you run `cd backend && axolotl build`, schemas are merged using these rules:
+When you run `cd backend && npx @aexol/axolotl build`, schemas are merged using these rules:
 
 **1. Types are merged by name:**
 
@@ -456,6 +502,9 @@ Directive implementations should be registered in each module's Axolotl instance
 # Install dependencies
 npm install
 
+# Generate Prisma client
+cd backend && npx prisma generate
+
 # Generate all models and merged schema
 cd backend && npx @aexol/axolotl build
 
@@ -465,7 +514,7 @@ cd backend && npx @aexol/axolotl resolvers
 
 **When to Regenerate:**
 
-Run `cd backend && axolotl build` when you:
+Run `cd backend && npx @aexol/axolotl build` when you:
 
 - Add or modify any schema file
 - Add new types or fields
@@ -477,6 +526,10 @@ The CLI will regenerate:
 1. Each submodule's `models.ts`
 2. The merged `schema.graphql`
 3. The root `models.ts`
+
+**When to also run `prisma generate`:**
+
+If any of the above changes also required Prisma schema modifications (new models, renamed fields, new relations), run `cd backend && npx prisma generate` after `axolotl build` to update the Prisma client types.
 
 ---
 
