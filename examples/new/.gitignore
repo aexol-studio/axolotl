@@ -6,9 +6,6 @@
 tsconfig.tsbuildinfo
 .DS_Store
 
-# Prisma generated client
-backend/src/prisma/generated/
-
 # Prisma config compiled output (compiled by Prisma CLI, not tsc)
 prisma.config.js
 prisma.config.d.ts
