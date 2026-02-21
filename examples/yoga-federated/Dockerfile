@@ -34,6 +34,6 @@ COPY --from=builder /app/src/prisma/migrations ./src/prisma/migrations
 COPY --from=builder /app/prisma.config.ts ./
 COPY --from=builder /app/schema.graphql ./
 
-EXPOSE 4102
+EXPOSE 8080
 
 CMD ["node", "lib/index.js"]
