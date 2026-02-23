@@ -1,8 +1,50 @@
+import { redirect } from 'react-router';
+import { useLoaderData } from 'react-router';
+import type { LoaderFunctionArgs } from 'react-router';
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { Settings as SettingsIcon } from 'lucide-react';
 import { useDynamite } from '@aexol/dynamite';
+import { useAuthStore } from '@/stores';
+import { queryClient } from '@/lib/queryClient';
+import { loaderQuery, sessionSelector } from '@/api';
 import { ProfileSection, ChangePasswordSection, SessionsSection, DeleteAccountSection } from './components';
 
-export const Settings = () => {
+// --- Loader ---
+
+export const settingsLoader = async ({ request }: LoaderFunctionArgs) => {
+  const isAuthenticated =
+    request.headers.get('x-authenticated') === 'true' ||
+    (typeof window !== 'undefined' && useAuthStore.getState().isAuthenticated);
+  if (!isAuthenticated) throw redirect('/login');
+
+  // Pre-fetch queries that Settings actually uses (matching exact queryKeys)
+  await queryClient.fetchQuery({
+    queryKey: ['me'],
+    queryFn: async () => {
+      const q = loaderQuery(request);
+      const data = await q({ user: { me: { _id: true, email: true, createdAt: true } } });
+      return data.user?.me ?? null;
+    },
+  });
+
+  await queryClient.fetchQuery({
+    queryKey: ['sessions'],
+    queryFn: async () => {
+      const q = loaderQuery(request);
+      const data = await q({ user: { sessions: sessionSelector } });
+      return data.user?.sessions ?? [];
+    },
+  });
+
+  return {
+    meta: { title: 'Settings — Axolotl', description: '' },
+    dehydratedState: dehydrate(queryClient),
+  };
+};
+
+// --- Inner content (uses hooks that benefit from HydrationBoundary) ---
+
+const SettingsContent = () => {
   const { t } = useDynamite();
 
   return (
@@ -22,5 +64,16 @@ export const Settings = () => {
         <DeleteAccountSection />
       </div>
     </div>
+  );
+};
+
+// --- Page Component ---
+
+export const Settings = () => {
+  const { dehydratedState } = useLoaderData<typeof settingsLoader>();
+  return (
+    <HydrationBoundary state={dehydratedState}>
+      <SettingsContent />
+    </HydrationBoundary>
   );
 };

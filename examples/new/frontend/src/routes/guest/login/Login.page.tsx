@@ -1,15 +1,25 @@
 import { useState } from 'react';
+import { redirect } from 'react-router';
+import type { LoaderFunctionArgs } from 'react-router';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useDynamite } from '@aexol/dynamite';
 import { useAuth } from '@/hooks/useAuth.js';
+import { useAuthStore } from '@/stores';
 import { ErrorMessage } from '@/components/atoms/ErrorMessage';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/Form';
 import type { AuthMode } from '@/hooks/useAuth.js';
+
+export const loginLoader = ({ request }: LoaderFunctionArgs) => {
+  const fromHeader = request.headers.get('x-authenticated') === 'true';
+  const fromStore = typeof window !== 'undefined' ? useAuthStore.getState().isAuthenticated : false;
+  if (fromHeader || fromStore) return redirect('/app');
+  return { meta: { title: 'Sign In — Axolotl', description: '' } };
+};
 
 const createAuthFormSchema = (t: (key: string) => string) =>
   z.object({

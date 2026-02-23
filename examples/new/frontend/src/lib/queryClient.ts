@@ -7,7 +7,7 @@ import { useAuthStore } from '../stores';
 // cannot be used here. These toast strings remain in English as global fallbacks.
 // The keys are registered in public/locales/en/common.json for completeness.
 
-export const queryClient = new QueryClient({
+const queryClientConfig = {
   queryCache: new QueryCache({
     onError: (error) => {
       if (isAuthError(error)) {
@@ -28,11 +28,15 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: (failureCount, error) => {
+      retry: (failureCount: number, error: unknown) => {
         if (isAuthError(error)) return false;
         return failureCount < 1;
       },
       refetchOnWindowFocus: false,
     },
   },
-});
+};
+
+export const createQueryClient = () => new QueryClient(queryClientConfig);
+
+export const queryClient = new QueryClient(queryClientConfig);

@@ -3,43 +3,26 @@ name: zeus-graphql
 description: Zeus type-safe GraphQL client with React Query integration - useQuery/useMutation + Zeus queryFn, selectors, cache invalidation, API layer architecture
 ---
 
-## Architecture Overview
-
-The data-fetching architecture is layered:
+## Architecture
 
 ```
-React Query (state/cache management)
-  -> Zeus api layer (type-safe fetching)
-    -> GraphQL server
+React Query (state/cache) -> Zeus api layer (type-safe) -> GraphQL server
 ```
 
-- **Zeus api layer** (`api/client.ts`, `api/query.ts`, `api/mutation.ts`) handles type-safe GraphQL communication
-- **React Query** (`@tanstack/react-query`) manages server state, caching, loading/error states, and cache invalidation
-- Components use React Query hooks (`useQuery`/`useMutation`) which call Zeus internally
+- `api/client.ts`, `api/query.ts`, `api/mutation.ts` — type-safe GraphQL communication
+- React Query manages caching, loading/error states, invalidation
+- Components use `useQuery`/`useMutation` which call Zeus internally
 
 ---
 
-## GraphQL API Layer with Zeus (Foundation)
-
-### Client Setup (api/client.ts)
+## API Layer
 
 ```typescript
+// api/client.ts
 import { Chain } from '../zeus/index';
+export const createChain = () =>
+  Chain('/graphql', { headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin' });
 
-// Create chain with cookie credentials - auth token sent automatically via httpOnly cookie
-export const createChain = () => {
-  return Chain('/graphql', {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'same-origin',
-  });
-};
-```
-
-### Query/Mutation Helpers (api/query.ts, api/mutation.ts)
-
-```typescript
 // api/query.ts
 import { createChain } from './client';
 export const query = () => createChain()('query');
@@ -49,174 +32,61 @@ import { createChain } from './client';
 export const mutation = () => createChain()('mutation');
 ```
 
-### Direct Usage (for non-component contexts)
+---
+
+## Selectors
 
 ```typescript
-import { query, mutation } from '../api';
+import { Selector, type FromSelector } from '../zeus/index.js';
 
-// Fetching data
-const data = await query()({
-  user: {
-    me: { _id: true, email: true },
-  },
-});
-
-// Mutations
-await mutation()({
-  user: {
-    changePassword: [{ newPassword: 'new-secret' }, true],
-  },
-});
-
-// Login
-const data = await mutation()({
-  login: [{ email, password }, true],
-});
+const postSelector = Selector('Post')({ _id: true, title: true, content: true, published: true });
+type PostType = FromSelector<typeof postSelector, 'Post'>; // derive type — never duplicate manually
 ```
+
+- **1 file only** → define locally
+- **2+ files** → define in `api/selectors.ts`, re-export from `api/index.ts`
 
 ---
 
-## Advanced Zeus Patterns
+## `$` Variables
 
-### Using Selectors
-
-Selectors define reusable query shapes and derive TypeScript types:
-
-```typescript
-import { Selector, type FromSelector } from '../zeus/index.js';
-
-// Define selector
-const postSelector = Selector('Post')({
-  _id: true,
-  title: true,
-  content: true,
-  published: true,
-});
-
-// Derive type from selector (instead of manual type definition)
-type PostType = FromSelector<typeof postSelector, 'Post'>;
-
-// Use in query
-const data = await query()({
-  user: { posts: postSelector },
-});
-```
-
-#### Selector Placement Rule
-
-- **Used in 1 file only** → define locally in that file
-- **Used in 2+ files** → define in `api/selectors.ts` and re-export from `api/index.ts`
-
-Shared selectors file (`api/selectors.ts`):
-
-```typescript
-import { Selector, type FromSelector } from '../zeus/index.js';
-
-export const postSelector = Selector('Post')({
-  _id: true,
-  title: true,
-  content: true,
-  published: true,
-});
-export type PostType = FromSelector<typeof postSelector, 'Post'>;
-```
-
-Re-export from `api/index.ts`:
-
-```typescript
-export { postSelector, type PostType } from './selectors.js';
-```
-
-### GraphQL Variables with `$`
-
-Use `$` for parameterized queries:
+Use `$` when values come from user input or props:
 
 ```typescript
 import { $ } from '../zeus/index';
 
-// With variables
-const result = await mutation()(
-  {
-    login: [
-      {
-        email: $('email', 'String!'),
-        password: $('password', 'String!'),
-      },
-      true,
-    ],
-  },
-  {
-    variables: { email: 'john@example.com', password: 'secret' },
-  },
+await mutation()(
+  { login: [{ email: $('email', 'String!'), password: $('password', 'String!') }, true] },
+  { variables: { email, password } },
 );
 ```
 
 ---
 
-## React Query Integration
+## useQuery + Zeus
 
-React Query wraps the Zeus api layer to provide caching, automatic loading/error states, and cache invalidation.
-
-### Setup
-
-**QueryClient configuration** (`lib/queryClient.ts`):
-
-```typescript
-import { QueryClient } from '@tanstack/react-query';
-
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-```
-
-**Provider setup** in `App.tsx`:
-
-```typescript
-import { QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { queryClient } from './lib/queryClient';
-
-// Wrap app with QueryClientProvider
-<QueryClientProvider client={queryClient}>
-  {children}
-  <ReactQueryDevtools initialIsOpen={false} />
-</QueryClientProvider>
-```
-
-### Pattern: useQuery + Zeus
-
-> ⚠️ **Use `isLoading`, not `isPending`** for UI loading states. `isPending` is `true` when query is disabled (`enabled: false`), causing permanent loading states. `isLoading` (`isPending && isFetching`) is only `true` during actual fetches.
-
-Zeus `query()` is used inside React Query's `queryFn`:
+> ⚠️ Use `isLoading`, NOT `isPending`. `isPending` is `true` when `enabled: false`, causing permanent loading states. `isLoading` (`isPending && isFetching`) only fires during actual fetches.
 
 ```typescript
 import { useQuery } from '@tanstack/react-query';
-import { useAuthStore } from '../stores';
 import { query } from '../api';
+import { useAuthStore } from '../stores';
 
 const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
 const { data, isLoading, error } = useQuery({
   queryKey: ['posts'],
   queryFn: async () => {
-    const data = await query()({
-      user: { posts: { _id: true, title: true, content: true, published: true } },
-    });
+    const data = await query()({ user: { posts: { _id: true, title: true } } });
     return data.user?.posts ?? [];
   },
-  enabled: isAuthenticated, // only fetch when authenticated
+  enabled: isAuthenticated,
 });
 ```
 
-### Pattern: useMutation + Zeus
+---
 
-Zeus `mutation()` is used inside React Query's `mutationFn`, with cache invalidation on success:
+## useMutation + Zeus
 
 ```typescript
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -224,129 +94,34 @@ import { mutation } from '../api';
 
 const queryClient = useQueryClient();
 
-const createPostMutation = useMutation({
+const createPost = useMutation({
   mutationFn: async (input: { title: string; content: string }) => {
-    await mutation()({
-      user: { createPost: [input, true] },
-    });
+    await mutation()({ user: { createPost: [input, true] } });
   },
   onSuccess: () => {
     queryClient.invalidateQueries({ queryKey: ['posts'] });
   },
 });
-
-// Use with .mutateAsync() for imperative flows
-const createPost = async (input: { title: string; content: string }) => {
-  try {
-    await createPostMutation.mutateAsync(input);
-    return true;
-  } catch {
-    return false;
-  }
-};
 ```
 
-### Query Key Conventions
+---
 
-Query keys are simple string arrays:
+## Cache Invalidation
 
-| Query Key   | Purpose                    |
-| ----------- | -------------------------- |
-| `['posts']` | Post list data             |
-| `['me']`    | Current authenticated user |
-
-For more complex apps, consider a key factory pattern (e.g., `postKeys.all()`, `postKeys.detail(id)`).
-
-### Cache Invalidation Patterns
-
-- **After mutations:** `queryClient.invalidateQueries({ queryKey: ['posts'] })`
-- **From subscriptions:** Same invalidation in subscription callbacks
-- **On logout:** `queryClient.clear()` (clears ALL cache -- security measure)
-
-**Subscription -> invalidation bridge:**
-
-```typescript
-const queryClient = useQueryClient();
-
-usePostSubscription({
-  ownerId: user?._id ?? null,
-  onPostCreated: () => queryClient.invalidateQueries({ queryKey: ['posts'] }),
-  onPostUpdated: () => queryClient.invalidateQueries({ queryKey: ['posts'] }),
-});
-```
-
-### Conditional Queries
-
-Use `enabled` to prevent queries from running until preconditions are met:
-
-```typescript
-const { data } = useQuery({
-  queryKey: ['me'],
-  queryFn: async () => {
-    /* ... */
-  },
-  enabled: isAuthenticated, // don't fetch until authenticated
-  retry: (failureCount, error) => {
-    if (error instanceof Error && error.message.includes('Unauthorized')) return false;
-    return failureCount < 1;
-  },
-});
-```
-
-### Error Aggregation Pattern
-
-Aggregate errors from query + multiple mutations into a single value:
-
-```typescript
-const error = queryError?.message ?? loginMutation.error?.message ?? registerMutation.error?.message ?? null;
-```
+- After mutations: `queryClient.invalidateQueries({ queryKey: ['posts'] })`
+- From subscription callbacks: same `invalidateQueries` call
+- On logout: `queryClient.clear()` (clears ALL cache — security)
 
 ---
 
 ## Key Rules
 
-1. **ALWAYS use React Query** (`useQuery`/`useMutation`) for data fetching in components -- never manual `useState`/`useEffect` fetching
-2. **Use Zeus `query()`/`mutation()`** inside React Query's `queryFn`/`mutationFn`
-3. **Use `enabled`** option for conditional queries (e.g., `enabled: isAuthenticated`)
-4. **Invalidate cache** after mutations with `queryClient.invalidateQueries()`
-5. **Clear cache on logout** with `queryClient.clear()`
-6. **ALWAYS use Zeus** for GraphQL communication -- never write raw GraphQL queries
-7. **Use the api/ layer** -- import from `../api` not directly from Zeus
-8. **ALWAYS define Selectors** for reusable query shapes
-9. **ALWAYS use `FromSelector`** to derive TypeScript types from selectors
-10. **NEVER manually duplicate backend types** -- derive them from selectors
-11. **Selector used in 1 file** → keep local; **used in 2+ files** → put in `api/selectors.ts`
-12. **Use `$` function** for GraphQL variables when values come from user input or props
-13. **One hook per domain** — `useAuth` for authentication, `usePosts` for post operations. Each hook owns its queries, mutations, error aggregation, and loading states. Keep components presentational — all data logic lives in hooks
-
----
-
-## Quick Reference
-
-| Task                    | Code                                                             |
-| ----------------------- | ---------------------------------------------------------------- |
-| Create query            | `query()({ user: { posts: { _id: true } } })`                    |
-| Create mutation         | `mutation()({ login: [{ email, password }, true] })`             |
-| Mutation with args      | `mutation()({ field: [{ arg: value }, selector] })`              |
-| Return scalar directly  | `field: [{ args }, true]`                                        |
-| Fetch with React Query  | `useQuery({ queryKey: ['key'], queryFn: () => query()({...}) })` |
-| Mutate with React Query | `useMutation({ mutationFn: (args) => mutation()({...}) })`       |
-| Invalidate cache        | `queryClient.invalidateQueries({ queryKey: ['key'] })`           |
-| Conditional query       | `useQuery({ ..., enabled: isAuthenticated })`                    |
-| Define selector         | `const sel = Selector('Post')({ _id: true, ... })`               |
-| Derive type             | `type T = FromSelector<typeof sel, 'Post'>`                      |
-| Clear all cache         | `queryClient.clear()`                                            |
-
----
-
-## Troubleshooting
-
-### Type errors after schema changes
-
-**Solution:** Regenerate Zeus by running `cd backend && npx @aexol/axolotl build`
-
-### Zeus files not found
-
-> **Zeus Configuration:** See `AGENTS.md` → **Understanding axolotl.json** for the Zeus generation config. The `zeus` array in `axolotl.json` defines output paths for generated Zeus client files.
-
-**Solution:** Verify `backend/axolotl.json` contains a `zeus` array pointing to your frontend source directory, then run `cd backend && npx @aexol/axolotl build` to regenerate.
+1. **ALWAYS use React Query** in components — never `useState`/`useEffect` fetching
+2. **Zeus `query()`/`mutation()`** go inside `queryFn`/`mutationFn` only
+3. **Use `enabled`** for conditional queries (e.g., `enabled: isAuthenticated`)
+4. **ALWAYS define Selectors** for reusable query shapes
+5. **ALWAYS use `FromSelector`** to derive types — never duplicate backend types manually
+6. **Selector in 1 file** → local; **2+ files** → `api/selectors.ts`
+7. **Use `$`** for GraphQL variables from user input or props
+8. **One hook per domain** — owns queries, mutations, loading/error state; components stay presentational
+9. **Import from `../api`** — never directly from Zeus

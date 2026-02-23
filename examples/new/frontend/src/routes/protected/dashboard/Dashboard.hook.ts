@@ -29,7 +29,7 @@ export const useDashboard = ({ ownerId }: UseDashboardOptions) => {
 
   const {
     data: todos = [],
-    isPending: todosLoading,
+    isLoading: todosLoading,
     error: queryError,
   } = useQuery({
     queryKey: ['todos'],

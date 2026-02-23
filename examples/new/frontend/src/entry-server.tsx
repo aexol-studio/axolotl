@@ -1,68 +1,94 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { StrictMode } from 'react';
-import { renderToString } from 'react-dom/server';
-import { StaticRouter } from 'react-router';
-import { App } from './App';
+import { createStaticHandler, createStaticRouter, StaticRouterProvider } from 'react-router';
+import { renderToPipeableStream } from 'react-dom/server';
+import { type Writable } from 'node:stream';
+import { routeConfig } from './routes/index';
+import { buildMetaHead } from './routes/meta';
+import { queryClient } from './lib/queryClient';
 import { AuthProvider } from './contexts/AuthContext';
-import type { TranslationMap } from '@aexol/dynamite/server';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DEFAULT_LOCALE = 'en';
+export const render = async (
+  request: Request,
+  options: { isAuthenticated: boolean; locale?: string },
+): Promise<{
+  pipe: (stream: Writable) => void;
+  statusCode: number;
+  redirectUrl?: string;
+  head: string;
+  locale: string;
+  translations: Record<string, string>;
+}> => {
+  // Per-request isolation: clear any cached query data from a previous SSR render
+  queryClient.clear();
 
-/**
- * Load translations from the public locales directory for SSR.
- *
- * We use a custom loader instead of `loadTranslations` from `@aexol/dynamite/server`
- * because the library expects a flat `{localesDir}/{locale}.json` layout, while this
- * project uses a subfolder structure: `locales/{locale}/common.json`.
- *
- * Falls back to an empty object if the file doesn't exist yet — since English
- * text IS the translation key in dynamite, `t()` returns the key itself when
- * no translation is found, so missing translations are harmless.
- */
-const LOCALE_CANDIDATE_DIRS = [
-  // Dev: relative to frontend/src/entry-server.tsx -> ../public/locales
-  path.resolve(__dirname, '../public/locales'),
-  // Prod: relative to dist/server/entry-server.js -> ../../dist/client/locales
-  path.resolve(__dirname, '../../dist/client/locales'),
-  // Fallback: from CWD (typically project root)
-  path.resolve(process.cwd(), 'frontend/public/locales'),
-];
+  const locale = options.locale ?? 'en';
 
-const loadServerTranslations = (locale: string): TranslationMap => {
-  for (const dir of LOCALE_CANDIDATE_DIRS) {
-    const filePath = path.join(dir, locale, 'common.json');
-    try {
-      if (fs.existsSync(filePath)) {
-        return JSON.parse(fs.readFileSync(filePath, 'utf-8')) as TranslationMap;
-      }
-    } catch {
-      // Try next candidate path
-    }
+  const handler = createStaticHandler(routeConfig);
+
+  // Add locale header so rootLoader can read it via request.headers.get('x-locale')
+  const requestWithLocale = new Request(request.url, {
+    method: request.method,
+    headers: (() => {
+      const headers = new Headers(request.headers);
+      headers.set('x-locale', locale);
+      return headers;
+    })(),
+    // Don't clone body for GET/HEAD requests (body may already be consumed)
+    ...(request.method !== 'GET' && request.method !== 'HEAD' ? { body: request.body } : {}),
+  });
+
+  const context = await handler.query(requestWithLocale);
+
+  // A loader returned a redirect Response — short-circuit without rendering
+  if (context instanceof Response) {
+    return {
+      pipe: () => {},
+      statusCode: context.status,
+      redirectUrl: context.headers.get('Location') ?? '/',
+      head: buildMetaHead([]),
+      locale,
+      translations: {},
+    };
   }
-  return {};
-};
 
-interface RenderOptions {
-  isAuthenticated: boolean;
-  locale?: string;
-}
+  // Extract translations from rootLoader data so backend can inject window.__INITIAL_TRANSLATIONS__
+  const rootLoaderData = (context as { loaderData?: Record<string, unknown> }).loaderData?.['root'];
+  const translations = (rootLoaderData as { translations?: Record<string, string> } | undefined)?.translations ?? {};
 
-export const render = (url: string, options: RenderOptions = { isAuthenticated: false }) => {
-  const locale = options.locale ?? DEFAULT_LOCALE;
-  const translations = loadServerTranslations(locale);
+  const staticRouter = createStaticRouter(handler.dataRoutes, context);
 
-  const html = renderToString(
-    <StrictMode>
-      <StaticRouter location={url}>
+  const { pipe } = await new Promise<{ pipe: (s: Writable) => void }>((resolve, reject) => {
+    const { pipe, abort } = renderToPipeableStream(
+      <StrictMode>
         <AuthProvider value={{ isAuthenticated: options.isAuthenticated }}>
-          <App initialTranslations={translations} initialLocale={locale} />
+          <StaticRouterProvider router={staticRouter} context={context} />
         </AuthProvider>
-      </StaticRouter>
-    </StrictMode>,
-  );
+      </StrictMode>,
+      {
+        onShellReady: () => {
+          clearTimeout(timeoutId);
+          resolve({ pipe });
+        },
+        onShellError: reject,
+        onError: (err) => console.error('[SSR error]', err),
+      },
+    );
 
-  return { html, translations, locale };
+    // Abort streaming after 10 s to prevent hanging requests
+    const timeoutId = setTimeout(abort, 10_000);
+  });
+
+  return {
+    pipe,
+    // context.statusCode is set by React Router based on matched routes / error boundaries
+    statusCode: context.statusCode ?? 200,
+    redirectUrl: undefined,
+    head: buildMetaHead(
+      context.matches.map((match) => ({
+        data: context.loaderData[match.route.id],
+      })),
+    ),
+    locale,
+    translations,
+  };
 };

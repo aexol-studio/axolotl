@@ -1,3 +1,6 @@
+import { useLoaderData } from 'react-router';
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
 import {
   AlignCenter,
   AlignLeft,
@@ -28,7 +31,17 @@ import { SectionCard } from '@/components/atoms';
 import { techStack } from './Examples.data';
 import { DataDisplaySection, FormsShowcaseTab, GraphQLShowcaseTab, NotesShowcase } from './components';
 
-export const ExamplesPage = () => {
+// --- Loader ---
+
+export const examplesLoader = () => ({
+  meta: {
+    title: 'Examples — Axolotl Showcase',
+    description: 'Explore components, forms, and live GraphQL examples powered by Axolotl.',
+  },
+  dehydratedState: dehydrate(queryClient),
+});
+
+const ExamplesPageContent = () => {
   const { t } = useDynamite();
 
   return (
@@ -251,5 +264,16 @@ export const ExamplesPage = () => {
         </TabsContent>
       </Tabs>
     </div>
+  );
+};
+
+// --- Page Component ---
+
+export const ExamplesPage = () => {
+  const { dehydratedState } = useLoaderData<typeof examplesLoader>();
+  return (
+    <HydrationBoundary state={dehydratedState}>
+      <ExamplesPageContent />
+    </HydrationBoundary>
   );
 };

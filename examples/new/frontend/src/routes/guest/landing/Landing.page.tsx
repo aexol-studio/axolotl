@@ -1,5 +1,6 @@
 // Landing page - rendered with SSR
 // Pure marketing page with hero, features, CTA, and footer
+import type { LoaderFunctionArgs } from 'react-router';
 import { Link } from 'react-router';
 import { useDynamite } from '@aexol/dynamite';
 import { Separator } from '@/components/ui/Separator';
@@ -7,6 +8,13 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { getFeatures, techStackItems } from './Landing.data';
+
+export const landingLoader = (_args: LoaderFunctionArgs) => ({
+  meta: {
+    title: 'Axolotl — Build Type-Safe GraphQL Apps',
+    description: 'Schema-first GraphQL framework with end-to-end type safety and modern React frontend.',
+  },
+});
 
 export const Landing = () => {
   const { t } = useDynamite();
