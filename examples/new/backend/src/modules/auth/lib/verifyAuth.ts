@@ -6,6 +6,7 @@ import { verifyToken, type JwtPayload } from '@/src/lib/auth.js';
 export interface AuthResult {
   _id: string;
   email: string;
+  jti: string;
 }
 
 /**
@@ -44,5 +45,5 @@ export const verifyAuth = async (cookieHeader: string | null, tokenHeader: strin
     throw new GraphQLError('Not authorized', { extensions: { code: 'UNAUTHORIZED' } });
   }
 
-  return { _id: payload.userId, email: payload.email };
+  return { _id: payload.userId, email: payload.email, jti: payload.jti };
 };

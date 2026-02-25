@@ -1,6 +1,6 @@
 ---
 name: axolotl-resolvers
-description: Writing Axolotl resolvers - signatures, destructuring patterns, parent/source access, typing, and organized resolver file structure
+description: Writing Axolotl resolvers - signatures, destructuring patterns, context access, typing, and organized resolver file structure
 ---
 
 ## Resolver Signature
@@ -8,77 +8,92 @@ description: Writing Axolotl resolvers - signatures, destructuring patterns, par
 ```typescript
 (input, args) => ReturnType;
 // input = [source, args, context]
-// input[0] = source (parent), input[1] = args, input[2] = context
-// args also provided as second param for convenience
 ```
 
 ### Destructuring Patterns
 
 ```typescript
-// Context only
-me: async ([, , context]) => getUserById(context.userId);
+// Context only (most common)
+me: async ([, , context]) => getUserById(context.authUser!._id);
 
-// Source and context
-posts: async ([source, , context]) => getPostsByUser((source as { _id: string })._id);
+// Context with args
+createPost: async ([, , context], { title, content }) => createPost(context.authUser!._id, title, content);
 
-// Convenience args parameter
-createPost: async ([, , context], { title, content }) => createPost(title, content);
-
-// Underscores for unused
-me: async ([_, __, context]) => getUserById(context.userId);
+// Source — nested type resolvers only (e.g., TodoOps receives a Todo)
+markDone: async ([source, , context]) => updateTodo((source as PrismaTodo).id);
 ```
 
 ---
 
 ## Gateway Auth Pattern
 
-**RULE:** Auth module owns `Query.user` / `Mutation.user`. Domain modules define fields on `AuthorizedUserQuery` / `AuthorizedUserMutation`. **Never** define gateway resolvers in domain modules.
-
-### `_: String` Placeholder
-
-The auth module declares `AuthorizedUserQuery` / `AuthorizedUserMutation` with a `_: String` placeholder — GraphQL requires at least one field per type. Domain modules add real fields by declaring the same type name in their own schema. `axolotl build` merges all fields.
-
-### Gateway Resolver (auth module)
+- Auth module owns `Query.user` / `Mutation.user`. Domain modules define fields on `AuthorizedUserQuery` / `AuthorizedUserMutation`.
+- `AuthorizedUserQuery` / `AuthorizedUserMutation` have a `_: String` placeholder — GraphQL requires ≥1 field. Domain modules add real fields via same type name; `axolotl build` merges.
 
 ```typescript
-export const Query = createResolvers({
+// Gateway resolver (auth module) — checks context, returns {}
+export default createResolvers({
   Query: {
-    user: async (input) => {
-      const cookieHeader = input[2].request.headers.get('cookie');
-      const tokenHeader = input[2].request.headers.get('token');
-      const authResult = await verifyAuth(cookieHeader, tokenHeader);
-      return authResult; // { _id: string, email: string } — becomes `source` for child resolvers
+    user: async ([, , context]) => {
+      if (!context.authUser) {
+        throw new GraphQLError('Not authorized', { extensions: { code: 'UNAUTHORIZED' } });
+      }
+      return {}; // auth data lives on context, not source
     },
   },
 });
 ```
 
-### Protected Resolver (domain module)
-
 ```typescript
-export const AuthorizedUserQuery = createResolvers({
+// Protected resolver (domain module) — reads auth from context
+// context.authUser! is safe here: gateway already verified it exists
+export default createResolvers({
   AuthorizedUserQuery: {
-    posts: async ([source]) => {
-      const user = source as { _id: string; email: string };
-      return prisma.post.findMany({ where: { authorId: user._id } });
+    posts: async ([, , context]) => {
+      return prisma.post.findMany({ where: { authorId: context.authUser!._id } });
     },
-    me: async ([source]) => source, // already have user from gateway
+    me: async ([, , context]) => {
+      return { _id: context.authUser!._id, email: context.authUser!.email };
+    },
   },
 });
 ```
 
 ---
 
-## Typing the Parent
+## Resource-Level Authorization
+
+**Every resolver MUST verify the user owns/has access to the resource via `context.authUser!._id`.**
 
 ```typescript
-type UserSource = { _id: string; email: string };
+// ✅ CORRECT — scoped to authenticated user
+deleteNote: async ([, , context], { id }) => {
+  await prisma.note.findFirstOrThrow({
+    where: { id, userId: context.authUser!._id },
+  });
+  return prisma.note.delete({ where: { id } });
+},
+
+// ❌ WRONG — any authenticated user can delete any note
+deleteNote: async ([, , context], { id }) => {
+  return prisma.note.delete({ where: { id } });
+},
+```
+
+---
+
+## Source Typing (Nested Resolvers Only)
+
+Auth data → use `context.authUser`, never source. Source typing is for **nested resolvers** where parent returns a domain object:
+
+```typescript
+import type { Todo as PrismaTodo } from '@/src/prisma/generated/prisma/index.js';
 
 export default createResolvers({
-  AuthorizedUserQuery: {
-    me: ([source]) => {
-      const src = source as UserSource;
-      return { _id: src._id, email: src.email };
+  TodoOps: {
+    markDone: async ([source, , context]) => {
+      const todo = source as PrismaTodo;
+      return prisma.todo.update({ where: { id: todo.id }, data: { done: true } });
     },
   },
 });
@@ -88,75 +103,52 @@ export default createResolvers({
 
 ## Prisma Typing
 
-Import Prisma-generated types from `@/src/prisma/generated/prisma/index.js` — **never use `any`**:
+Import from `@/src/prisma/generated/prisma/index.js` — **never `as any`**:
 
 ```typescript
 import type { Visit as PrismaVisit } from '@/src/prisma/generated/prisma/index.js';
-
-const mapVisit = (v: PrismaVisit) => ({
-  _id: v.id,
-  protocolType: v.protocolType,
-});
+const mapVisit = (v: PrismaVisit) => ({ _id: v.id, protocolType: v.protocolType });
 ```
 
-- `@@map()` only renames the DB table — TypeScript accessor is always camelCase model name (`prisma.overtimeRecord`, not `prisma.overtime_record`)
-- Never cast the Prisma client: `prisma as any` is forbidden
+- `@@map()` renames DB table only — accessor is always camelCase: `prisma.overtimeRecord`
+- `prisma as any` is forbidden
 
-### Prisma Enum Mapping
-
-Import Prisma enums and cast — never use `as any`:
+### Prisma Enums & Input Types
 
 ```typescript
 import { StaffRole, CommissionType } from '@/src/prisma/generated/prisma/index.js';
 
-// Map GraphQL string → Prisma enum
 const GQL_TO_PRISMA_ROLE: Record<string, StaffRole> = {
   ADMIN: StaffRole.ADMIN,
   STAFF: StaffRole.STAFF,
 };
-const prismaRole = GQL_TO_PRISMA_ROLE[graphqlRole]; // typed as StaffRole
 
-// Or use enum member directly
 await prisma.commission.create({ data: { type: CommissionType.VISIT } });
-```
 
-### Generated Input Types
-
-`models.ts` fields are directly accessible — no casting needed:
-
-```typescript
-// ✅ input.firstName is typed as string | undefined | null
-data.firstName = input.firstName ?? null;
-
-// ❌ never do this — the field is already typed
-(input as any).firstName;
+// Generated input types are already typed — no casting needed:
+data.firstName = input.firstName ?? null; // ✅ typed as string | undefined | null
+(input as any).firstName; // ❌ never
 ```
 
 ---
 
-## Resolver File Structure
+## File Structure
 
 ```
 backend/src/
-├── resolvers.ts                          # mergeAxolotls(authResolvers, usersResolvers, ...)
-└── modules/
-    └── posts/
-        └── resolvers/
-            ├── resolvers.ts              # createResolvers({ ...Mutation, ...AuthorizedUserQuery })
-            ├── Mutation/
-            │   └── createPost.ts
-            └── AuthorizedUserQuery/
-                └── posts.ts
+├── resolvers.ts                  # mergeAxolotls(auth, users, ...)
+└── modules/posts/resolvers/
+    ├── resolvers.ts              # createResolvers({ ...Mutation, ...AuthorizedUserQuery })
+    ├── Mutation/createPost.ts
+    └── AuthorizedUserQuery/posts.ts
 ```
 
-Run `cd backend && npx @aexol/axolotl resolvers` to scaffold this structure. Existing implementations are preserved.
+Scaffold: `cd backend && npx @aexol/axolotl resolvers` (preserves existing).
 
 ---
 
-## Key Rules
+## Quick Rules
 
-1. **Return `{}`** from parent resolvers to enable nested resolvers
-2. Auth module owns `Query.user` / `Mutation.user` — domain modules never define these
-3. Domain modules add fields to `AuthorizedUserQuery` / `AuthorizedUserMutation`
-4. **Never use `any`** — import Prisma types or use type assertions
-5. Always use `createResolvers()` — import from `axolotl.ts`, not `@aexol/axolotl-core` directly
+- Return `{}` from gateway resolvers. Auth module owns `Query.user` / `Mutation.user` exclusively.
+- Domain resolvers: `context.authUser!`, never source. Every resource access verifies ownership via `context.authUser!._id`.
+- Never `as any` or `as AppContext` — context is auto-typed. Always `createResolvers()` from `axolotl.ts`.

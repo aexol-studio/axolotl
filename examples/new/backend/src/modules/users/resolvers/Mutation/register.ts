@@ -2,10 +2,8 @@ import { GraphQLError } from 'graphql';
 import { z } from 'zod';
 import { createResolvers } from '../../axolotl.js';
 import { prisma } from '@/src/db.js';
-import { serializeSetCookie } from '@/src/lib/cookies.js';
 import { hashPassword, signToken, generateSessionToken, getSessionExpiryDate } from '@/src/lib/auth.js';
 import { parseInput, emailSchema, passwordSchema } from '@/src/lib/validation.js';
-import type { AppContext } from '@/src/lib/context.js';
 
 const registerSchema = z.object({
   email: emailSchema,
@@ -27,7 +25,7 @@ export default createResolvers({
       const sessionToken = generateSessionToken();
 
       // Create user and session atomically
-      const context = input[2] as AppContext;
+      const context = input[2];
       const { user, session } = await prisma.$transaction(async (tx) => {
         const user = await tx.user.create({
           data: { email, password: hashedPassword },
@@ -47,12 +45,7 @@ export default createResolvers({
       const jwt = signToken({ userId: user.id, email: user.email, jti: session.token });
 
       // Set auth cookie on the response so the browser stores the JWT automatically
-      const { res } = context;
-      if (res) {
-        res.setHeader('Set-Cookie', serializeSetCookie(jwt));
-      } else {
-        console.warn('Cannot set auth cookie: ServerResponse not available in context');
-      }
+      context.setCookie(jwt);
 
       return jwt;
     },

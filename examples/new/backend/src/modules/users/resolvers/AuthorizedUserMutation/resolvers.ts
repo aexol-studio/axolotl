@@ -3,6 +3,7 @@ import changePassword from './changePassword.js';
 import deleteAccount from './deleteAccount.js';
 import revokeSession from './revokeSession.js';
 import revokeAllSessions from './revokeAllSessions.js';
+import logout from './logout.js';
 
 export default createResolvers({
   AuthorizedUserMutation: {
@@ -10,5 +11,6 @@ export default createResolvers({
     ...deleteAccount.AuthorizedUserMutation,
     ...revokeSession.AuthorizedUserMutation,
     ...revokeAllSessions.AuthorizedUserMutation,
+    ...logout.AuthorizedUserMutation,
   },
 });

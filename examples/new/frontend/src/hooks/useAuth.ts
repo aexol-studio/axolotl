@@ -91,7 +91,7 @@ export const useAuth = () => {
   // Logout: call API to clear cookie, then update local state
   const handleLogout = async () => {
     try {
-      await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
+      await mutation()({ user: { logout: true } });
     } catch {
       // Even if the API call fails, clear local state
     }

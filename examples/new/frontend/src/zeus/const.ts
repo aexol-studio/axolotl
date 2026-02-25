@@ -126,6 +126,7 @@ export const ReturnTypes: Record<string,any> = {
 		revokeSession:"Boolean",
 		revokeAllSessions:"Boolean",
 		deleteAccount:"Boolean",
+		logout:"Boolean",
 		createNote:"Note",
 		deleteNote:"Boolean"
 	},

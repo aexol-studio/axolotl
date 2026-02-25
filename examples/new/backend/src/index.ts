@@ -7,7 +7,7 @@ import { dirname, resolve } from 'path';
 import { adapter } from '@/src/axolotl.js';
 import resolvers from '@/src/resolvers.js';
 import directives from './directives.js';
-import { parseCookies, getTokenFromCookies, serializeClearCookie, getLocaleFromCookies } from './lib/cookies.js';
+import { parseCookies, getLocaleFromCookies } from './lib/cookies.js';
 import { verifyToken } from './lib/auth.js';
 import { prisma } from './db.js';
 
@@ -81,23 +81,6 @@ mutation Register{
 
   // Mount GraphQL at /graphql (includes AI chat via subscription)
   app.use('/graphql', yoga as unknown as express.RequestHandler);
-
-  // Logout endpoint — deletes session from DB and clears the auth cookie
-  app.post('/api/logout', async (req, res) => {
-    try {
-      const cookieHeader = req.headers.cookie ?? null;
-      const rawToken = getTokenFromCookies(cookieHeader);
-      if (rawToken) {
-        const payload = verifyToken(rawToken);
-        // Delete session from DB — ignore if already deleted or expired
-        await prisma.session.delete({ where: { token: payload.jti } }).catch(() => {});
-      }
-    } catch {
-      // JWT verification failed — token is invalid/expired, just clear cookie
-    }
-    res.setHeader('Set-Cookie', serializeClearCookie());
-    res.status(200).json({ success: true });
-  });
 
   // Add Vite or respective production middlewares
   let vite: ViteDevServer | undefined;

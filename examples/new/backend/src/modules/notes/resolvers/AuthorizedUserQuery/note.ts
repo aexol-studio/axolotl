@@ -4,10 +4,9 @@ import type { Note as PrismaNote } from '@/src/prisma/generated/prisma/client.js
 
 export default createResolvers({
   AuthorizedUserQuery: {
-    note: async ([source], { id }) => {
-      const src = source as { _id: string; email: string };
+    note: async ([, , context], { id }) => {
       const found: PrismaNote | null = await prisma.note.findFirst({
-        where: { id, userId: src._id },
+        where: { id, userId: context.authUser!._id },
       });
       if (!found) return null;
       return {

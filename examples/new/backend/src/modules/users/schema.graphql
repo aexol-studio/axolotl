@@ -22,6 +22,7 @@ type AuthorizedUserMutation {
   revokeSession(sessionId: String!): Boolean @resolver
   revokeAllSessions: Boolean @resolver
   deleteAccount(password: String!): Boolean @resolver
+  logout: Boolean! @resolver
 }
 
 type AuthorizedUserQuery {

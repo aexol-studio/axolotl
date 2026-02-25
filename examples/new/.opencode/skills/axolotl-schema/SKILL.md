@@ -6,37 +6,34 @@ description: Schema-first development, @resolver directive, models generation, r
 ## Rules
 
 - Write schema in `.graphql` files → run `axolotl build` → types generated in `models.ts`
-- **NEVER edit `models.ts` manually** — it is always overwritten by `axolotl build`
-- `@resolver` marks a field that requires a resolver implementation; declare it in every module schema that uses it
+- **NEVER edit `models.ts` manually** — always overwritten by `axolotl build`
+- `@resolver` marks fields requiring a resolver implementation
 - Each federation module has its own `.graphql`; `axolotl build` merges them into `backend/schema.graphql`
+- **No `extend type`** — Axolotl merges types by name. Use plain `type` declarations.
 - Always use `.js` extensions in imports (ESM)
 
-## `@resolver` directive
-
-Declare in each schema file that uses it:
+## `@resolver` Directive
 
 ```graphql
 directive @resolver on FIELD_DEFINITION
 
 type Query {
-  user: AuthorizedUserQuery @resolver # gateway — needs resolver
+  user: AuthorizedUserQuery @resolver # needs resolver
   hello: String! # no @resolver — resolved inline
 }
 ```
 
-`axolotl resolvers` reads `@resolver` fields and scaffolds resolver files. Only fields with `@resolver` are scaffolded — plain fields are not.
+`axolotl resolvers` scaffolds files only for `@resolver` fields.
 
 ## CLI Commands
 
-| Command                                                                          | What it does                                                          |
-| -------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `cd backend && npx @aexol/axolotl build`                                         | Merges federation schemas → regenerates `models.ts` + Zeus client     |
-| `cd backend && npx @aexol/axolotl resolvers`                                     | Scaffolds resolver files for all `@resolver` fields (non-destructive) |
-| `cd backend && npx @aexol/axolotl inspect -s schema.graphql -r lib/resolvers.js` | Reports unimplemented `@resolver` fields                              |
+| Command                                                                          | Effect                                                           |
+| -------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `cd backend && npx @aexol/axolotl build`                                         | Merge schemas → regenerate `models.ts` + Zeus client             |
+| `cd backend && npx @aexol/axolotl resolvers`                                     | Scaffold resolver files for `@resolver` fields (non-destructive) |
+| `cd backend && npx @aexol/axolotl inspect -s schema.graphql -r lib/resolvers.js` | Report unimplemented `@resolver` fields                          |
 
-## Federation schema pattern
-
-Each module declares its own types and the `@resolver` directive:
+## Federation Schema Pattern
 
 ```graphql
 # src/modules/users/schema.graphql
@@ -47,4 +44,4 @@ type AuthorizedUserQuery {
 }
 ```
 
-`axolotl.json` lists all module schemas under `federation[]`; `axolotl build` merges them.
+Declare `type` with same name across modules — `axolotl build` merges fields. `axolotl.json` lists all module schemas under `federation[]`.

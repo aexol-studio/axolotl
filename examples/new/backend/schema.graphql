@@ -109,6 +109,7 @@ type AuthorizedUserMutation{
 	deleteAccount(
 		password: String!
 	): Boolean @resolver
+	logout: Boolean! @resolver
 	createNote(
 		input: CreateNoteInput!
 	): Note!

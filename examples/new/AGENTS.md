@@ -66,22 +66,25 @@ project/
 1. **NEVER edit models.ts manually** - always regenerate with `axolotl build`
 2. **ALWAYS use .js extensions** in imports (ESM requirement)
 3. **ALWAYS run axolotl build** after schema changes
-4. **CRITICAL: Resolver signature is** `(input, args)` where `input = [source, args, context]`
-5. **CRITICAL: Access context as** `input[2]` or `([, , context])`
-6. **CRITICAL: Access parent/source as** `input[0]` or `([source])`
+4. **CRITICAL: Resolver signature is** `(input, args)` where `input = [source, args, context]` — `source` is rarely used (only in nested type resolvers like `TodoOps`)
+5. **CRITICAL: Access context as** `input[2]` or `([, , context])` — this is the primary pattern for all resolvers
+6. **Source (`input[0]`) is for nested type resolvers only** (e.g., `TodoOps` receiving a `Todo`). Auth data → `context.authUser`
 7. **CRITICAL: Context type must** extend `YogaInitialContext` and spread `...initial`
 8. **Import from axolotl.ts** - never from @aexol/axolotl-core directly in resolver files
 9. **Use createResolvers()** for ALL resolver definitions
 10. **Use mergeAxolotls()** to combine multiple resolver sets
 11. **Return empty object `{}`** for nested resolver enablement
 12. **Context typing** requires `graphqlYogaWithContextAdapter<T>(contextFunction)`
-13. **Auth gateway module** (`src/modules/auth/`) owns the protected resolver gateway pattern (`Query.user`, `Mutation.user`) — domain modules (e.g., users) should NOT duplicate these gateway resolvers
+13. **Auth gateway module** (`src/modules/auth/`) owns the protected resolver gateway pattern (`Query.user`, `Mutation.user`) — these check `context.authUser` and return `{}`. Domain modules should NOT duplicate these gateway resolvers and should access auth data via `context.authUser`, not `source`
 14. **NEVER use `as any` in resolvers or backend code** — use named type assertions instead:
     - For Prisma mapper functions: import types from `@/src/prisma/generated/prisma/index.js` and use them directly
     - For Prisma model access: use `prisma.modelName` (camelCase of model name) — `@@map()` only changes the DB table name, NOT the TypeScript accessor
     - For Prisma enum mismatches: import the Prisma enum and cast as `value as SpecificEnum` or use `SpecificEnum.VALUE`
     - For generated input types: trust the fields in `models.ts` — `input.firstName` is typed, `(input as any).firstName` is unnecessary
     - For Express/Yoga bridge in `index.ts`: use `yoga as unknown as express.RequestHandler` (NOT `yoga as any`)
+15. **NEVER use `extend type` in module schemas** — Axolotl federation merges types by name, not by SDL extension. Declare `type` (not `extend type`) in each module schema; `axolotl build` combines fields from all modules automatically.
+16. **Domain resolvers access auth via `context.authUser`** — never via `source`. The context builder calls `verifyAuth()` and sets `authUser` on every request. Gateway resolvers verify `context.authUser` exists. Domain resolvers use `context.authUser!._id` and `context.authUser!.email`. Source is only used for non-auth parent data (e.g., nested type resolvers).
+17. **Resource-level authorization is mandatory** — every resolver that reads or writes a resource MUST verify the authenticated user owns or has permission to access that resource using `context.authUser!._id`. Gateway auth alone is insufficient — it only proves the user is logged in, not that they can access a specific resource.
 
 ### Understanding axolotl.json
 
@@ -176,7 +179,8 @@ Axolotl(adapter)<Models<{ MyScalar: string }>, Scalars>();
 | Scaffold resolvers   | `cd backend && npx @aexol/axolotl resolvers`                                 |
 | Create resolvers     | `createResolvers({ Query: {...} })`                                          |
 | Access context       | `([, , context])` - third in tuple                                           |
-| Access parent        | `([source])` - first in tuple                                                |
+| Access auth user     | `context.authUser!`                                                          |
+| Access source        | `([source])` - nested type resolvers only (e.g., `TodoOps`)                  |
 | Merge resolvers      | `mergeAxolotls(resolvers1, resolvers2)`                                      |
 | Start server         | `adapter({ resolvers }).server.listen(4000)`                                 |
 | Add custom context   | `graphqlYogaWithContextAdapter<Ctx>(contextFn)`                              |
@@ -184,6 +188,8 @@ Axolotl(adapter)<Models<{ MyScalar: string }>, Scalars>();
 | Context must include | `{ ...initial, ...custom }`                                                  |
 | Define scalars       | `createScalars({ ScalarName: GraphQLScalarType })`                           |
 | Define directives    | `createDirectives({ directiveName: mapper })`                                |
+| Set auth cookie      | `context.setCookie(token)`                                                   |
+| Clear auth cookie    | `context.clearCookie()`                                                      |
 | Inspect resolvers    | `npx @aexol/axolotl inspect -s backend/schema.graphql -r ./lib/resolvers.js` |
 
 ---
@@ -313,6 +319,7 @@ frontend/
 11. **PascalCase for React component files** — `AuthForm.tsx`, `ThemeProvider.tsx`, `UserList.tsx`. **Shared hooks** in `hooks/` keep `useX.ts` naming (e.g., `useAuth.ts`, `useIsMobile.ts`). **Co-located hooks** (extracted from a page/component) use `ComponentName.hook.ts` naming (e.g., `Settings.hook.ts`, `AuthForm.hook.ts`). The exported function is still `useComponentName` per React convention.
 12. **Route pages use `.page.tsx` suffix** — each route gets its own folder inside a route group: `routes/guest/landing/Landing.page.tsx`, `routes/protected/dashboard/Dashboard.page.tsx`. Route groups (`guest/`, `protected/`, `public/`) provide shared layouts. Sub-page content without its own route stays as regular `.tsx`
 13. **ALWAYS use arrow functions** — `const MyComponent = () => {}` instead of `function MyComponent() {}`. Applies to components, hooks, handlers, helpers — everything. Only exception: generator functions (`function*`)
+14. **ALL user-visible strings MUST use `useDynamite().t()`** — never hardcode user-facing text. Import `useDynamite` from `@aexol/dynamite`, destructure `t`, and wrap every label, title, message, placeholder, error message, and button text with `t('English text')`. For files outside the React tree (data files, schemas), use the factory pattern: accept `t` as a parameter. See the `frontend-translations` skill for full patterns.
 
 ### Component Architecture
 
@@ -346,6 +353,28 @@ toast('Default notification');
 - Use semantic methods: `toast.success()`, `toast.error()`, `toast.info()`
 - Keep messages short and user-friendly
 - The `<Toaster />` component is already mounted in the app root
+
+### Translations (@aexol/dynamite)
+
+This project uses `@aexol/dynamite` for internationalization. **Every user-facing string MUST be translated — hardcoded strings are bugs.**
+
+```typescript
+import { useDynamite } from '@aexol/dynamite';
+
+const MyComponent = () => {
+  const { t } = useDynamite();
+  return <Button>{t('Save changes')}</Button>;
+};
+```
+
+**Key rules:**
+
+- Use `t('English text')` for ALL labels, titles, buttons, messages, placeholders, error messages, toasts
+- Factory pattern for data files/schemas outside React tree: `const getData = (t: (key: string) => string) => ...`
+- Don't translate: brand names, code, URLs
+- Locale stored in cookie (not localStorage/Zustand) — see `frontend-translations` skill
+
+> **Full guide:** Load the `frontend-translations` skill for detailed patterns and rules.
 
 ### SSR Patterns (Data Router)
 
@@ -398,20 +427,44 @@ This project uses **JWT+JTI session-based cookie authentication** with a **gatew
 
 - Passwords hashed with bcrypt (12 rounds). JWTs signed with HS256 containing `{ userId, email, jti }` where `jti` is a session UUID
 - Sessions stored in a `Session` table (Prisma) for server-side revocation. 30-day expiry
-- Tokens sent via httpOnly `Set-Cookie` header — frontend never touches tokens directly
-- Auth check: gateway resolvers (`Query.user` / `Mutation.user`) call `verifyAuth()` which decodes JWT → checks session exists in DB → returns `{ _id, email }` as source for child resolvers
-- Logout: `POST /api/logout` deletes session + clears cookie
+- Tokens sent via httpOnly `Set-Cookie` header — frontend never touches tokens directly. Resolvers set cookies via `context.setCookie(token)` and clear via `context.clearCookie()`
+- Auth check: context builder calls `verifyAuth()` on every request (try/catch, non-throwing) → sets `context.authUser` if valid. Gateway resolvers (`Query.user` / `Mutation.user`) check `context.authUser` exists → throw if not → return `{}`. Domain resolvers access auth data via `context.authUser`
+- Logout: GraphQL mutation `user { logout }` deletes session from DB + clears httpOnly cookie via `context.clearCookie()`
 - Password change invalidates all other sessions (keeps current one)
 - SSR: server verifies cookie on every page render, injects `window.__INITIAL_AUTH__ = { isAuthenticated: true/false }`
 
 **Key files:**
 
+- `backend/src/lib/context.ts` — `AppContext` with `authUser?: AuthUser`, `setCookie(token)`, `clearCookie()`, `AuthUser` type
+- `backend/src/axolotl.ts` — Context builder: extracts cookie/token → calls `verifyAuth` → sets `authUser`
 - `backend/src/lib/auth.ts` — JWT sign/verify, bcrypt hash/verify, session token generation
 - `backend/src/lib/cookies.ts` — Cookie serialize/parse, `COOKIE_NAME`, `COOKIE_OPTIONS`
-- `backend/src/modules/auth/lib/verifyAuth.ts` — Shared auth verification (JWT → session DB check)
+- `backend/src/modules/auth/lib/verifyAuth.ts` — JWT + session verification (used by context builder)
+- `backend/src/modules/auth/resolvers/Query/user.ts` — Gateway: checks `context.authUser`, returns `{}`
+- `backend/src/modules/auth/resolvers/Mutation/user.ts` — Gateway: checks `context.authUser`, returns `{}`
 - `frontend/src/stores/authStore.ts` — `isAuthenticated` boolean from `__INITIAL_AUTH__`
+- `backend/src/modules/users/resolvers/AuthorizedUserMutation/logout.ts` — Logout resolver: deletes session, clears cookie
 - `frontend/src/hooks/useAuth.ts` — Login/register/logout + user query
 
-**Adding protected resolvers:** Add field to `AuthorizedUserQuery` or `AuthorizedUserMutation` in your domain module's schema, run `axolotl build`, implement resolver destructuring `[source]` as `{ _id: string; email: string }`. Auth is already enforced by the gateway.
+**Adding protected resolvers:** Add field to `AuthorizedUserQuery` or `AuthorizedUserMutation` in your domain module's schema, run `axolotl build`, implement resolver using `context.authUser` (access via `([, , context])` destructuring). Auth is already enforced by the gateway — `context.authUser!` is safe to use with non-null assertion. **Every resolver MUST verify the user owns/has access to the resource** using `context.authUser!._id`.
+
+**⚠️ Resource-Level Authorization (Critical Security):**
+
+Gateway auth only verifies the user is logged in. Every resolver that fetches or mutates a resource MUST additionally verify the user has access:
+
+```typescript
+// ✅ Correct — ownership enforced
+deleteNote: async ([, , context], { id }) => {
+  await prisma.note.findFirstOrThrow({
+    where: { id, userId: context.authUser!._id },
+  });
+  return prisma.note.delete({ where: { id } });
+};
+
+// ❌ Wrong — any logged-in user can delete any note
+deleteNote: async ([, , context], { id }) => {
+  return prisma.note.delete({ where: { id } });
+};
+```
 
 **Before writing any code, always check available skills for detailed guidance on the topic you're working on.**

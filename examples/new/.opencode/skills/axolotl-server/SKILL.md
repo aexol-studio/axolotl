@@ -6,46 +6,68 @@ description: Axolotl server setup, axolotl.ts initialization, custom context, sc
 ## axolotl.ts Initialization
 
 ```typescript
-// Without custom context
-export const { createResolvers, createDirectives, applyMiddleware, adapter } = Axolotl(graphqlYogaAdapter)<
-  Models<{ Secret: number }>,
-  Scalars
->();
-
-// With custom context
-const yogaAdapter = graphqlYogaWithContextAdapter<AppContext>((initial) => initial as AppContext);
+// Root src/axolotl.ts — passes context builder function
+const yogaAdapter = graphqlYogaWithContextAdapter<AppContext>(async (initial) => {
+  // ... auth verification, setCookie/clearCookie closures
+  return { ...initial, authUser, setCookie, clearCookie };
+});
 export const { createResolvers, createDirectives, applyMiddleware, adapter } = Axolotl(yogaAdapter)<
   Models<{ Secret: number; ID: string }>,
   Scalars,
   Directives
 >();
+
+// Module src/modules/myModule/axolotl.ts — type-only, no builder
+const yogaAdapter = graphqlYogaWithContextAdapter<AppContext>();
+export const { createResolvers } = Axolotl(yogaAdapter)<ModuleModels>();
 ```
 
-- Module resolver files use `graphqlYogaAdapter`
-- Root `axolotl.ts` uses `graphqlYogaWithContextAdapter<T>(buildContext)` when custom context is needed
-- `buildContext` must return `{ ...initial, ...customFields }` — spreading `initial` is mandatory
+- Both root and modules use `graphqlYogaWithContextAdapter<AppContext>()`
+- Root passes a builder function — modules pass nothing (type-only)
+- Builder must return `{ ...initial, ...customFields }` — spreading `initial` is **mandatory**
 - Context type **must** extend `YogaInitialContext`
-- **Never use `as any`** — use `as unknown as T` for structural incompatibility (e.g. Express bridge)
+- Context is auto-typed in resolvers — **never cast with `as AppContext`**
+- **Never `as any`** — use `as unknown as T` for structural incompatibility
 
 ## Context Type
 
 ```typescript
-// context.ts
-export interface AppContext extends YogaInitialContext {
-  // ✅ must extend
-  req: IncomingMessage;
-  res: ServerResponse;
-}
+import type { YogaInitialContext } from 'graphql-yoga';
 
-// axolotl.ts — builder must spread initial
-const yogaAdapter = graphqlYogaWithContextAdapter<AppContext>(
-  async (initial) => ({ ...initial, myField: value }), // ✅ ...initial required
-);
+export type AuthUser = { _id: string; email: string; jti: string };
+
+export interface AppContext extends YogaInitialContext {
+  authUser?: AuthUser;
+  setCookie: (token: string) => void;
+  clearCookie: () => void;
+}
 ```
 
-❌ `type AppContext = { userId: string }` — not extending `YogaInitialContext`  
-❌ `(initial) => ({ userId: '123' })` — missing `...initial`  
-❌ `graphqlYogaWithContextAdapter<AppContext>({ userId: '123' })` — must pass a function
+## Context Builder with Auth
+
+```typescript
+// axolotl.ts — verifies auth on every request (try/catch, non-throwing)
+const yogaAdapter = graphqlYogaWithContextAdapter<AppContext>(async (initial) => {
+  const cookieHeader = initial.request.headers.get('cookie');
+  const tokenHeader = initial.request.headers.get('token');
+
+  let authUser: AppContext['authUser'];
+  try {
+    authUser = await verifyAuth(cookieHeader, tokenHeader);
+  } catch {
+    authUser = undefined;
+  }
+
+  return { ...initial, authUser, setCookie, clearCookie };
+});
+// setCookie/clearCookie are closures created from the response object — see context.ts
+```
+
+**Common mistakes:**
+
+- ❌ `type AppContext = { userId: string }` — not extending `YogaInitialContext`
+- ❌ `(initial) => ({ userId: '123' })` — missing `...initial`
+- ❌ `graphqlYogaWithContextAdapter<AppContext>({ userId: '123' })` — must pass a function
 
 ## Custom Scalars
 
@@ -80,7 +102,7 @@ const directives = createDirectives({
       return {
         ...fieldConfig,
         resolve: async (source, args, context, info) => {
-          if (!context.userId) throw new GraphQLError('Not authenticated');
+          if (!context.authUser) throw new GraphQLError('Not authenticated');
           return resolve(source, args, context, info);
         },
       };
@@ -91,13 +113,13 @@ const directives = createDirectives({
 adapter({ resolvers, directives });
 ```
 
-- Directive fn signature: `(schema, getDirective) => { [MapperKind.X]: fieldMapper }`
-- Return mapper config object — the adapter calls `mapSchema()` internally, don't call it yourself
+- Directive signature: `(schema, getDirective) => { [MapperKind.X]: fieldMapper }`
+- Adapter calls `mapSchema()` internally — don't call it yourself
 
-## Express Bridge (no `as any`)
+## Express Bridge
 
 ```typescript
-// ✅ correct double-cast
+// ✅ correct
 app.use('/graphql', yoga as unknown as express.RequestHandler);
 // ❌ wrong
 app.use('/graphql', yoga as any);
