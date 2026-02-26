@@ -2,8 +2,8 @@ import { GraphQLError } from 'graphql';
 import { z } from 'zod';
 import { createResolvers } from '../../axolotl.js';
 import { prisma } from '@/src/db.js';
-import { hashPassword, signToken, generateSessionToken, getSessionExpiryDate } from '@/src/lib/auth.js';
-import { parseInput, emailSchema, passwordSchema } from '@/src/lib/validation.js';
+import { hashPassword, signToken, generateSessionToken, getSessionExpiryDate } from '@/src/utils/auth.js';
+import { parseInput, emailSchema, passwordSchema } from '@/src/utils/validation.js';
 
 const registerSchema = z.object({
   email: emailSchema,

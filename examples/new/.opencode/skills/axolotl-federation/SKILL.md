@@ -19,7 +19,7 @@ All modules use `graphqlYogaWithContextAdapter<AppContext>()` for typed context.
 ```typescript
 // every module's axolotl.ts — type-only, no context builder
 import { graphqlYogaWithContextAdapter } from '@aexol/axolotl-graphql-yoga';
-import type { AppContext } from '@/src/lib/context.js';
+import type { AppContext } from '@/src/context.js';
 const yogaAdapter = graphqlYogaWithContextAdapter<AppContext>();
 export const { createResolvers } = Axolotl(yogaAdapter)<Models, unknown>();
 

@@ -2,8 +2,8 @@ import type { ServerResponse } from 'node:http';
 import { Directives, Models, Scalars } from '@/src/models.js';
 import { Axolotl } from '@aexol/axolotl-core';
 import { graphqlYogaWithContextAdapter } from '@aexol/axolotl-graphql-yoga';
-import { AppContext } from './lib/context.js';
-import { serializeClearCookie, serializeSetCookie } from './lib/cookies.js';
+import { AppContext } from './context.js';
+import { serializeClearCookie, serializeSetCookie } from './utils/cookies.js';
 import { verifyAuth } from '@/src/modules/auth/lib/verifyAuth.js';
 
 const yogaAdapter = graphqlYogaWithContextAdapter<AppContext>(async (initial) => {

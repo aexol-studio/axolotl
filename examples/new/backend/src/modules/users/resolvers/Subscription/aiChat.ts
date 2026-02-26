@@ -1,7 +1,7 @@
 import { createSubscriptionHandler } from '@aexol/axolotl-core';
 import { createResolvers } from '../../axolotl.js';
 import { streamText, CoreMessage } from 'ai';
-import { gpt4oMini } from '@/src/ai/index.js';
+import { gpt4oMini } from '../../lib/ai/index.js';
 
 export default createResolvers({
   Subscription: {

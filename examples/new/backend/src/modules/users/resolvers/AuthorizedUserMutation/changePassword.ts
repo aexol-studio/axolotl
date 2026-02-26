@@ -2,9 +2,9 @@ import { z } from 'zod';
 import { GraphQLError } from 'graphql';
 import { createResolvers } from '../../axolotl.js';
 import { prisma } from '@/src/db.js';
-import { hashPassword, verifyPassword, verifyToken } from '@/src/lib/auth.js';
-import { getTokenFromCookies } from '@/src/lib/cookies.js';
-import { parseInput, passwordSchema } from '@/src/lib/validation.js';
+import { hashPassword, verifyPassword, verifyToken } from '@/src/utils/auth.js';
+import { getTokenFromCookies } from '@/src/utils/cookies.js';
+import { parseInput, passwordSchema } from '@/src/utils/validation.js';
 
 const changePasswordSchema = z.object({
   oldPassword: z.string().min(1, 'Current password is required'),

@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { GraphQLError } from 'graphql';
 import { createResolvers } from '../../axolotl.js';
 import { prisma } from '@/src/db.js';
-import { verifyPassword } from '@/src/lib/auth.js';
-import { parseInput } from '@/src/lib/validation.js';
+import { verifyPassword } from '@/src/utils/auth.js';
+import { parseInput } from '@/src/utils/validation.js';
 
 const deleteAccountSchema = z.object({
   password: z.string().min(1, 'Password is required'),

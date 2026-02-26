@@ -37,7 +37,7 @@ const form = useForm({ resolver: zodResolver(schema) });
 - Locale stored in a `locale` **cookie** — NOT localStorage, NOT Zustand
 - `LanguageSwitcher` sets cookie + `window.location.reload()`
 - Server reads cookie → SSR renders correct language
-- New locale: add to `SUPPORTED_LOCALES` in `backend/src/lib/cookies.ts`, create `frontend/public/locales/{code}/common.json`, restart dev
+- New locale: add to `SUPPORTED_LOCALES` in `backend/src/config/cookies.ts`, create `frontend/public/locales/{code}/common.json`, restart dev
 
 ## What to Translate
 

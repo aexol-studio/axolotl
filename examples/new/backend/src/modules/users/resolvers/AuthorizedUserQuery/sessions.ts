@@ -1,7 +1,7 @@
 import { createResolvers } from '../../axolotl.js';
 import { prisma } from '@/src/db.js';
-import { verifyToken } from '@/src/lib/auth.js';
-import { getTokenFromCookies } from '@/src/lib/cookies.js';
+import { verifyToken } from '@/src/utils/auth.js';
+import { getTokenFromCookies } from '@/src/utils/cookies.js';
 
 /**
  * Extracts the current session's JTI from the request cookie.

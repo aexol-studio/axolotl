@@ -7,8 +7,8 @@ import { dirname, resolve } from 'path';
 import { adapter } from '@/src/axolotl.js';
 import resolvers from '@/src/resolvers.js';
 import directives from './directives.js';
-import { parseCookies, getLocaleFromCookies } from './lib/cookies.js';
-import { verifyToken } from './lib/auth.js';
+import { parseCookies, getLocaleFromCookies } from './utils/cookies.js';
+import { verifyToken } from './utils/auth.js';
 import { prisma } from './db.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

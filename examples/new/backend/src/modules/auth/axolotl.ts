@@ -1,7 +1,7 @@
 import { Models } from '@/src/modules/auth/models.js';
 import { Axolotl } from '@aexol/axolotl-core';
 import { graphqlYogaWithContextAdapter } from '@aexol/axolotl-graphql-yoga';
-import type { AppContext } from '@/src/lib/context.js';
+import type { AppContext } from '@/src/context.js';
 
 const yogaAdapter = graphqlYogaWithContextAdapter<AppContext>();
 

@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { prisma } from '@/src/db.js';
-import { getTokenFromCookies } from '@/src/lib/cookies.js';
-import { verifyToken, type JwtPayload } from '@/src/lib/auth.js';
+import { getTokenFromCookies } from '@/src/utils/cookies.js';
+import { verifyToken, type JwtPayload } from '@/src/utils/auth.js';
 
 export interface AuthResult {
   _id: string;

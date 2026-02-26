@@ -34,10 +34,13 @@ project/
 │   │   ├── resolvers.ts  # mergeAxolotls(auth, users)
 │   │   ├── index.ts      # Server entry point
 │   │   ├── db.ts         # Shared Prisma client
-│   │   ├── lib/          # Shared utilities
-│   │   │   ├── auth.ts
-│   │   │   ├── context.ts
+│   │   ├── context.ts    # AppContext type & AuthUser type
+│   │   ├── config/       # App-specific constants
 │   │   │   └── cookies.ts
+│   │   ├── utils/        # Domain-agnostic reusable utilities
+│   │   │   ├── auth.ts
+│   │   │   ├── cookies.ts
+│   │   │   └── validation.ts
 │   │   └── modules/
 │   │       ├── auth/      # Auth gateway module
 │   │       │   ├── schema.graphql
@@ -50,6 +53,8 @@ project/
 │   │           ├── schema.graphql
 │   │           ├── models.ts
 │   │           ├── axolotl.ts
+│   │           ├── lib/       # Module-specific helpers
+│   │           │   └── ai/    # AI providers (domain-specific)
 │   │           └── resolvers/
 ├── frontend/
 │   ├── vite.config.ts    # Vite configuration
@@ -58,6 +63,14 @@ project/
 ```
 
 > **Note:** The `auth` and `users` modules are **core modules** that provide authentication and user management. The `todos` module is an **example module** included for demonstration — it can be safely removed when building your own application.
+
+#### Backend Folder Placement Rules
+
+- **`src/utils/`** — Domain-agnostic utility functions only (auth primitives, cookie parsing, validation helpers). If it's specific to one module, it doesn't belong here.
+- **`src/config/`** — App-specific constants (cookie names, options, supported locales). No functions.
+- **`src/context.ts`** — App-level `AppContext` and `AuthUser` types. Not a utility — it's the application contract.
+- **`modules/{name}/lib/`** — Module-specific helpers, types, or domain logic (e.g., AI providers, domain validation schemas).
+- **NEVER** put domain-specific code in `utils/` or `config/`. Move it to the owning module's `lib/` folder.
 
 ### Critical Rules
 
@@ -435,10 +448,11 @@ This project uses **JWT+JTI session-based cookie authentication** with a **gatew
 
 **Key files:**
 
-- `backend/src/lib/context.ts` — `AppContext` with `authUser?: AuthUser`, `setCookie(token)`, `clearCookie()`, `AuthUser` type
+- `backend/src/context.ts` — `AppContext` with `authUser?: AuthUser`, `setCookie(token)`, `clearCookie()`, `AuthUser` type
 - `backend/src/axolotl.ts` — Context builder: extracts cookie/token → calls `verifyAuth` → sets `authUser`
-- `backend/src/lib/auth.ts` — JWT sign/verify, bcrypt hash/verify, session token generation
-- `backend/src/lib/cookies.ts` — Cookie serialize/parse, `COOKIE_NAME`, `COOKIE_OPTIONS`
+- `backend/src/utils/auth.ts` — JWT sign/verify, bcrypt hash/verify, session token generation
+- `backend/src/config/cookies.ts` — `COOKIE_NAME`, `COOKIE_OPTIONS`, locale constants
+- `backend/src/utils/cookies.ts` — Cookie serialize/parse utilities
 - `backend/src/modules/auth/lib/verifyAuth.ts` — JWT + session verification (used by context builder)
 - `backend/src/modules/auth/resolvers/Query/user.ts` — Gateway: checks `context.authUser`, returns `{}`
 - `backend/src/modules/auth/resolvers/Mutation/user.ts` — Gateway: checks `context.authUser`, returns `{}`

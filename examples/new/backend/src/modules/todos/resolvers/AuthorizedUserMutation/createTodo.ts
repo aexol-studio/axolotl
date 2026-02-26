@@ -2,7 +2,8 @@ import { z } from 'zod';
 import { createResolvers } from '../../axolotl.js';
 import { prisma } from '@/src/db.js';
 import { todoPubSub } from '../../pubsub.js';
-import { parseInput, todoContentSchema } from '@/src/lib/validation.js';
+import { parseInput } from '@/src/utils/validation.js';
+import { todoContentSchema } from '../../lib/validation.js';
 
 const createTodoSchema = z.object({ content: todoContentSchema });
 
