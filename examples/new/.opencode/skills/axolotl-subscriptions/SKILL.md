@@ -3,16 +3,36 @@ name: axolotl-subscriptions
 description: Axolotl subscription handlers - async generators, yield patterns, PubSub integration, and federated subscription rules
 ---
 
-## Subscriptions
+## Subscription Resolvers
 
-### Defining Subscriptions in Schema
+**CRITICAL:** Always use `createSubscriptionHandler` from `@aexol/axolotl-core`. Never use a raw `AsyncGenerator`.
 
-Add a `Subscription` type to your schema:
+### Async Generator + Yield Pattern
+
+```typescript
+import { createResolvers, createSubscriptionHandler } from '@aexol/axolotl-core';
+import { setTimeout as setTimeout$ } from 'node:timers/promises';
+
+export default createResolvers({
+  Subscription: {
+    countdown: createSubscriptionHandler(async function* (input, { from }) {
+      // input = [source, args, context] — same as regular resolvers
+      for (let i = from ?? 10; i >= 0; i--) {
+        await setTimeout$(1000);
+        yield i; // yield the value directly — NOT { countdown: i }
+      }
+    }),
+  },
+});
+```
+
+### Schema Wiring
+
+Subscriptions require a `Subscription` type in the schema AND the `subscription` key in the `schema` block:
 
 ```graphql
 type Subscription {
-  countdown(from: Int): Int @resolver
-  messageAdded: Message @resolver
+  countdown(from: Int): Int! @resolver
 }
 
 schema {
@@ -22,168 +42,51 @@ schema {
 }
 ```
 
-### Creating Subscription Resolvers
+### Yield Format Rule
 
-**CRITICAL:** All subscription resolvers **MUST** use `createSubscriptionHandler` from `@aexol/axolotl-core`.
-
-```typescript
-import { createResolvers, createSubscriptionHandler } from '@aexol/axolotl-core';
-import { setTimeout as setTimeout$ } from 'node:timers/promises';
-
-export default createResolvers({
-  Subscription: {
-    // Simple countdown subscription
-    countdown: createSubscriptionHandler(async function* (input, { from }) {
-      // input is [source, args, context] - same as regular resolvers
-      const [, , context] = input;
-
-      for (let i = from || 10; i >= 0; i--) {
-        await setTimeout$(1000);
-        yield i;
-      }
-    }),
-
-    // Event-based subscription with PubSub
-    messageAdded: createSubscriptionHandler(async function* (input) {
-      const [, , context] = input;
-      const channel = context.pubsub.subscribe('MESSAGE_ADDED');
-
-      for await (const message of channel) {
-        yield message;
-      }
-    }),
-  },
-});
-```
-
-### Key Points
-
-1. **Always use `createSubscriptionHandler`** - It wraps your async generator function
-2. **Use async generators** - Functions with `async function*` that yield values
-3. **Yield values directly** - GraphQL automatically wraps the yielded value in `{ [fieldName]: yieldedValue }` format
-4. **Access context** - Same `[source, args, context]` signature as regular resolvers
-5. **Works with GraphQL Yoga** - Supports both SSE and WebSocket transports
-
-### CRITICAL: Subscription Return Format
-
-GraphQL subscriptions automatically wrap yielded values. You should yield the **value directly**, NOT wrapped in the field name:
+Yield the **field value directly**. GraphQL wraps it automatically:
 
 ```typescript
-// ✅ CORRECT - yield the value directly
-createSubscriptionHandler(async function* () {
-  yield { type: 'CREATED', post: { _id: '123', title: 'Test' } };
-  // GraphQL returns: { "data": { "postUpdates": { "type": "CREATED", "post": {...} } } }
-});
+// ✅ CORRECT
+yield { type: 'CREATED', post: { _id: '123' } };
+// → { "data": { "postUpdates": { "type": "CREATED", "post": {...} } } }
 
-// ❌ WRONG - do NOT wrap in field name
-createSubscriptionHandler(async function* () {
-  yield { postUpdates: { type: 'CREATED', post: {...} } };
-  // This would result in: { "data": { "postUpdates": { "postUpdates": {...} } } }
-});
+// ❌ WRONG — double-wraps the field name
+yield { postUpdates: { type: 'CREATED', post: {...} } };
 ```
 
-The GraphQL layer handles the `{ data: { fieldName: ... } }` wrapping automatically.
+---
 
-### Example: Real-Time Counter
-
-**Schema:**
-
-```graphql
-type Subscription {
-  countdown(from: Int = 10): Int @resolver
-}
-```
-
-**Resolver:**
+## PubSub Integration
 
 ```typescript
-import { createResolvers, createSubscriptionHandler } from '@aexol/axolotl-core';
-import { setTimeout as setTimeout$ } from 'node:timers/promises';
-
-export default createResolvers({
-  Subscription: {
-    countdown: createSubscriptionHandler(async function* (input, { from }) {
-      console.log(`Starting countdown from ${from}`);
-
-      for (let i = from || 10; i >= 0; i--) {
-        await setTimeout$(1000);
-        yield i;
-      }
-
-      console.log('Countdown complete!');
-    }),
-  },
-});
-```
-
-**GraphQL Query:**
-
-```graphql
-subscription {
-  countdown(from: 5)
-}
-```
-
-### Example: PubSub Pattern
-
-```typescript
-import { createResolvers, createSubscriptionHandler } from '@aexol/axolotl-core';
-
 export default createResolvers({
   Mutation: {
     sendMessage: async ([, , ctx], { text }) => {
-      const message = {
-        id: crypto.randomUUID(),
-        text,
-        timestamp: new Date().toISOString(),
-      };
-
-      // Publish event
+      const message = { id: crypto.randomUUID(), text, timestamp: new Date().toISOString() };
       await ctx.pubsub.publish('MESSAGE_ADDED', message);
-
       return message;
     },
   },
-
   Subscription: {
     messageAdded: createSubscriptionHandler(async function* (input) {
       const [, , ctx] = input;
       const channel = ctx.pubsub.subscribe('MESSAGE_ADDED');
-
       try {
         for await (const message of channel) {
           yield message;
         }
       } finally {
-        // Cleanup on disconnect
-        await channel.unsubscribe();
+        await channel.unsubscribe(); // cleanup on disconnect
       }
     }),
   },
 });
 ```
 
-### Federated Subscriptions
+---
 
-In federated setups, each subscription field should only be defined in **one module**:
+## Federated Subscriptions
 
-```typescript
-// ✅ CORRECT: Define in one module only
-// modules/users/schema.graphql
-type Subscription {
-  userStatusChanged(userId: String!): UserStatus @resolver
-}
-
-// ❌ WRONG: Multiple modules defining the same subscription
-// modules/users/schema.graphql
-type Subscription {
-  statusChanged: Status @resolver
-}
-
-// modules/posts/schema.graphql
-type Subscription {
-  statusChanged: Status @resolver  # Conflict!
-}
-```
-
-If multiple modules try to define the same subscription field, only the first one encountered will be used.
+- Define each subscription field in **exactly one module** — if multiple modules define the same field, only the first is used
+- Do not split subscription logic across modules

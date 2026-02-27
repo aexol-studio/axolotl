@@ -4,10 +4,9 @@ import type { Note as PrismaNote } from '@/src/prisma/generated/prisma/client.js
 
 export default createResolvers({
   AuthorizedUserQuery: {
-    notes: async ([source]) => {
-      const src = source as { _id: string; email: string };
+    notes: async ([, , context]) => {
       const notes = await prisma.note.findMany({
-        where: { userId: src._id },
+        where: { userId: context.authUser!._id },
         orderBy: { createdAt: 'desc' },
       });
       return notes.map((n: PrismaNote) => ({

@@ -5,13 +5,12 @@ import { NoteStatus } from '@/src/prisma/generated/prisma/client.js';
 
 export default createResolvers({
   AuthorizedUserMutation: {
-    createNote: async ([source], { input }) => {
-      const src = source as { _id: string; email: string };
+    createNote: async ([, , context], { input }) => {
       const note: PrismaNote = await prisma.note.create({
         data: {
           content: input.content,
           status: (input.status as NoteStatus) ?? NoteStatus.ACTIVE,
-          userId: src._id,
+          userId: context.authUser!._id,
         },
       });
       return {

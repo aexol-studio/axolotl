@@ -1,6 +1,6 @@
-# new-starter (example)
+# Axolotl Fullstack Starter
 
-Federated GraphQL Yoga example built with Axolotl. Demonstrates user authentication with PostgreSQL/Prisma 7, and a React frontend with Tailwind CSS v4 using the Zeus GraphQL client.
+A production-ready starter for fullstack TypeScript apps. Axolotl GraphQL backend + React SSR frontend, ready to build on.
 
 ## Getting started
 
@@ -56,6 +56,19 @@ This starts both the GraphQL backend and React frontend on the same port (http:/
 - `npm run db:studio` - Open Prisma Studio GUI
 - `npm run db:seed` - Run database seed
 
+## Features
+
+- Axolotl schema-first GraphQL backend with micro-federation
+- React + Vite SSR (server-side rendering with streaming)
+- Tailwind CSS v4 + shadcn/ui components
+- Zeus type-safe GraphQL client
+- JWT + session authentication (httpOnly cookies)
+- PostgreSQL + Prisma 7
+- Dark mode (class-based)
+- i18n with @aexol/dynamite
+- React Query for server state
+- Zustand for client state
+
 ## Architecture
 
 - **Backend**: Express + GraphQL Yoga (served at `/graphql`)
@@ -64,68 +77,40 @@ This starts both the GraphQL backend and React frontend on the same port (http:/
 
 In development, Vite runs as Express middleware for HMR. In production, Express serves the built frontend from `dist/frontend/`.
 
-## Features
-
-- User registration and login with JWT tokens
-- Type-safe GraphQL client using Zeus
-- PostgreSQL persistence with Prisma 7
-
-## Included Examples
-
-The `todos` backend module (`backend/src/modules/todos/`) and the `/examples` frontend route are included for demonstration purposes. They can be safely removed when building your own application.
-
-## Database Setup
-
-This example uses PostgreSQL with Prisma 7. Docker Compose is provided for running a local development database only (it does not run the application itself):
-
-```sh
-docker-compose up -d
-```
-
-Default connection string: `postgresql://axolotl:axolotl@localhost:5533/axolotl?schema=public`
-
-### Prisma 7 Notes
-
-- The Prisma client is generated locally in `backend/src/prisma/generated/` (not in node_modules)
-- Uses driver adapters (`@prisma/adapter-pg`) for database connections
-- Configuration is in `prisma.config.ts`
-- Import the client from `./prisma/generated/prisma/client.js` (relative from `backend/src/db.ts`)
-
-## Docker Deployment
-
-### Local Development Database (Docker Compose)
-
-Docker Compose is used **only** for running the local PostgreSQL database during development — it does not run the application itself.
-
-```bash
-docker-compose up -d
-```
-
-This will:
-
-- Start PostgreSQL with pgvector extension on port 5533
-- Store data in a persistent Docker volume
-
-### Production Build
-
-Build and run just the app container:
-
-```bash
-docker build -t new-starter .
-docker run -p 4102:4102 \
-  -e PGUSER=axolotl \
-  -e PGPASSWORD=axolotl \
-  -e PGDATABASE=axolotl \
-  -e PGHOST=your-db-host \
-  new-starter
-```
-
-## Entry points
+## Entry Points
 
 - Server: `backend/src/index.ts`
 - Resolvers: `backend/src/resolvers.ts`
 - Schema: `backend/schema.graphql`
-- Frontend: `frontend/src/App.tsx`
+- SSR client entry: `frontend/src/entry-client.tsx`
+- SSR server entry: `frontend/src/entry-server.tsx`
+- Root route layout: `frontend/src/routes/RootLayout.tsx`
+- Route config: `frontend/src/routes/index.tsx`
 - Zeus client: `frontend/src/zeus/index.ts`
 - Database client: `backend/src/db.ts`
 - Prisma schema: `backend/src/prisma/schema.prisma`
+
+## Included Examples
+
+The `todos` backend module and `/examples` frontend route are included for demonstration — safe to remove.
+
+## Docker
+
+Development database:
+
+```sh
+docker-compose up -d    # PostgreSQL on port 5533
+```
+
+Production:
+
+```sh
+docker build -t my-app .
+docker run -p 4102:4102 -e PGHOST=... -e PGUSER=... -e PGPASSWORD=... -e PGDATABASE=... my-app
+```
+
+## Prisma 7 Notes
+
+- Client is generated locally in `backend/src/prisma/generated/` (not in node_modules)
+- Uses driver adapters (`@prisma/adapter-pg`) for database connections
+- Configuration is in `prisma.config.ts`; import client from `./prisma/generated/prisma/client.js`

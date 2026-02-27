@@ -188,6 +188,9 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
         password: string;
       };
     };
+    logout: {
+      args: Record<string, never>;
+    };
     createNote: {
       args: {
         input: CreateNoteInput;
@@ -282,6 +285,7 @@ export interface AuthorizedUserMutation<S extends { [P in keyof Scalars]: any } 
   revokeSession?: boolean | undefined | null;
   revokeAllSessions?: boolean | undefined | null;
   deleteAccount?: boolean | undefined | null;
+  logout: boolean;
   createNote: Note;
   deleteNote: boolean;
 }

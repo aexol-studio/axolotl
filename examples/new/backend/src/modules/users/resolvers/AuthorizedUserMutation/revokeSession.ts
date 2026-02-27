@@ -1,17 +1,12 @@
 import { GraphQLError } from 'graphql';
 import { createResolvers } from '../../axolotl.js';
-import { User } from '../../models.js';
 import { prisma } from '@/src/db.js';
-import { verifyToken } from '@/src/lib/auth.js';
-import { getTokenFromCookies } from '@/src/lib/cookies.js';
-import type { AppContext } from '@/src/lib/context.js';
+import { verifyToken } from '@/src/utils/auth.js';
+import { getTokenFromCookies } from '@/src/utils/cookies.js';
 
 export default createResolvers({
   AuthorizedUserMutation: {
-    revokeSession: async ([source, , ctx], { sessionId }) => {
-      const context = ctx as AppContext;
-      const src = source as User;
-
+    revokeSession: async ([, , context], { sessionId }) => {
       // Determine current session JTI from cookie
       const cookieHeader = context.request.headers.get('cookie');
       const token = getTokenFromCookies(cookieHeader);
@@ -24,9 +19,9 @@ export default createResolvers({
         }
       }
 
-      // Verify the session belongs to the current user
+      // Verify the session belongs to the current user (resource-level authorization)
       const session = await prisma.session.findFirst({
-        where: { token: sessionId, userId: src._id },
+        where: { token: sessionId, userId: context.authUser!._id },
       });
 
       if (!session) {

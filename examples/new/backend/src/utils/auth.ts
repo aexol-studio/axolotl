@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
-import { COOKIE_OPTIONS } from './cookies.js';
+import { COOKIE_OPTIONS } from '@/src/config/cookies.js';
 
 const BCRYPT_ROUNDS = 12;
 

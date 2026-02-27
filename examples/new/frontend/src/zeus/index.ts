@@ -1164,6 +1164,7 @@ changePassword?: [{	oldPassword: string | Variable<any, string>,	newPassword: st
 revokeSession?: [{	sessionId: string | Variable<any, string>},boolean | `@${string}`],
 	revokeAllSessions?:boolean | `@${string}`,
 deleteAccount?: [{	password: string | Variable<any, string>},boolean | `@${string}`],
+	logout?:boolean | `@${string}`,
 createNote?: [{	input: ValueTypes["CreateNoteInput"] | Variable<any, string>},ValueTypes["Note"]],
 deleteNote?: [{	id: ValueTypes["ID"] | Variable<any, string>},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`,
@@ -1261,6 +1262,7 @@ changePassword?: [{	oldPassword: string,	newPassword: string},boolean | `@${stri
 revokeSession?: [{	sessionId: string},boolean | `@${string}`],
 	revokeAllSessions?:boolean | `@${string}`,
 deleteAccount?: [{	password: string},boolean | `@${string}`],
+	logout?:boolean | `@${string}`,
 createNote?: [{	input: ResolverInputTypes["CreateNoteInput"]},ResolverInputTypes["Note"]],
 deleteNote?: [{	id: ResolverInputTypes["ID"]},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`
@@ -1352,6 +1354,7 @@ export type ModelTypes = {
 	revokeSession?: boolean | undefined | null,
 	revokeAllSessions?: boolean | undefined | null,
 	deleteAccount?: boolean | undefined | null,
+	logout: boolean,
 	createNote: ModelTypes["Note"],
 	deleteNote: boolean
 };
@@ -1461,6 +1464,7 @@ export type GraphQLTypes = {
 	revokeSession?: boolean | undefined | null,
 	revokeAllSessions?: boolean | undefined | null,
 	deleteAccount?: boolean | undefined | null,
+	logout: boolean,
 	createNote: GraphQLTypes["Note"],
 	deleteNote: boolean,
 	['...on AuthorizedUserMutation']: Omit<GraphQLTypes["AuthorizedUserMutation"], "...on AuthorizedUserMutation">

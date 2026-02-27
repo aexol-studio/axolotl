@@ -7,7 +7,6 @@
   "scripts": {
     "start": "npm run start --ws --if-present",
     "test": "glob -c \"node --test \" \"./packages/**/*.test.js\"",
-    "sync-docs": "cp Readme.md examples/new/AGENTS.md && cp Readme.md examples/yoga-federated/AGENTS.md",
     "build": "npm run build --ws --if-present",
     "sync": "npm run sync-docs && npx tsx packages/scripts/src/packages.ts && npm run build --ws --if-present && npm i && git add . && git commit -m \"next version\" && git push origin main"
   },

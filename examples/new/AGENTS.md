@@ -1,900 +1,107 @@
-# Axolotl Framework - LLM Integration Guide
+# Axolotl Fullstack - LLM Integration Guide
 
 ## Overview
 
-Axolotl is a **type-safe, schema-first GraphQL framework** that generates TypeScript types from your GraphQL schema and provides full type safety for resolvers. This guide provides exact instructions for LLMs to work with Axolotl projects.
+This is a fullstack project with an **Axolotl GraphQL backend** and a **React frontend**.
 
-## Core Concepts
+- **Backend**: Axolotl - a type-safe, schema-first GraphQL framework that generates TypeScript types from your schema
+- **Frontend**: React + Vite + Tailwind CSS v4 + shadcn/ui + Zustand + Zeus (type-safe GraphQL client) + Sonner (toasts)
 
-### 1. Schema-First Development
+---
+
+## Backend (Axolotl)
+
+### Core Concepts
+
+#### Schema-First Development
 
 - Write GraphQL schema in `.graphql` files
 - Axolotl CLI generates TypeScript types automatically
 - Resolvers are fully typed based on the schema
 
-### 2. File Structure
+#### File Structure
 
 ```
 project/
-├── axolotl.json          # Configuration file
-├── schema.graphql        # GraphQL schema
-├── src/
-│   ├── axolotl.ts       # Framework initialization
-│   ├── models.ts        # Auto-generated types (DO NOT EDIT)
-│   ├── resolvers.ts     # Resolver implementations
-│   └── index.ts         # Server entry point
+├── backend/
+│   ├── axolotl.json      # Configuration file
+│   ├── schema.graphql    # Auto-generated merged schema
+│   ├── nodemon.json      # Dev watcher config
+│   ├── prisma.config.ts  # Prisma configuration
+│   ├── src/
+│   │   ├── axolotl.ts    # Framework initialization
+│   │   ├── models.ts     # Auto-generated types (DO NOT EDIT)
+│   │   ├── resolvers.ts  # mergeAxolotls(auth, users)
+│   │   ├── index.ts      # Server entry point
+│   │   ├── db.ts         # Shared Prisma client
+│   │   ├── context.ts    # AppContext type & AuthUser type
+│   │   ├── config/       # App-specific constants
+│   │   │   └── cookies.ts
+│   │   ├── utils/        # Domain-agnostic reusable utilities
+│   │   │   ├── auth.ts
+│   │   │   ├── cookies.ts
+│   │   │   └── validation.ts
+│   │   └── modules/
+│   │       ├── auth/      # Auth gateway module
+│   │       │   ├── schema.graphql
+│   │       │   ├── models.ts
+│   │       │   ├── axolotl.ts
+│   │       │   ├── lib/
+│   │       │   │   └── verifyAuth.ts
+│   │       │   └── resolvers/
+│   │       └── users/     # Users domain module
+│   │           ├── schema.graphql
+│   │           ├── models.ts
+│   │           ├── axolotl.ts
+│   │           ├── lib/       # Module-specific helpers
+│   │           │   └── ai/    # AI providers (domain-specific)
+│   │           └── resolvers/
+├── frontend/
+│   ├── vite.config.ts    # Vite configuration
+│   ├── src/
+│   │   └── ...           # React app source
 ```
 
----
+> **Note:** The `auth` and `users` modules are **core modules** that provide authentication and user management. The `todos` module is an **example module** included for demonstration — it can be safely removed when building your own application.
 
-## Critical Rules for LLMs
+#### Backend Folder Placement Rules
+
+- **`src/utils/`** — Domain-agnostic utility functions only (auth primitives, cookie parsing, validation helpers). If it's specific to one module, it doesn't belong here.
+- **`src/config/`** — App-specific constants (cookie names, options, supported locales). No functions.
+- **`src/context.ts`** — App-level `AppContext` and `AuthUser` types. Not a utility — it's the application contract.
+- **`modules/{name}/lib/`** — Module-specific helpers, types, or domain logic (e.g., AI providers, domain validation schemas).
+- **NEVER** put domain-specific code in `utils/` or `config/`. Move it to the owning module's `lib/` folder.
+
+### Critical Rules
 
 **ALWAYS follow these rules when working with Axolotl:**
 
 1. **NEVER edit models.ts manually** - always regenerate with `axolotl build`
 2. **ALWAYS use .js extensions** in imports (ESM requirement)
 3. **ALWAYS run axolotl build** after schema changes
-4. **CRITICAL: Resolver signature is** `(input, args)` where `input = [source, args, context]`
-5. **CRITICAL: Access context as** `input[2]` or `([, , context])`
-6. **CRITICAL: Access parent/source as** `input[0]` or `([source])`
+4. **CRITICAL: Resolver signature is** `(input, args)` where `input = [source, args, context]` — `source` is rarely used (only in nested type resolvers like `TodoOps`)
+5. **CRITICAL: Access context as** `input[2]` or `([, , context])` — this is the primary pattern for all resolvers
+6. **Source (`input[0]`) is for nested type resolvers only** (e.g., `TodoOps` receiving a `Todo`). Auth data → `context.authUser`
 7. **CRITICAL: Context type must** extend `YogaInitialContext` and spread `...initial`
 8. **Import from axolotl.ts** - never from @aexol/axolotl-core directly in resolver files
 9. **Use createResolvers()** for ALL resolver definitions
 10. **Use mergeAxolotls()** to combine multiple resolver sets
 11. **Return empty object `{}`** for nested resolver enablement
 12. **Context typing** requires `graphqlYogaWithContextAdapter<T>(contextFunction)`
-
----
-
-## STEP 1: Understanding axolotl.json
-
-The `axolotl.json` configuration file defines:
-
-```json
-{
-  "schema": "schema.graphql", // Path to main schema
-  "models": "src/models.ts", // Where to generate types
-  "federation": [
-    // Optional: for micro-federation
-    {
-      "schema": "src/todos/schema.graphql",
-      "models": "src/todos/models.ts"
-    }
-  ],
-  "zeus": [
-    // Optional: GraphQL client generation
-    {
-      "generationPath": "src/"
-    }
-  ]
-}
-```
-
-**Instructions:**
-
-- Read `axolotl.json` first to understand project structure
-- NEVER edit `axolotl.json` unless explicitly asked
-- Use paths from config to locate schema and models
-
----
-
-## STEP 2: GraphQL Schema (schema.graphql)
-
-**Example:**
-
-```graphql
-scalar Secret
-
-type User {
-  _id: String!
-  username: String!
-}
-
-type Query {
-  user: AuthorizedUserQuery @resolver
-  hello: String!
-}
-
-type Mutation {
-  login(username: String!, password: String!): String! @resolver
-}
-
-directive @resolver on FIELD_DEFINITION
-
-schema {
-  query: Query
-  mutation: Mutation
-}
-```
-
-**Key Points:**
-
-- This is the source of truth for your API
-- The `@resolver` directive marks fields that need resolver implementations
-- After modifying schema, ALWAYS run: `npx @aexol/axolotl build`
-
----
-
-## STEP 3: Models Generation
-
-**Command:**
-
-```bash
-npx @aexol/axolotl build
-# Or with custom directory:
-npx @aexol/axolotl build --cwd path/to/project
-```
-
-**What it does:**
-
-- Reads `schema.graphql`
-- Generates TypeScript types in `src/models.ts`
-- Creates type definitions for Query, Mutation, Subscription, and all types
-
-**Generated models.ts structure:**
-
-```typescript
-// AUTO-GENERATED - DO NOT EDIT
-
-export type Scalars = {
-  ['Secret']: unknown;
-};
-
-export type Models<S extends { [P in keyof Scalars]: any }> = {
-  ['User']: {
-    _id: { args: Record<string, never> };
-    username: { args: Record<string, never> };
-  };
-  ['Query']: {
-    hello: { args: Record<string, never> };
-    user: { args: Record<string, never> };
-  };
-  ['Mutation']: {
-    login: {
-      args: {
-        username: string;
-        password: string;
-      };
-    };
-  };
-};
-```
-
----
-
-## STEP 3.5: Generate Resolver Boilerplate (Optional but Recommended)
-
-**Command:**
-
-```bash
-npx @aexol/axolotl resolvers
-```
-
-**What it does:**
-
-- Reads your schema and finds all fields marked with `@resolver` directive
-- Generates organized resolver file structure automatically
-- Creates placeholder implementations for each resolver field
-- Sets up proper import structure and type safety
-
-**Generated structure example:**
-
-Given a schema with `@resolver` directives:
-
-```graphql
-type Query {
-  user: AuthorizedUserQuery @resolver
-  hello: String!
-}
-
-type Mutation {
-  login(username: String!, password: String!): String! @resolver
-}
-```
-
-The command generates:
-
-```
-src/
-├── resolvers/
-│   ├── Query/
-│   │   ├── user.ts          # Individual field resolver
-│   │   └── resolvers.ts     # Query type aggregator
-│   ├── Mutation/
-│   │   ├── login.ts         # Individual field resolver
-│   │   └── resolvers.ts     # Mutation type aggregator
-│   └── resolvers.ts         # Root aggregator (export this)
-```
-
-**Generated file example (Query/user.ts):**
-
-```typescript
-import { createResolvers } from '../../axolotl.js';
-
-export default createResolvers({
-  Query: {
-    user: async ([parent, details, ctx], args) => {
-      // TODO: implement resolver for Query.user
-      throw new Error('Not implemented: Query.user');
-    },
-  },
-});
-```
-
-**Generated aggregator (Query/resolvers.ts):**
-
-```typescript
-import { createResolvers } from '../../axolotl.js';
-import user from './user.js';
-
-export default createResolvers({
-  Query: {
-    ...user.Query,
-  },
-});
-```
-
-**Root aggregator (resolvers/resolvers.ts):**
-
-```typescript
-import { createResolvers } from '../axolotl.js';
-import Query from './Query/resolvers.js';
-import Mutation from './Mutation/resolvers.js';
-
-export default createResolvers({
-  ...Query,
-  ...Mutation,
-});
-```
-
-**Key Benefits:**
-
-- **Automatic scaffolding** - No manual file/folder creation needed
-- **Organized structure** - Each resolver in its own file
-- **Type safety** - All generated files use `createResolvers()` correctly
-- **Non-destructive** - Only creates files that don't exist (won't overwrite your implementations)
-- **Aggregator files always updated** - Type-level and root aggregators are regenerated to stay in sync
-
-**When to use:**
-
-- ✅ Starting a new project with many resolvers
-- ✅ Adding new resolver fields to existing schema
-- ✅ Want organized, maintainable resolver structure
-- ✅ Working with federated schemas (generates for each module)
-
-**Workflow:**
-
-1. Add `@resolver` directives to schema fields
-2. Run `npx @aexol/axolotl build` to update types
-3. Run `npx @aexol/axolotl resolvers` to scaffold structure
-4. Implement TODO sections in generated resolver files
-5. Import and use `resolvers/resolvers.ts` in your server
-
-**Note for Federated Projects:**
-
-The command automatically detects federation in `axolotl.json` and generates resolver structures for each federated schema in the appropriate directories.
-
----
-
-## STEP 4: Creating axolotl.ts
-
-**Purpose:** Initialize Axolotl framework with adapter and type definitions.
-
-**File: src/axolotl.ts**
-
-### Without Custom Context (Basic)
-
-```typescript
-import { Models, Scalars } from '@/src/models.js';
-import { Axolotl } from '@aexol/axolotl-core';
-import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
-
-export const { applyMiddleware, createResolvers, createDirectives, adapter } = Axolotl(graphqlYogaAdapter)<
-  Models<{ Secret: number }>, // Models with scalar mappings
-  Scalars // Scalar type definitions
->();
-```
-
-### With Custom Context (Recommended)
-
-```typescript
-import { Models, Scalars } from '@/src/models.js';
-import { Axolotl } from '@aexol/axolotl-core';
-import { graphqlYogaWithContextAdapter } from '@aexol/axolotl-graphql-yoga';
-import { YogaInitialContext } from 'graphql-yoga';
-
-// Define your context type - MUST extend YogaInitialContext
-type AppContext = YogaInitialContext & {
-  userId: string | null;
-  isAuthenticated: boolean;
-  isAdmin: boolean;
-  requestId: string;
-};
-
-// Context builder function
-async function buildContext(initial: YogaInitialContext): Promise<AppContext> {
-  const token = initial.request.headers.get('authorization')?.replace('Bearer ', '');
-  const user = token ? await verifyToken(token) : null;
-
-  return {
-    ...initial, // ✅ MUST spread initial context
-    userId: user?._id || null,
-    isAuthenticated: !!user,
-    isAdmin: user?.role === 'admin' || false,
-    requestId: crypto.randomUUID(),
-  };
-}
-
-export const { createResolvers, adapter } = Axolotl(graphqlYogaWithContextAdapter<AppContext>(buildContext))<
-  Models<{ Secret: number }>,
-  Scalars
->();
-```
-
-**Key Components:**
-
-1. **Import Models & Scalars** from generated `models.ts`
-2. **Import Axolotl** from `@aexol/axolotl-core`
-3. **Import adapter** (GraphQL Yoga in this case)
-4. **Initialize with generics:**
-   - First generic: `Models<ScalarMap>` - your type definitions
-   - Second generic: `Scalars` - custom scalar types
-
-**Exported functions:**
-
-- `createResolvers()` - Create type-safe resolvers
-- `createDirectives()` - Create custom directives
-- `applyMiddleware()` - Apply middleware to resolvers
-- `adapter()` - Configure and start server
-
-**Context Type Safety:**
-
-- `graphqlYogaWithContextAdapter<T>()` takes a **FUNCTION** (not an object)
-- Your context type MUST extend `YogaInitialContext`
-- The function MUST return an object that includes `...initial`
-- Context is automatically typed in ALL resolvers
-
----
-
-## STEP 5: Writing Resolvers
-
-### Resolver Signature
-
-**The resolver signature is:**
-
-```typescript
-(input, args) => ReturnType;
-```
-
-Where:
-
-- **`input`** is a tuple: `[source, args, context]`
-  - `input[0]` = **source** (parent value)
-  - `input[1]` = **args** (field arguments)
-  - `input[2]` = **context** (request context)
-- **`args`** is also provided as second parameter for convenience
-
-### Simple Resolver Example
-
-```typescript
-import { createResolvers } from '@/src/axolotl.js';
-
-export default createResolvers({
-  Query: {
-    hello: async ([source, args, context]) => {
-      //              ↑      ↑      ↑
-      //           input[0] [1]    [2]
-      return 'Hello, World!';
-    },
-  },
-  Mutation: {
-    login: async ([source, args, context], { username, password }) => {
-      //            ↑ Destructure tuple    ↑ Convenience args parameter
-      const token = await authenticateUser(username, password);
-      return token;
-    },
-  },
-});
-```
-
-### Common Destructuring Patterns
-
-```typescript
-// Pattern 1: Access context only
-createResolvers({
-  Query: {
-    me: async ([, , context]) => {
-      return getUserById(context.userId);
-    },
-  },
-});
-
-// Pattern 2: Access source and context
-createResolvers({
-  AuthorizedUserQuery: {
-    todos: async ([source, , context]) => {
-      const src = source as { _id: string };
-      return getTodosByUserId(src._id);
-    },
-  },
-});
-
-// Pattern 3: Use convenience args parameter
-createResolvers({
-  Mutation: {
-    createTodo: async ([, , context], { content }) => {
-      return createTodo(content, context.userId);
-    },
-  },
-});
-
-// Pattern 4: Ignore unused with underscores
-createResolvers({
-  Query: {
-    me: async ([_, __, context]) => {
-      return getUserById(context.userId);
-    },
-  },
-});
-```
-
-### Accessing Parent (Source) in Nested Resolvers
-
-In nested resolvers, the **parent** (also called **source**) is the value returned by the parent resolver.
-
-```typescript
-// Schema
-type Query {
-  user: AuthorizedUserQuery @resolver
-}
-
-type AuthorizedUserQuery {
-  me: User! @resolver
-  todos: [Todo!] @resolver
-}
-
-// Resolvers
-createResolvers({
-  Query: {
-    user: async ([, , context]) => {
-      const token = context.request.headers.get('authorization');
-      const user = await verifyToken(token);
-
-      // This object becomes the SOURCE for AuthorizedUserQuery resolvers
-      return {
-        _id: user._id,
-        username: user.username,
-      };
-    },
-  },
-  AuthorizedUserQuery: {
-    me: ([source]) => {
-      // source is what Query.user returned
-      const src = source as { _id: string; username: string };
-      return src;
-    },
-    todos: async ([source]) => {
-      // Access parent data
-      const src = source as { _id: string };
-      return getTodosByUserId(src._id);
-    },
-  },
-});
-```
-
-### Typing the Parent (Two Methods)
-
-**Method 1: Type Assertion (Simple)**
-
-```typescript
-type UserSource = {
-  _id: string;
-  username: string;
-  token?: string;
-};
-
-export default createResolvers({
-  AuthorizedUserQuery: {
-    me: ([source]) => {
-      const src = source as UserSource;
-      return {
-        _id: src._id,
-        username: src.username,
-      };
-    },
-  },
-});
-```
-
-**Method 2: Using setSourceTypeFromResolver (Advanced)**
-
-```typescript
-import { createResolvers, setSourceTypeFromResolver } from '@aexol/axolotl-core';
-
-const getUserResolver = async ([, , context]) => {
-  const user = await authenticateUser(context);
-  return {
-    _id: user._id,
-    username: user.username,
-    email: user.email,
-  };
-};
-
-const getUser = setSourceTypeFromResolver(getUserResolver);
-
-export default createResolvers({
-  Query: {
-    user: getUserResolver,
-  },
-  AuthorizedUserQuery: {
-    me: ([source]) => {
-      const src = getUser(source); // src is now fully typed
-      return src;
-    },
-  },
-});
-```
-
-### Organized Resolver Structure (Recommended)
-
-```typescript
-// src/resolvers/Query/resolvers.ts
-import { createResolvers } from '../axolotl.js';
-import user from './user.js';
-
-export default createResolvers({
-  Query: {
-    ...user.Query,
-  },
-});
-
-// src/resolvers/Query/user.ts
-import { createResolvers } from '../axolotl.js';
-
-export default createResolvers({
-  Query: {
-    user: async ([, , context]) => {
-      // Return object to enable nested resolvers
-      return {};
-    },
-  },
-});
-
-// Main resolvers.ts
-import { mergeAxolotls } from '@aexol/axolotl-core';
-import QueryResolvers from '@/src/resolvers/Query/resolvers.js';
-import MutationResolvers from '@/src/resolvers/Mutation/resolvers.js';
-
-export default mergeAxolotls(QueryResolvers, MutationResolvers);
-```
-
-**Key Points:**
-
-- Arguments are automatically typed from schema
-- Return types must match schema definitions
-- For nested resolvers, return an empty object `{}` in parent resolver
-- Always use async functions (best practice)
-
----
-
-## STEP 6: Subscriptions
-
-**Purpose:** Enable real-time updates via GraphQL Subscriptions.
-
-### Defining Subscriptions in Schema
-
-Add a `Subscription` type to your schema:
-
-```graphql
-type Subscription {
-  countdown(from: Int): Int @resolver
-  messageAdded: Message @resolver
-}
-
-schema {
-  query: Query
-  mutation: Mutation
-  subscription: Subscription
-}
-```
-
-### Creating Subscription Resolvers
-
-**CRITICAL:** All subscription resolvers **MUST** use `createSubscriptionHandler` from `@aexol/axolotl-core`.
-
-```typescript
-import { createResolvers, createSubscriptionHandler } from '@aexol/axolotl-core';
-import { setTimeout as setTimeout$ } from 'node:timers/promises';
-
-export default createResolvers({
-  Subscription: {
-    // Simple countdown subscription
-    countdown: createSubscriptionHandler(async function* (input, { from }) {
-      // input is [source, args, context] - same as regular resolvers
-      const [, , context] = input;
-
-      for (let i = from || 10; i >= 0; i--) {
-        await setTimeout$(1000);
-        yield i;
-      }
-    }),
-
-    // Event-based subscription with PubSub
-    messageAdded: createSubscriptionHandler(async function* (input) {
-      const [, , context] = input;
-      const channel = context.pubsub.subscribe('MESSAGE_ADDED');
-
-      for await (const message of channel) {
-        yield message;
-      }
-    }),
-  },
-});
-```
-
-### Key Points:
-
-1. **Always use `createSubscriptionHandler`** - It wraps your async generator function
-2. **Use async generators** - Functions with `async function*` that yield values
-3. **Return values directly** - The framework handles wrapping in the subscription field
-4. **Access context** - Same `[source, args, context]` signature as regular resolvers
-5. **Works with GraphQL Yoga** - Supports both SSE and WebSocket transports
-
-### Example: Real-Time Counter
-
-**Schema:**
-
-```graphql
-type Subscription {
-  countdown(from: Int = 10): Int @resolver
-}
-```
-
-**Resolver:**
-
-```typescript
-import { createResolvers, createSubscriptionHandler } from '@aexol/axolotl-core';
-import { setTimeout as setTimeout$ } from 'node:timers/promises';
-
-export default createResolvers({
-  Subscription: {
-    countdown: createSubscriptionHandler(async function* (input, { from }) {
-      console.log(`Starting countdown from ${from}`);
-
-      for (let i = from || 10; i >= 0; i--) {
-        await setTimeout$(1000);
-        yield i;
-      }
-
-      console.log('Countdown complete!');
-    }),
-  },
-});
-```
-
-**GraphQL Query:**
-
-```graphql
-subscription {
-  countdown(from: 5)
-}
-```
-
-### Example: PubSub Pattern
-
-```typescript
-import { createResolvers, createSubscriptionHandler } from '@aexol/axolotl-core';
-
-export default createResolvers({
-  Mutation: {
-    sendMessage: async ([, , ctx], { text }) => {
-      const message = {
-        id: crypto.randomUUID(),
-        text,
-        timestamp: new Date().toISOString(),
-      };
-
-      // Publish event
-      await ctx.pubsub.publish('MESSAGE_ADDED', message);
-
-      return message;
-    },
-  },
-
-  Subscription: {
-    messageAdded: createSubscriptionHandler(async function* (input) {
-      const [, , ctx] = input;
-      const channel = ctx.pubsub.subscribe('MESSAGE_ADDED');
-
-      try {
-        for await (const message of channel) {
-          yield message;
-        }
-      } finally {
-        // Cleanup on disconnect
-        await channel.unsubscribe();
-      }
-    }),
-  },
-});
-```
-
-### Federated Subscriptions
-
-In federated setups, each subscription field should only be defined in **one module**:
-
-```typescript
-// ✅ CORRECT: Define in one module only
-// users/schema.graphql
-type Subscription {
-  userStatusChanged(userId: String!): UserStatus @resolver
-}
-
-// ❌ WRONG: Multiple modules defining the same subscription
-// users/schema.graphql
-type Subscription {
-  statusChanged: Status @resolver
-}
-
-// todos/schema.graphql
-type Subscription {
-  statusChanged: Status @resolver  # Conflict!
-}
-```
-
-If multiple modules try to define the same subscription field, only the first one encountered will be used.
-
----
-
-## STEP 7: Server Configuration
-
-**File: src/index.ts**
-
-### Basic Server
-
-```typescript
-import { adapter } from '@/src/axolotl.js';
-import resolvers from '@/src/resolvers.js';
-
-const { server, yoga } = adapter(
-  { resolvers },
-  {
-    yoga: {
-      graphiql: true, // Enable GraphiQL UI
-    },
-  },
-);
-
-server.listen(4000, () => {
-  console.log('Server running on http://localhost:4000');
-});
-```
-
-### With Custom Scalars
-
-```typescript
-import { GraphQLScalarType, Kind } from 'graphql';
-import { createScalars } from '@/src/axolotl.js';
-
-const scalars = createScalars({
-  Secret: new GraphQLScalarType({
-    name: 'Secret',
-    serialize: (value) => String(value),
-    parseValue: (value) => Number(value),
-    parseLiteral: (ast) => {
-      if (ast.kind !== Kind.INT) return null;
-      return Number(ast.value);
-    },
-  }),
-});
-
-adapter({ resolvers, scalars });
-```
-
-### With Directives
-
-Directives add cross-cutting concerns like authentication, authorization, and logging to your schema fields.
-
-```typescript
-import { createDirectives } from '@/src/axolotl.js';
-import { MapperKind } from '@graphql-tools/utils';
-import { defaultFieldResolver, GraphQLError } from 'graphql';
-
-const directives = createDirectives({
-  // Directive function signature: (schema, getDirective) => SchemaMapperConfig
-  auth: (schema, getDirective) => {
-    // Return mapper config object (NOT a schema!)
-    return {
-      [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
-        // Check if field has @auth directive
-        const authDirective = getDirective(schema, fieldConfig, 'auth')?.[0];
-
-        if (!authDirective) {
-          return fieldConfig; // No directive, return unchanged
-        }
-
-        // Get original resolver
-        const { resolve = defaultFieldResolver } = fieldConfig;
-
-        // Return field with wrapped resolver for runtime behavior
-        return {
-          ...fieldConfig,
-          resolve: async (source, args, context, info) => {
-            // This runs on EVERY request to this field
-            if (!context.userId) {
-              throw new GraphQLError('Not authenticated', {
-                extensions: { code: 'UNAUTHORIZED' },
-              });
-            }
-
-            // Call original resolver
-            return resolve(source, args, context, info);
-          },
-        };
-      },
-    };
-  },
-});
-
-adapter({ resolvers, directives });
-```
-
-**Schema:**
-
-```graphql
-directive @auth on FIELD_DEFINITION
-
-type Query {
-  publicData: String!
-  protectedData: String! @auth # Only authenticated users
-}
-```
-
-**Key Points:**
-
-- Directive function receives `(schema, getDirective)` parameters
-- Must return mapper config object `{ [MapperKind.X]: ... }`
-- Use `getDirective()` to check if field has the directive
-- Wrap `resolve` function to add runtime behavior per request
-- The adapter calls `mapSchema()` internally - don't call it in your directive
-
----
-
-## STEP 8: Micro-Federation (GraphQL Federation Patterns)
-
-Micro-federation is one of Axolotl's most powerful features, allowing you to compose multiple GraphQL modules into a unified API while maintaining type safety and code organization.
-
-### What is Micro-Federation?
-
-Micro-federation in Axolotl is a modular architecture pattern where:
-
-- Each domain (e.g., users, todos, products) has its own GraphQL schema and resolvers
-- Schemas are automatically merged into a single supergraph at build time
-- Each module maintains its own type safety with generated models
-- Resolvers are intelligently merged at runtime to handle overlapping types
-
-**Key Difference from Apollo Federation:** Axolotl's micro-federation is designed for **monorepo or single-project architectures** where all modules are built and deployed together, not for distributed microservices.
-
-### When to Use Micro-Federation
-
-**Good use cases:**
-
-- Large monorepo applications with distinct domain modules
-- Teams working on separate features within the same codebase
-- Projects where you want to organize GraphQL code by business domain
-- Applications that need to scale code organization without microservices complexity
-
-**Not recommended for:**
-
-- Distributed services that deploy independently (use Apollo Federation instead)
-- Simple applications with only a few types and resolvers
-- Projects where all types are tightly coupled
-
----
-
-### Federation Configuration
-
-**axolotl.json:**
+13. **Auth gateway module** (`src/modules/auth/`) owns the protected resolver gateway pattern (`Query.user`, `Mutation.user`) — these check `context.authUser` and return `{}`. Domain modules should NOT duplicate these gateway resolvers and should access auth data via `context.authUser`, not `source`
+14. **NEVER use `as any` in resolvers or backend code** — use named type assertions instead:
+    - For Prisma mapper functions: import types from `@/src/prisma/generated/prisma/index.js` and use them directly
+    - For Prisma model access: use `prisma.modelName` (camelCase of model name) — `@@map()` only changes the DB table name, NOT the TypeScript accessor
+    - For Prisma enum mismatches: import the Prisma enum and cast as `value as SpecificEnum` or use `SpecificEnum.VALUE`
+    - For generated input types: trust the fields in `models.ts` — `input.firstName` is typed, `(input as any).firstName` is unnecessary
+    - For Express/Yoga bridge in `index.ts`: use `yoga as unknown as express.RequestHandler` (NOT `yoga as any`)
+15. **NEVER use `extend type` in module schemas** — Axolotl federation merges types by name, not by SDL extension. Declare `type` (not `extend type`) in each module schema; `axolotl build` combines fields from all modules automatically.
+16. **Domain resolvers access auth via `context.authUser`** — never via `source`. The context builder calls `verifyAuth()` and sets `authUser` on every request. Gateway resolvers verify `context.authUser` exists. Domain resolvers use `context.authUser!._id` and `context.authUser!.email`. Source is only used for non-auth parent data (e.g., nested type resolvers).
+17. **Resource-level authorization is mandatory** — every resolver that reads or writes a resource MUST verify the authenticated user owns or has permission to access that resource using `context.authUser!._id`. Gateway auth alone is insufficient — it only proves the user is logged in, not that they can access a specific resource.
+
+### Understanding axolotl.json
+
+The `axolotl.json` configuration file is located at `backend/axolotl.json` and defines:
 
 ```json
 {
@@ -902,787 +109,50 @@ Micro-federation in Axolotl is a modular architecture pattern where:
   "models": "src/models.ts",
   "federation": [
     {
-      "schema": "src/todos/schema.graphql",
-      "models": "src/todos/models.ts"
+      "schema": "src/modules/auth/schema.graphql",
+      "models": "src/modules/auth/models.ts"
     },
     {
-      "schema": "src/users/schema.graphql",
-      "models": "src/users/models.ts"
+      "schema": "src/modules/users/schema.graphql",
+      "models": "src/modules/users/models.ts"
+    }
+  ],
+  "zeus": [
+    {
+      "generationPath": "../frontend/src"
     }
   ]
 }
 ```
 
----
+**Instructions:**
 
-### Federation Directory Structure
+- Read `backend/axolotl.json` first to understand project structure
+- NEVER edit `backend/axolotl.json` unless explicitly asked
+- Use paths from config to locate schema and models
 
-Recommended structure for a federated project:
+> Additional modules (e.g., the included `todos` example) are added to the `federation` array following the same pattern.
 
-```
-project/
-├── axolotl.json              # Main config with federation array
-├── schema.graphql            # Generated supergraph (don't edit manually)
-├── src/
-│   ├── models.ts             # Generated supergraph models
-│   ├── axolotl.ts           # Main Axolotl instance
-│   ├── resolvers.ts         # Merged resolvers (calls mergeAxolotls)
-│   ├── index.ts             # Server entry point
-│   │
-│   ├── users/               # Users domain module
-│   │   ├── schema.graphql   # Users schema
-│   │   ├── models.ts        # Generated from users schema
-│   │   ├── axolotl.ts       # Users Axolotl instance
-│   │   ├── db.ts            # Users data layer
-│   │   └── resolvers/
-│   │       ├── resolvers.ts       # Main users resolvers export
-│   │       ├── Mutation/
-│   │       │   ├── resolvers.ts
-│   │       │   ├── login.ts
-│   │       │   └── register.ts
-│   │       └── Query/
-│   │           ├── resolvers.ts
-│   │           └── user.ts
-│   │
-│   └── todos/               # Todos domain module
-│       ├── schema.graphql
-│       ├── models.ts
-│       ├── axolotl.ts
-│       ├── db.ts
-│       └── resolvers/
-│           ├── resolvers.ts
-│           ├── AuthorizedUserMutation/
-│           ├── AuthorizedUserQuery/
-│           └── TodoOps/
-```
+### Backend Workflow Checklist
 
----
+1. **Read `backend/axolotl.json`** to understand structure
+2. **Check `backend/schema.graphql`** for current schema
+3. **Verify models.ts is up-to-date** (regenerate if needed)
+4. **Locate axolotl.ts** to understand initialization
+5. **Find resolver files** and understand structure
+6. **Make schema changes** if requested
+7. **Run `cd backend && axolotl build`** after schema changes
+8. **Optionally run `cd backend && axolotl resolvers`** to scaffold new resolver files
+9. **Update resolvers** to match new types
+10. **Test** that server starts without type errors
 
-### Creating Submodule Schemas
+### Backend Troubleshooting
 
-Each module defines its own schema:
+#### Type errors in resolvers
 
-**src/users/schema.graphql:**
+**Solution:** Run `cd backend && npx @aexol/axolotl build` to regenerate models
 
-```graphql
-type User {
-  _id: String!
-  username: String!
-}
-
-type Mutation {
-  login(username: String!, password: String!): String! @resolver
-  register(username: String!, password: String!): String! @resolver
-}
-
-type Query {
-  user: AuthorizedUserQuery! @resolver
-}
-
-type AuthorizedUserQuery {
-  me: User! @resolver
-}
-
-directive @resolver on FIELD_DEFINITION
-
-schema {
-  query: Query
-  mutation: Mutation
-}
-```
-
-**src/todos/schema.graphql:**
-
-```graphql
-type Todo {
-  _id: String!
-  content: String!
-  done: Boolean
-}
-
-type AuthorizedUserMutation {
-  createTodo(content: String!): String! @resolver
-  todoOps(_id: String!): TodoOps! @resolver
-}
-
-type AuthorizedUserQuery {
-  todos: [Todo!] @resolver
-  todo(_id: String!): Todo! @resolver
-}
-
-type TodoOps {
-  markDone: Boolean @resolver
-}
-
-directive @resolver on FIELD_DEFINITION
-
-type Query {
-  user: AuthorizedUserQuery @resolver
-}
-
-type Mutation {
-  user: AuthorizedUserMutation @resolver
-}
-
-schema {
-  query: Query
-  mutation: Mutation
-}
-```
-
----
-
-### Module Axolotl Instances
-
-Each module needs its own `axolotl.ts` file to create type-safe resolver helpers:
-
-**src/users/axolotl.ts:**
-
-```typescript
-import { Models } from '@/src/users/models.js';
-import { Axolotl } from '@aexol/axolotl-core';
-import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
-
-export const { createResolvers, createDirectives, applyMiddleware } = Axolotl(graphqlYogaAdapter)<Models, unknown>();
-```
-
-**src/todos/axolotl.ts:**
-
-```typescript
-import { Models } from '@/src/todos/models.js';
-import { Axolotl } from '@aexol/axolotl-core';
-import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
-
-export const { createResolvers, createDirectives, applyMiddleware } = Axolotl(graphqlYogaAdapter)<Models, unknown>();
-```
-
----
-
-### Schema Merging Rules
-
-When you run `axolotl build`, schemas are merged using these rules:
-
-**1. Types are merged by name:**
-
-- If `User` type exists in multiple schemas, all fields are combined
-- Fields with the same name **must have identical type signatures**
-- If there's a conflict, the build fails with a detailed error
-
-**Example - Types get merged:**
-
-```graphql
-# users/schema.graphql
-type User {
-  _id: String!
-  username: String!
-}
-
-# todos/schema.graphql
-type User {
-  _id: String!
-}
-
-# Merged result in schema.graphql
-type User {
-  _id: String!
-  username: String! # Field from users module
-}
-```
-
-**2. Root types (Query, Mutation, Subscription) are automatically merged:**
-
-```graphql
-# users/schema.graphql
-type Query {
-  user: AuthorizedUserQuery! @resolver
-}
-
-# todos/schema.graphql
-type Query {
-  user: AuthorizedUserQuery @resolver
-}
-
-# Merged result - fields combined
-type Query {
-  user: AuthorizedUserQuery @resolver
-}
-```
-
----
-
-### Resolver Merging with mergeAxolotls
-
-The `mergeAxolotls` function intelligently merges resolvers:
-
-**1. Non-overlapping resolvers are combined:**
-
-```typescript
-// users: { Mutation: { login: fn1 } }
-// todos: { Mutation: { createTodo: fn2 } }
-// Result: { Mutation: { login: fn1, createTodo: fn2 } }
-```
-
-**2. Overlapping resolvers are executed in parallel and results are deep-merged:**
-
-```typescript
-// users: { Query: { user: () => ({ username: "john" }) } }
-// todos: { Query: { user: () => ({ todos: [...] }) } }
-// Result: { Query: { user: () => ({ username: "john", todos: [...] }) } }
-```
-
-This allows multiple modules to contribute different fields to the same resolver!
-
-**3. Subscriptions cannot be merged - only the first one is used:**
-
-```typescript
-// If multiple modules define the same subscription, only the first is used
-// This is because subscriptions have a single event stream
-```
-
-**Module resolvers example:**
-
-```typescript
-// src/users/resolvers/resolvers.ts
-import { createResolvers } from '../axolotl.js';
-import Mutation from './Mutation/resolvers.js';
-import Query from './Query/resolvers.js';
-import AuthorizedUserQuery from './AuthorizedUserQuery/resolvers.js';
-
-export default createResolvers({
-  ...Mutation,
-  ...Query,
-  ...AuthorizedUserQuery,
-});
-```
-
-```typescript
-// src/users/resolvers/Mutation/login.ts
-import { createResolvers } from '../../axolotl.js';
-import { db } from '../../db.js';
-
-export default createResolvers({
-  Mutation: {
-    login: async (_, { password, username }) => {
-      const user = db.users.find((u) => u.username === username && u.password === password);
-      return user?.token;
-    },
-  },
-});
-```
-
-**Main resolvers (merge all modules):**
-
-```typescript
-// src/resolvers.ts
-import { mergeAxolotls } from '@aexol/axolotl-core';
-import todosResolvers from '@/src/todos/resolvers/resolvers.js';
-import usersResolvers from '@/src/users/resolvers/resolvers.js';
-
-export default mergeAxolotls(todosResolvers, usersResolvers);
-```
-
----
-
-### Type Generation Flow
-
-```
-1. Read axolotl.json
-   ↓
-2. For each federation entry:
-   - Parse schema file
-   - Generate models.ts with TypeScript types
-   ↓
-3. Merge all schemas using graphql-js-tree
-   ↓
-4. Write merged schema to root schema file
-   ↓
-5. Generate root models.ts from supergraph
-   ↓
-6. Each module uses its own models for type safety
-```
-
----
-
-### Advanced Federation Topics
-
-#### Sharing Types Across Modules
-
-When modules need to reference the same types, define them in each schema:
-
-```graphql
-# src/users/schema.graphql
-type User {
-  _id: String!
-  username: String!
-}
-```
-
-```graphql
-# src/todos/schema.graphql
-type User {
-  _id: String! # Shared fields must match exactly
-}
-
-type Todo {
-  _id: String!
-  content: String!
-  owner: User! # Reference the shared type
-}
-```
-
-The schemas will be merged, and the `User` type will contain all fields from both definitions.
-
-#### Cross-Module Dependencies
-
-Modules can extend each other's types by defining resolvers for shared types:
-
-```typescript
-// src/todos/resolvers/Query/user.ts
-import { createResolvers } from '@/src/axolotl.js';
-import { db as usersDb } from '@/src/users/db.js';
-
-// Todos module contributes to the Query.user resolver
-export default createResolvers({
-  Query: {
-    user: async (input) => {
-      const token = input[2].request.headers.get('token');
-      const user = usersDb.users.find((u) => u.token === token);
-      if (!user) throw new Error('Not authorized');
-      return user;
-    },
-  },
-});
-```
-
-When multiple modules implement the same resolver, their results are deep-merged automatically.
-
-#### Custom Scalars in Federation
-
-Define scalars in each module that uses them:
-
-```graphql
-# src/todos/schema.graphql
-scalar Secret
-
-type AuthorizedUserMutation {
-  createTodo(content: String!, secret: Secret): String! @resolver
-}
-```
-
-Scalar resolvers should be defined once in the main `axolotl.ts`:
-
-```typescript
-// src/axolotl.ts
-import { Axolotl } from '@aexol/axolotl-core';
-import { Models } from '@/src/models.js';
-
-export const { adapter, createResolvers } = Axolotl(graphqlYogaAdapter)<
-  Models<{ Secret: number }>, // Map custom scalar to TypeScript type
-  unknown
->();
-```
-
-#### Subscriptions in Federation
-
-Subscriptions work in federated setups, but each subscription field should only be defined in **one module**:
-
-```typescript
-// src/users/resolvers/Subscription/countdown.ts
-import { createResolvers, createSubscriptionHandler } from '@aexol/axolotl-core';
-
-export default createResolvers({
-  Subscription: {
-    countdown: createSubscriptionHandler(async function* (input, { from }) {
-      for (let i = from ?? 3; i >= 0; i--) {
-        yield i;
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-    }),
-  },
-});
-```
-
-If multiple modules try to define the same subscription field, only the first one encountered will be used.
-
-#### Directives Across Modules
-
-Directives must be defined in each schema that uses them:
-
-```graphql
-directive @resolver on FIELD_DEFINITION
-directive @auth(role: String!) on FIELD_DEFINITION
-```
-
-Directive implementations should be registered in each module's Axolotl instance that needs them.
-
----
-
-### Federation Development Workflow
-
-**Initial Setup:**
-
-```bash
-# Install dependencies
-npm install
-
-# Generate all models and merged schema
-npx @aexol/axolotl build
-
-# Generate resolver scaffolding (optional)
-npx @aexol/axolotl resolvers
-```
-
-**When to Regenerate:**
-
-Run `axolotl build` when you:
-
-- Add or modify any schema file
-- Add new types or fields
-- Add or remove federation modules
-- Change `axolotl.json` configuration
-
-The CLI will regenerate:
-
-1. Each submodule's `models.ts`
-2. The merged `schema.graphql`
-3. The root `models.ts`
-
----
-
-### Federation Best Practices
-
-**Module Organization:**
-
-- Organize by business domain (users, products, orders)
-- Keep related types in the same module
-- Use consistent directory structure across modules
-- Make modules as independent as possible
-
-**Avoid:**
-
-- Creating modules for every single type
-- Mixing unrelated concerns in one module
-- Creating circular dependencies between modules
-
-**Naming Conventions for Shared Types:**
-
-```graphql
-# Good: Both modules use "User"
-type User {
-  _id: String!
-}
-
-# Bad: Different names for same concept
-type UserAccount {
-  _id: String!
-}
-type UserProfile {
-  _id: String!
-}
-```
-
-**Module-specific types - prefix with domain:**
-
-```graphql
-type TodoItem { ... }
-type TodoFilter { ... }
-```
-
-**Performance Considerations:**
-
-- **Parallel resolver execution:** When multiple modules implement the same resolver, they execute in parallel using `Promise.all()`. Be aware of database connection limits and rate limiting.
-- **Deep merge overhead:** Results are deep-merged using object spreading. Keep resolver return values focused and avoid deeply nested objects when possible.
-- **Use DataLoader** for batching database queries across modules.
-
----
-
-### Federation Troubleshooting
-
-#### Schema Merge Conflicts
-
-**Error:** `Federation conflict on Node.field pattern: User.email`
-
-**Cause:** The same field on the same type has different definitions across modules.
-
-**Solution:** Ensure field types match exactly:
-
-```graphql
-# users/schema.graphql
-type User {
-  email: String! # Required
-}
-
-# profile/schema.graphql
-type User {
-  email: String # Optional - CONFLICT!
-}
-```
-
-Fix by making them identical in both files.
-
-#### Type Generation Failures
-
-**Error:** `Cannot find module '@/src/users/models.js'`
-
-**Solution:**
-
-```bash
-# Regenerate all models
-npx @aexol/axolotl build
-
-# Check your tsconfig.json has correct path mappings
-{
-  "compilerOptions": {
-    "paths": {
-      "@/*": ["./*"]
-    }
-  }
-}
-```
-
-#### Resolver Not Found
-
-**Causes:**
-
-- Resolver not exported from module
-- Not included in `mergeAxolotls` call
-- Schema and resolver names don't match
-
-**Solution:**
-
-```typescript
-// Ensure resolver is exported
-export default createResolvers({
-  Query: {
-    user: async () => { ... }  // Must match schema field name exactly
-  }
-});
-
-// Ensure it's merged
-import usersResolvers from './users/resolvers/resolvers.js';
-export default mergeAxolotls(usersResolvers, ...otherResolvers);
-```
-
-#### Merged Resolver Returns Unexpected Data
-
-**Issue:** Deep merge combines objects in unexpected ways.
-
-**Solution:** Ensure resolvers return compatible object shapes. If modules return conflicting primitives, the last one wins. Use different field names to avoid conflicts.
-
----
-
-### Axolotl vs Apollo Federation Comparison
-
-| Feature                | Axolotl Micro-Federation | Apollo Federation            |
-| ---------------------- | ------------------------ | ---------------------------- |
-| **Deployment**         | Single service           | Multiple services            |
-| **Schema Merging**     | Build-time               | Runtime with gateway         |
-| **Type Splitting**     | Automatic deep merge     | Explicit `@key` directives   |
-| **Resolver Execution** | Parallel within process  | Cross-service HTTP calls     |
-| **Performance**        | Fast (in-process)        | Network overhead             |
-| **Complexity**         | Simple config            | Gateway + federation service |
-| **Use Case**           | Monorepo/single app      | Distributed microservices    |
-| **Independence**       | Shared codebase          | Fully independent services   |
-
----
-
-### Running the Federation Example
-
-The repository includes a complete federated example:
-
-```bash
-# Navigate to the example
-cd examples/yoga-federated
-
-# Install dependencies (if not already done at root)
-npm install
-
-# Generate models
-npm run models
-
-# Run in development mode
-npm run dev
-```
-
-Visit `http://localhost:4002/graphql` and try these operations:
-
-```graphql
-# Register a user
-mutation Register {
-  register(username: "user", password: "password")
-}
-
-# Login (returns token)
-mutation Login {
-  login(username: "user", password: "password")
-}
-
-# Set the token in headers: { "token": "your-token-here" }
-
-# Create a todo
-mutation CreateTodo {
-  user {
-    createTodo(content: "Learn Axolotl Federation")
-  }
-}
-
-# Query merged data (comes from both users and todos modules!)
-query MyData {
-  user {
-    me {
-      _id
-      username
-    }
-    todos {
-      _id
-      content
-      done
-    }
-  }
-}
-```
-
----
-
-## Common Commands
-
-```bash
-# Create new Axolotl project with Yoga
-npx @aexol/axolotl create-yoga my-project
-
-# Generate models from schema
-npx @aexol/axolotl build
-
-# Generate models with custom directory
-npx @aexol/axolotl build --cwd path/to/project
-
-# Generate resolver boilerplate from @resolver directives
-npx @aexol/axolotl resolvers
-
-
-# Inspect resolvers (find unimplemented @resolver fields)
-npx @aexol/axolotl inspect -s schema.graphql -r lib/resolvers.js
-```
-
-### Inspect Command
-
-The `inspect` command identifies which resolvers marked with `@resolver` directive are not yet implemented:
-
-```bash
-npx @aexol/axolotl inspect -s ./schema.graphql -r ./lib/resolvers.js
-```
-
-**What it does:**
-
-- Finds all fields marked with `@resolver` directive in your schema
-- Checks if resolvers are missing or still contain stub implementations
-- Reports only unimplemented resolvers (not all schema fields)
-
-**Example output:**
-
-```
-Resolvers that need implementation:
-
-⚠️ Query.users - throws "Not implemented"
-❌ Mutation.login - not found
-❌ Mutation.register - not found
-
-Total: 3 resolver(s) to implement
-```
-
-**Status indicators:**
-
-- ✅ All implemented - Command exits with code 0
-- ⚠️ Stub - Resolver exists but throws "Not implemented" error
-- ❌ Missing - No resolver function exists for this field
-
-**Tip:** Use `npx @aexol/axolotl resolvers` to generate stubs, then use `inspect` to track implementation progress.
-
----
-
-````
-
----
-
-## LLM Workflow Checklist
-
-When working with an Axolotl project:
-
-1. ✅ **Read axolotl.json** to understand structure
-2. ✅ **Check schema.graphql** for current schema
-3. ✅ **Verify models.ts is up-to-date** (regenerate if needed)
-4. ✅ **Locate axolotl.ts** to understand initialization
-5. ✅ **Find resolver files** and understand structure
-6. ✅ **Make schema changes** if requested
-7. ✅ **Run `axolotl build`** after schema changes
-8. ✅ **Optionally run `axolotl resolvers`** to scaffold new resolver files
-9. ✅ **Update resolvers** to match new types
-10. ✅ **Test** that server starts without type errors
-
----
-
-## Common Patterns Cheat Sheet
-
-### Context Type Safety
-
-```typescript
-// ✅ CORRECT
-type AppContext = YogaInitialContext & { userId: string };
-
-graphqlYogaWithContextAdapter<AppContext>(async (initial) => ({
-  ...initial,
-  userId: '123',
-}));
-
-// ❌ WRONG - Not extending YogaInitialContext
-type AppContext = { userId: string };
-
-// ❌ WRONG - Not spreading initial
-graphqlYogaWithContextAdapter<AppContext>(async (initial) => ({
-  userId: '123', // Missing ...initial
-}));
-
-// ❌ WRONG - Passing object instead of function
-graphqlYogaWithContextAdapter<AppContext>({ userId: '123' });
-````
-
-### Resolver Patterns
-
-```typescript
-// Type-safe arguments (auto-typed from schema)
-createResolvers({
-  Query: {
-    user: async ([, , context], { id, includeEmail }) => {
-      // id: string, includeEmail: boolean | undefined
-      return getUserById(id, includeEmail);
-    },
-  },
-});
-
-// Nested resolvers
-createResolvers({
-  Query: {
-    user: async ([, , context]) => {
-      return {}; // Enable nested resolvers
-    },
-  },
-  UserQuery: {
-    me: async ([, , context]) => {
-      return getUserById(context.userId);
-    },
-  },
-});
-```
-
----
-
-## Troubleshooting
-
-### Type errors in resolvers
-
-**Solution:** Run `npx @aexol/axolotl build` to regenerate models
-
-### Scalar types showing as 'unknown'
+#### Scalar types showing as 'unknown'
 
 **Solution:** Map scalars in axolotl.ts:
 
@@ -1690,35 +160,325 @@ createResolvers({
 Axolotl(adapter)<Models<{ MyScalar: string }>, Scalars>();
 ```
 
-### Context type not recognized
+#### Context type not recognized
 
 **Solution:** Use `graphqlYogaWithContextAdapter<YourContextType>(contextFunction)`
 
-### Context properties undefined
+#### Context properties undefined
 
 **Solution:** Make sure you spread `...initial` when building context
 
+#### Prisma model accessor not recognized / `prisma.overtimeRecord` type error
+
+**Problem:** TypeScript doesn't know about `prisma.overtimeRecord`, `prisma.surveyResponse`, etc.
+**Solution:** These ARE on the typed Prisma client — `prisma.[camelCaseModelName]`. The `@@map()` decorator only renames the database table, not the client property. NEVER use `const db = prisma as any`.
+
+#### TypeScript complains assigning a string to a Prisma enum field
+
+**Problem:** `role: prismaRole` errors — "Type 'string' is not assignable to type 'StaffRole'"
+**Solution:** Import the Prisma enum and cast: `import { StaffRole } from '@/src/prisma/generated/prisma/index.js'` then `role: prismaRole as StaffRole`. Or use the enum member directly: `type: CommissionType.VISIT`.
+
+#### Type errors accessing optional fields on generated input types
+
+**Problem:** TypeScript doesn't find `input.firstName` — using `(input as any).firstName` as workaround
+**Solution:** The generated interfaces in `models.ts` already have those fields (e.g., `firstName?: string | undefined | null`). Access them directly: `input.firstName ?? null`. No cast needed.
+
+### Backend Quick Reference
+
+| Task                 | Command/Code                                                                 |
+| -------------------- | ---------------------------------------------------------------------------- |
+| Initialize project   | `npx @aexol/axolotl create-yoga <name>`                                      |
+| Generate types       | `cd backend && npx @aexol/axolotl build`                                     |
+| Scaffold resolvers   | `cd backend && npx @aexol/axolotl resolvers`                                 |
+| Create resolvers     | `createResolvers({ Query: {...} })`                                          |
+| Access context       | `([, , context])` - third in tuple                                           |
+| Access auth user     | `context.authUser!`                                                          |
+| Access source        | `([source])` - nested type resolvers only (e.g., `TodoOps`)                  |
+| Merge resolvers      | `mergeAxolotls(resolvers1, resolvers2)`                                      |
+| Start server         | `adapter({ resolvers }).server.listen(4000)`                                 |
+| Add custom context   | `graphqlYogaWithContextAdapter<Ctx>(contextFn)`                              |
+| Context must extend  | `YogaInitialContext & { custom }`                                            |
+| Context must include | `{ ...initial, ...custom }`                                                  |
+| Define scalars       | `createScalars({ ScalarName: GraphQLScalarType })`                           |
+| Define directives    | `createDirectives({ directiveName: mapper })`                                |
+| Set auth cookie      | `context.setCookie(token)`                                                   |
+| Clear auth cookie    | `context.clearCookie()`                                                      |
+| Inspect resolvers    | `npx @aexol/axolotl inspect -s backend/schema.graphql -r ./lib/resolvers.js` |
+
 ---
 
-## Quick Reference
+## Frontend (React + Zeus)
 
-| Task                 | Command/Code                                                |
-| -------------------- | ----------------------------------------------------------- |
-| Initialize project   | `npx @aexol/axolotl create-yoga <name>`                     |
-| Generate types       | `npx @aexol/axolotl build`                                  |
-| Scaffold resolvers   | `npx @aexol/axolotl resolvers`                              |
-| Create resolvers     | `createResolvers({ Query: {...} })`                         |
-| Access context       | `([, , context])` - third in tuple                          |
-| Access parent        | `([source])` - first in tuple                               |
-| Merge resolvers      | `mergeAxolotls(resolvers1, resolvers2)`                     |
-| Start server         | `adapter({ resolvers }).server.listen(4000)`                |
-| Add custom context   | `graphqlYogaWithContextAdapter<Ctx>(contextFn)`             |
-| Context must extend  | `YogaInitialContext & { custom }`                           |
-| Context must include | `{ ...initial, ...custom }`                                 |
-| Define scalars       | `createScalars({ ScalarName: GraphQLScalarType })`          |
-| Define directives    | `createDirectives({ directiveName: mapper })`               |
-| Inspect resolvers    | `npx @aexol/axolotl inspect -s schema.graphql -r resolvers` |
+### Project Structure
+
+```
+frontend/
+├── src/
+│   ├── api/                     # GraphQL client layer
+│   │   ├── client.ts            # Chain client creation
+│   │   ├── query.ts             # Query helper
+│   │   ├── mutation.ts          # Mutation helper
+│   │   ├── subscription.ts      # Subscription helper
+│   │   ├── selectors.ts         # Reusable query shape selectors
+│   │   ├── errors.ts            # GraphQL error extraction
+│   │   └── index.ts             # Re-exports
+│   ├── components/              # React components (atomic design)
+│   │   ├── atoms/               # Smallest reusable units
+│   │   │   ├── CodeSnippet.tsx
+│   │   │   ├── ErrorMessage.tsx
+│   │   │   ├── SectionCard.tsx
+│   │   │   ├── ThemeToggle.tsx
+│   │   │   └── index.ts
+│   │   ├── molecules/           # Composed atom groups
+│   │   │   └── index.ts
+│   │   ├── organisms/           # Complex UI sections
+│   │   │   └── index.ts
+│   │   ├── global/              # App-wide components
+│   │   │   ├── ThemeProvider.tsx
+│   │   │   ├── TopNav.tsx
+│   │   │   └── index.ts
+│   │   ├── ui/                  # shadcn/ui primitives (DO NOT EDIT)
+│   │   │   ├── Button.tsx, Card.tsx, Dialog.tsx, Form.tsx, ...
+│   │   │   └── index.ts
+│   │   └── index.ts
+│   ├── contexts/                # React context providers
+│   │   └── AuthContext.tsx      # Auth context & provider
+│   ├── hooks/                   # Shared data-fetching hooks
+│   │   ├── useAuth.ts           # Authentication logic
+│   │   ├── useIsMobile.ts       # Responsive breakpoint hook
+│   │   └── index.ts
+│   ├── lib/                     # Shared utilities
+│   │   ├── queryClient.ts       # React Query client config
+│   │   └── utils.ts             # cn() and general helpers
+│   ├── routes/                  # Route pages & layouts  # See frontend-navigation skill for full route details
+│   │   ├── index.tsx            # Route definitions
+│   │   ├── RootLayout.tsx       # Root route layout
+│   │   ├── MetaUpdater.tsx      # Client-side document.title updater
+│   │   ├── meta.ts              # buildMetaHead() — SSR meta injection
+│   │   ├── ErrorPage.tsx        # Error boundary for route loaders
+│   │   ├── guest/               # Unauthenticated routes
+│   │   │   ├── Layout.tsx
+│   │   │   ├── landing/
+│   │   │   │   ├── Landing.page.tsx
+│   │   │   │   ├── Landing.data.ts
+│   │   │   │   └── index.ts
+│   │   │   ├── login/
+│   │   │   │   ├── Login.page.tsx
+│   │   │   │   └── index.ts
+│   │   │   └── index.ts
+│   │   ├── protected/           # Authenticated routes
+│   │   │   ├── Layout.tsx
+│   │   │   ├── dashboard/
+│   │   │   │   ├── Dashboard.page.tsx
+│   │   │   │   └── index.ts
+│   │   │   ├── settings/
+│   │   │   │   ├── Settings.page.tsx
+│   │   │   │   ├── Settings.hook.ts
+│   │   │   │   ├── components/
+│   │   │   │   └── index.ts
+│   │   │   └── index.ts
+│   │   ├── public/              # Always-accessible routes
+│   │   │   └── examples/
+│   │   │       ├── Examples.page.tsx
+│   │   │       ├── Examples.schema.ts
+│   │   │       ├── Examples.data.ts
+│   │   │       ├── components/  # Route-scoped components
+│   │   │       │   ├── DataDisplaySection.tsx
+│   │   │       │   ├── graphql-showcase-tab/
+│   │   │       │   ├── forms-showcase-tab/
+│   │   │       │   └── index.ts
+│   │   │       └── index.ts
+│   │   └── not-found/
+│   │       ├── NotFound.page.tsx
+│   │       └── index.ts
+│   ├── stores/                  # Zustand state stores
+│   │   ├── authStore.ts         # Auth state (isAuthenticated)
+│   │   └── index.ts
+│   ├── zeus/                    # Auto-generated (DO NOT EDIT)
+│   │   ├── const.ts
+│   │   └── index.ts
+│   ├── App.tsx                  # Compatibility shim (re-exports RootLayout)
+│   ├── global.d.ts              # Global type declarations
+│   ├── index.css                # Tailwind v4 theme config
+│   ├── entry-client.tsx         # Client hydration entry
+│   └── entry-server.tsx         # SSR render entry
+├── index.html
+└── tsconfig.json
+```
+
+> **Note:** The `todos` backend module, todo-related hooks, and the `/examples` frontend route are **included for demonstration** and can be safely removed when building your own application.
+
+### UI & Theming
+
+- **shadcn/ui** components live in `src/components/ui/` — import from `@/components/ui`
+- **Tailwind CSS v4** — no `tailwind.config` or `postcss.config` files. All theme configuration is in `src/index.css` using `@theme inline` blocks
+- **CSS variables** define semantic color tokens (`--background`, `--primary`, `--destructive`, etc.) in `oklch()` color space, with `:root` (light) and `.dark` overrides
+- **Dark mode** is class-based (`.dark` on `<html>`), managed by `ThemeProvider` context + `useTheme()` hook
+- **`cn()` utility** from `@/lib/utils` — always use for conditional class merging (combines `clsx` + `tailwind-merge`)
+- **Icons**: `lucide-react`
+
+### Critical Rules
+
+1. **ALWAYS use Zeus** for GraphQL communication - never write raw GraphQL queries
+2. **Use the api/ layer** - import from `../api` not directly from Zeus
+3. **Use Zustand stores** for shared state (auth, UI state)
+4. **SSR-safe code** - check `typeof window` before accessing browser APIs
+5. **Use hooks** for data fetching logic - keep components presentational
+6. **ALWAYS define Selectors** for reusable query shapes
+7. **ALWAYS use `FromSelector`** to derive TypeScript types from selectors
+8. **NEVER manually duplicate backend types** - derive them from selectors
+9. **Use `$` function** for GraphQL variables when values come from user input or props
+10. **ALWAYS use semantic color tokens** (`bg-primary`, `text-muted-foreground`, `border-border`, etc.) — avoid hardcoded Tailwind colors (`bg-blue-500`, `text-gray-400`) as they won't respond to theme changes
+11. **PascalCase for React component files** — `AuthForm.tsx`, `ThemeProvider.tsx`, `UserList.tsx`. **Shared hooks** in `hooks/` keep `useX.ts` naming (e.g., `useAuth.ts`, `useIsMobile.ts`). **Co-located hooks** (extracted from a page/component) use `ComponentName.hook.ts` naming (e.g., `Settings.hook.ts`, `AuthForm.hook.ts`). The exported function is still `useComponentName` per React convention.
+12. **Route pages use `.page.tsx` suffix** — each route gets its own folder inside a route group: `routes/guest/landing/Landing.page.tsx`, `routes/protected/dashboard/Dashboard.page.tsx`. Route groups (`guest/`, `protected/`, `public/`) provide shared layouts. Sub-page content without its own route stays as regular `.tsx`
+13. **ALWAYS use arrow functions** — `const MyComponent = () => {}` instead of `function MyComponent() {}`. Applies to components, hooks, handlers, helpers — everything. Only exception: generator functions (`function*`)
+14. **ALL user-visible strings MUST use `useDynamite().t()`** — never hardcode user-facing text. Import `useDynamite` from `@aexol/dynamite`, destructure `t`, and wrap every label, title, message, placeholder, error message, and button text with `t('English text')`. For files outside the React tree (data files, schemas), use the factory pattern: accept `t` as a parameter. See the `frontend-translations` skill for full patterns.
+
+### Component Architecture
+
+- **Atomic design** for reusable components — organize in `components/atoms/`, `components/molecules/`, `components/organisms/`. Exception: shadcn/ui stays in `components/ui/`
+- **File splitting at 400–500 lines** — extract hooks (`ComponentName.hook.ts`), schemas (`.schema.ts`), types (`.types.ts`), data (`.data.ts`), or sub-components. All partitions live next to the component file
+- **Reusability-first** — any component with the slightest chance of reuse belongs in the atomic design system with configurable props
+- **Route-scoped components** — components used by only one route live in `routes/{route}/components/`. If they grow too large, same splitting rules apply recursively
+- **Promote when shared** — if a route-scoped component starts being used by multiple routes, move it to the atomic design system
+- **Co-located hooks** — extracted page/component hooks use `.hook.ts` suffix and live next to their component (e.g., `AuthForm.tsx` + `AuthForm.hook.ts`). The function inside is still `useAuthForm` per React convention. These are distinct from shared hooks in `hooks/` which keep the `useX.ts` naming.
+- **One hook per file** — co-located hooks should export a SINGLE hook per file (not multiple small hooks). All related data fetching and mutations for a view/component should be consolidated into one hook that returns a flat object with all data and mutation results
+
+> **Full guide:** Load the `frontend-components` skill for detailed patterns, examples, and decision flowchart.
+
+### Toast Notifications (Sonner)
+
+This project uses **Sonner** (`sonner`) for toast notifications. Import `toast` directly from sonner:
+
+```typescript
+import { toast } from 'sonner';
+
+// Usage
+toast.success('Changes saved!');
+toast.error('Failed to delete item');
+toast.info('Session expired, please log in again');
+toast('Default notification');
+```
+
+**Rules:**
+
+- Always use `sonner` for toasts - do NOT create custom toast stores or components
+- Use semantic methods: `toast.success()`, `toast.error()`, `toast.info()`
+- Keep messages short and user-friendly
+- The `<Toaster />` component is already mounted in the app root
+
+### Translations (@aexol/dynamite)
+
+This project uses `@aexol/dynamite` for internationalization. **Every user-facing string MUST be translated — hardcoded strings are bugs.**
+
+```typescript
+import { useDynamite } from '@aexol/dynamite';
+
+const MyComponent = () => {
+  const { t } = useDynamite();
+  return <Button>{t('Save changes')}</Button>;
+};
+```
+
+**Key rules:**
+
+- Use `t('English text')` for ALL labels, titles, buttons, messages, placeholders, error messages, toasts
+- Factory pattern for data files/schemas outside React tree: `const getData = (t: (key: string) => string) => ...`
+- Don't translate: brand names, code, URLs
+- Locale stored in cookie (not localStorage/Zustand) — see `frontend-translations` skill
+
+> **Full guide:** Load the `frontend-translations` skill for detailed patterns and rules.
+
+### SSR Patterns (Data Router)
+
+- Route config in `frontend/src/routes/index.tsx` as `RouteObject[]` — loaders attached per route
+- Loader auth: `request.headers.get('x-authenticated') === 'true'` (SSR) or `useAuthStore.getState().isAuthenticated` (client)
+- Data fetch in loader: `await queryClient.fetchQuery(...)` — throws on error → `errorElement`; wrap in `try/catch` for non-fatal public routes
+- Page hydration: `const { dehydratedState } = useLoaderData<typeof loader>()` → `<HydrationBoundary state={dehydratedState}>`
+- Meta tags: return `{ meta: { title, description } }` from loader → auto-injected in `<head>` server-side via `buildMetaHead()`
+- Full reference: load the `vite-ssr` skill
+
+### Frontend Troubleshooting
+
+#### Type errors after schema changes
+
+**Solution:** Regenerate Zeus by running `cd backend && npx @aexol/axolotl build`
+
+#### Zeus files not found
+
+**Solution:** Ensure `backend/axolotl.json` has zeus configuration:
+
+```json
+{
+  "zeus": [
+    {
+      "generationPath": "../frontend/src",
+      "esModule": true
+    }
+  ]
+}
+```
+
+### Frontend Quick Reference
+
+| Task                   | Code                                                    |
+| ---------------------- | ------------------------------------------------------- |
+| Create query           | `query()({ user: { me: { _id: true, email: true } } })` |
+| Create mutation        | `mutation()({ login: [{ email, password }, true] })`    |
+| Access auth state      | `useAuthStore((s) => s.isAuthenticated)`                |
+| Show toast (sonner)    | `toast.success('Done!')`                                |
+| Mutation with args     | `mutation()({ field: [{ arg: value }, selector] })`     |
+| Return scalar directly | `field: [{ args }, true]`                               |
 
 ---
 
-This guide provides everything an LLM needs to work effectively with Axolotl projects, from understanding the structure to implementing resolvers with full type safety.
+### Authentication Architecture
+
+This project uses **JWT+JTI session-based cookie authentication** with a **gateway resolver pattern** for authorization.
+
+**How it works:**
+
+- Passwords hashed with bcrypt (12 rounds). JWTs signed with HS256 containing `{ userId, email, jti }` where `jti` is a session UUID
+- Sessions stored in a `Session` table (Prisma) for server-side revocation. 30-day expiry
+- Tokens sent via httpOnly `Set-Cookie` header — frontend never touches tokens directly. Resolvers set cookies via `context.setCookie(token)` and clear via `context.clearCookie()`
+- Auth check: context builder calls `verifyAuth()` on every request (try/catch, non-throwing) → sets `context.authUser` if valid. Gateway resolvers (`Query.user` / `Mutation.user`) check `context.authUser` exists → throw if not → return `{}`. Domain resolvers access auth data via `context.authUser`
+- Logout: GraphQL mutation `user { logout }` deletes session from DB + clears httpOnly cookie via `context.clearCookie()`
+- Password change invalidates all other sessions (keeps current one)
+- SSR: server verifies cookie on every page render, injects `window.__INITIAL_AUTH__ = { isAuthenticated: true/false }`
+
+**Key files:**
+
+- `backend/src/context.ts` — `AppContext` with `authUser?: AuthUser`, `setCookie(token)`, `clearCookie()`, `AuthUser` type
+- `backend/src/axolotl.ts` — Context builder: extracts cookie/token → calls `verifyAuth` → sets `authUser`
+- `backend/src/utils/auth.ts` — JWT sign/verify, bcrypt hash/verify, session token generation
+- `backend/src/config/cookies.ts` — `COOKIE_NAME`, `COOKIE_OPTIONS`, locale constants
+- `backend/src/utils/cookies.ts` — Cookie serialize/parse utilities
+- `backend/src/modules/auth/lib/verifyAuth.ts` — JWT + session verification (used by context builder)
+- `backend/src/modules/auth/resolvers/Query/user.ts` — Gateway: checks `context.authUser`, returns `{}`
+- `backend/src/modules/auth/resolvers/Mutation/user.ts` — Gateway: checks `context.authUser`, returns `{}`
+- `frontend/src/stores/authStore.ts` — `isAuthenticated` boolean from `__INITIAL_AUTH__`
+- `backend/src/modules/users/resolvers/AuthorizedUserMutation/logout.ts` — Logout resolver: deletes session, clears cookie
+- `frontend/src/hooks/useAuth.ts` — Login/register/logout + user query
+
+**Adding protected resolvers:** Add field to `AuthorizedUserQuery` or `AuthorizedUserMutation` in your domain module's schema, run `axolotl build`, implement resolver using `context.authUser` (access via `([, , context])` destructuring). Auth is already enforced by the gateway — `context.authUser!` is safe to use with non-null assertion. **Every resolver MUST verify the user owns/has access to the resource** using `context.authUser!._id`.
+
+**⚠️ Resource-Level Authorization (Critical Security):**
+
+Gateway auth only verifies the user is logged in. Every resolver that fetches or mutates a resource MUST additionally verify the user has access:
+
+```typescript
+// ✅ Correct — ownership enforced
+deleteNote: async ([, , context], { id }) => {
+  await prisma.note.findFirstOrThrow({
+    where: { id, userId: context.authUser!._id },
+  });
+  return prisma.note.delete({ where: { id } });
+};
+
+// ❌ Wrong — any logged-in user can delete any note
+deleteNote: async ([, , context], { id }) => {
+  return prisma.note.delete({ where: { id } });
+};
+```
+
+**Before writing any code, always check available skills for detailed guidance on the topic you're working on.**

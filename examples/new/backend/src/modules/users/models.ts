@@ -73,6 +73,9 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
         password: string;
       };
     };
+    logout: {
+      args: Record<string, never>;
+    };
   };
   ['AuthorizedUserQuery']: {
     me: {
@@ -132,6 +135,7 @@ export interface AuthorizedUserMutation<S extends { [P in keyof Scalars]: any } 
   revokeSession?: boolean | undefined | null;
   revokeAllSessions?: boolean | undefined | null;
   deleteAccount?: boolean | undefined | null;
+  logout: boolean;
 }
 export interface AuthorizedUserQuery<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   me: User;

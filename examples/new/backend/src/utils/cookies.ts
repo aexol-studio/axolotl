@@ -1,12 +1,4 @@
-export const COOKIE_NAME = 'auth-token';
-
-export const COOKIE_OPTIONS = {
-  httpOnly: true,
-  sameSite: 'lax' as const,
-  path: '/',
-  secure: process.env.NODE_ENV === 'production',
-  maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-};
+import { COOKIE_NAME, COOKIE_OPTIONS, LOCALE_COOKIE_NAME, SUPPORTED_LOCALES } from '@/src/config/cookies.js';
 
 /**
  * Parses a raw Cookie header string into key-value pairs.
@@ -70,12 +62,6 @@ export const serializeClearCookie = (): string => {
 
   return parts.join('; ');
 };
-
-// --- Locale cookie (NOT httpOnly — client JS needs to read/write it) ---
-
-export const LOCALE_COOKIE_NAME = 'locale';
-
-export const SUPPORTED_LOCALES = ['en', 'pl'] as const;
 
 /** Returns the user's preferred locale from parsed cookies, defaulting to 'en'.
  *  Validates against SUPPORTED_LOCALES whitelist to prevent injection via the cookie value. */

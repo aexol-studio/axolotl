@@ -1,4 +1,4 @@
-export { query } from './query.js';
+export { query, ssrQuery, loaderQuery } from './query.js';
 export { mutation } from './mutation.js';
 export { subscription } from './subscription.js';
 export { createChain } from './client.js';

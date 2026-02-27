@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import { Writable } from 'node:stream';
 import express from 'express';
 import { createServer as createViteServer, ViteDevServer } from 'vite';
 import { fileURLToPath } from 'url';
@@ -6,8 +7,8 @@ import { dirname, resolve } from 'path';
 import { adapter } from '@/src/axolotl.js';
 import resolvers from '@/src/resolvers.js';
 import directives from './directives.js';
-import { parseCookies, getTokenFromCookies, serializeClearCookie, getLocaleFromCookies } from './lib/cookies.js';
-import { verifyToken } from './lib/auth.js';
+import { parseCookies, getLocaleFromCookies } from './utils/cookies.js';
+import { verifyToken } from './utils/auth.js';
 import { prisma } from './db.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -81,23 +82,6 @@ mutation Register{
   // Mount GraphQL at /graphql (includes AI chat via subscription)
   app.use('/graphql', yoga as unknown as express.RequestHandler);
 
-  // Logout endpoint — deletes session from DB and clears the auth cookie
-  app.post('/api/logout', async (req, res) => {
-    try {
-      const cookieHeader = req.headers.cookie ?? null;
-      const rawToken = getTokenFromCookies(cookieHeader);
-      if (rawToken) {
-        const payload = verifyToken(rawToken);
-        // Delete session from DB — ignore if already deleted or expired
-        await prisma.session.delete({ where: { token: payload.jti } }).catch(() => {});
-      }
-    } catch {
-      // JWT verification failed — token is invalid/expired, just clear cookie
-    }
-    res.setHeader('Set-Cookie', serializeClearCookie());
-    res.status(200).json({ success: true });
-  });
-
   // Add Vite or respective production middlewares
   let vite: ViteDevServer | undefined;
   if (!isProduction) {
@@ -124,21 +108,30 @@ mutation Register{
     try {
       const url = req.originalUrl;
 
+      type RenderFn = (
+        request: Request,
+        options: { isAuthenticated: boolean; locale?: string },
+      ) => Promise<{
+        pipe: (s: Writable) => void;
+        statusCode: number;
+        redirectUrl?: string;
+        head: string;
+        locale: string;
+        translations: Record<string, string>;
+      }>;
+
       let template: string;
-      let render: (
-        url: string,
-        options?: { isAuthenticated: boolean; locale?: string },
-      ) => { html: string; head?: string; translations?: Record<string, string>; locale?: string };
+      let render: RenderFn;
 
       if (!isProduction) {
         // Always read fresh template in development
         template = await fs.readFile(resolve(__dirname, '../frontend/index.html'), 'utf-8');
         template = await vite!.transformIndexHtml(url, template);
-        render = (await vite!.ssrLoadModule('/src/entry-server.tsx')).render;
+        render = (await vite!.ssrLoadModule('/src/entry-server.tsx')).render as RenderFn;
       } else {
         template = templateHtml;
         // @ts-expect-error - entry-server.js is built by vite build:server and only exists at runtime
-        render = (await import('../dist/server/entry-server.js')).render;
+        render = (await import('../dist/server/entry-server.js')).render as RenderFn;
       }
 
       let isAuthenticated = false;
@@ -159,25 +152,60 @@ mutation Register{
         }
       }
 
-      const rendered = await render(url, { isAuthenticated, locale: getLocaleFromCookies(req.cookies) });
+      const locale = getLocaleFromCookies(req.cookies);
 
+      // Build Web Request from Express req, forwarding all headers plus auth/locale context
+      const origin = `${req.protocol}://${req.get('host') ?? 'localhost'}`;
+      const headerEntries: [string, string][] = Object.entries(req.headers)
+        .filter((entry): entry is [string, string | string[]] => entry[1] !== undefined)
+        .map(([k, v]): [string, string] => [k, Array.isArray(v) ? v.join(', ') : v]);
+      const webHeaders = new Headers(headerEntries);
+      webHeaders.set('x-authenticated', isAuthenticated ? 'true' : 'false');
+      webHeaders.set('x-locale', locale);
+      const webRequest = new Request(`${origin}${url}`, { method: req.method, headers: webHeaders });
+
+      const rendered = await render(webRequest, { isAuthenticated, locale });
+
+      // Handle redirect — return immediately without rendering HTML
+      if (rendered.redirectUrl) {
+        res.redirect(rendered.statusCode, rendered.redirectUrl);
+        return;
+      }
+
+      // Collect the pipeableStream into a string
+      const chunks: Buffer[] = [];
+      const writable = new Writable({
+        write(chunk: Buffer, _encoding: BufferEncoding, callback: () => void) {
+          chunks.push(chunk);
+          callback();
+        },
+      });
+      rendered.pipe(writable);
+      await new Promise<void>((resolve, reject) => {
+        writable.on('finish', resolve);
+        writable.on('error', reject);
+      });
+      const appHtml = Buffer.concat(chunks).toString('utf-8');
+
+      // Inject initial state — translations loaded by rootLoader on client, but window state still
+      // needed for subsequent client-side navigations and initial locale resolution
       const initialStateScript = [
         `<script>`,
         `window.__INITIAL_AUTH__=${JSON.stringify({ isAuthenticated })};`,
-        `window.__INITIAL_TRANSLATIONS__=${JSON.stringify(rendered.translations ?? {})};`,
-        `window.__INITIAL_LOCALE__=${JSON.stringify(rendered.locale ?? 'en')};`,
+        `window.__INITIAL_TRANSLATIONS__=${JSON.stringify(rendered.translations)};`,
+        `window.__INITIAL_LOCALE__=${JSON.stringify(rendered.locale)};`,
         `</script>`,
       ].join('');
 
       let resultHtml = template
-        .replace(`<!--app-head-->`, rendered.head ?? '')
-        .replace(`<!--app-initial-state-->`, initialStateScript)
-        .replace(`<!--app-html-->`, rendered.html ?? '');
+        .replace('<!--app-head-->', rendered.head)
+        .replace('<!--app-initial-state-->', initialStateScript)
+        .replace('<!--app-html-->', appHtml);
 
       // Set the HTML lang attribute to match the rendered locale
-      resultHtml = resultHtml.replace('lang="en"', `lang="${rendered.locale ?? 'en'}"`);
+      resultHtml = resultHtml.replace('lang="en"', `lang="${rendered.locale}"`);
 
-      res.status(200).set({ 'Content-Type': 'text/html' }).send(resultHtml);
+      res.status(rendered.statusCode).set({ 'Content-Type': 'text/html' }).send(resultHtml);
     } catch (e) {
       vite?.ssrFixStacktrace(e as Error);
       console.error((e as Error).stack);
