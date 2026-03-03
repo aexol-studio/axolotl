@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 
 import { cn } from '@/lib/utils';
 import { type NoteItem, NoteStatus } from '@/api';
-import { useAuthStore } from '@/stores';
+import { useAuth } from '@/hooks';
 
 import { useNotes } from '../Notes.hook';
 
@@ -46,7 +46,7 @@ const formatDate = (dateStr: string): string => {
 // --- Component ---
 
 export const NotesShowcase = () => {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { isAuthenticated } = useAuth();
   const { notes, isLoading, createNote, isCreating, deleteNote, isDeleting } = useNotes();
 
   const form = useForm<CreateNoteValues>({

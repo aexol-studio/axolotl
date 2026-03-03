@@ -70,12 +70,13 @@ await mutation()(
 ```typescript
 import { useQuery } from '@tanstack/react-query';
 import { query } from '../api';
-import { useAuthStore } from '../stores';
+import { queryKeys } from '../lib/queryKeys';
+import { useAuth } from '../hooks';
 
-const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+const { isAuthenticated } = useAuth();
 
 const { data, isLoading, error } = useQuery({
-  queryKey: ['posts'],
+  queryKey: queryKeys.posts, // define in queryKeys.ts first
   queryFn: async () => {
     const data = await query()({ user: { posts: { _id: true, title: true } } });
     return data.user?.posts ?? [];
@@ -91,6 +92,7 @@ const { data, isLoading, error } = useQuery({
 ```typescript
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { mutation } from '../api';
+import { queryKeys } from '@/lib/queryKeys.js';
 
 const queryClient = useQueryClient();
 
@@ -99,7 +101,7 @@ const createPost = useMutation({
     await mutation()({ user: { createPost: [input, true] } });
   },
   onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['posts'] });
+    queryClient.invalidateQueries({ queryKey: queryKeys.posts });
   },
 });
 ```
@@ -108,7 +110,8 @@ const createPost = useMutation({
 
 ## Cache Invalidation
 
-- After mutations: `queryClient.invalidateQueries({ queryKey: ['posts'] })`
+- After mutations: `queryClient.invalidateQueries({ queryKey: queryKeys.posts })`
+- Auth mutation exception (`login`/`register`): for `queryKeys.me`, run explicit `await queryClient.fetchQuery({ queryKey: queryKeys.me, queryFn: ... })` sync after success; do not rely on invalidation alone
 - From subscription callbacks: same `invalidateQueries` call
 - On logout: `queryClient.clear()` (clears ALL cache — security)
 
@@ -125,3 +128,5 @@ const createPost = useMutation({
 7. **Use `$`** for GraphQL variables from user input or props
 8. **One hook per domain** — owns queries, mutations, loading/error state; components stay presentational
 9. **Import from `../api`** — never directly from Zeus
+10. **ALWAYS use `queryKeys`** from `@/lib/queryKeys.js` — never hardcode query key strings like `['me']` or `['todos']`
+11. **Keep guest optimization for `me` query** (`enabled` gating), but treat auth mutations as an exception and explicitly `fetchQuery(queryKeys.me)` to sync authenticated state deterministically

@@ -1,5 +1,4 @@
 // Dashboard page - the main app for authenticated users (SPA)
-import { redirect } from 'react-router';
 import { useLoaderData } from 'react-router';
 import type { LoaderFunctionArgs } from 'react-router';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
@@ -7,37 +6,24 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useDynamite } from '@aexol/dynamite';
+import { queryClient, type AppLoadContext } from '@/lib/queryClient';
+import { queryKeys } from '@/lib/queryKeys.js';
+import { loaderQuery, todoSelector } from '@/api';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/Form';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/hooks';
 import { ErrorMessage } from '@/components';
-import { useAuthStore } from '@/stores';
-import { queryClient } from '@/lib/queryClient';
 import { cn } from '@/lib/utils';
-import { loaderQuery, todoSelector } from '@/api';
 import { useDashboard } from './Dashboard.hook';
 import type { TodoType } from '@/api';
 
 // --- Loader ---
 
-export const dashboardLoader = async ({ request }: LoaderFunctionArgs) => {
-  const isAuthenticated =
-    request.headers.get('x-authenticated') === 'true' ||
-    (typeof window !== 'undefined' && useAuthStore.getState().isAuthenticated);
-  if (!isAuthenticated) throw redirect('/login');
-
-  await queryClient.fetchQuery({
-    queryKey: ['me'],
-    queryFn: async () => {
-      const q = loaderQuery(request);
-      const data = await q({ user: { me: { _id: true, email: true, createdAt: true } } });
-      return data.user?.me ?? null;
-    },
-  });
-
-  await queryClient.fetchQuery({
-    queryKey: ['todos'],
+export const dashboardLoader = async ({ request, context }: LoaderFunctionArgs) => {
+  const qc = (context as AppLoadContext | undefined)?.queryClient ?? queryClient;
+  await qc.fetchQuery({
+    queryKey: queryKeys.todos,
     queryFn: async () => {
       const q = loaderQuery(request);
       const data = await q({ user: { todos: todoSelector } });
@@ -47,7 +33,7 @@ export const dashboardLoader = async ({ request }: LoaderFunctionArgs) => {
 
   return {
     meta: { title: 'Dashboard — Axolotl', description: '' },
-    dehydratedState: dehydrate(queryClient),
+    dehydratedState: dehydrate(qc),
   };
 };
 

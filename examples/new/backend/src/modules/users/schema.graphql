@@ -15,6 +15,7 @@ type Session {
 type Mutation {
   login(email: String!, password: String!): String! @resolver
   register(email: String!, password: String!): String! @resolver
+  verifyEmail(token: String!): String! @resolver
 }
 
 type AuthorizedUserMutation {

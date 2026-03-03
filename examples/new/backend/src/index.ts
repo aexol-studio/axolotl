@@ -8,7 +8,6 @@ import { adapter } from '@/src/axolotl.js';
 import resolvers from '@/src/resolvers.js';
 import directives from './directives.js';
 import { parseCookies, getLocaleFromCookies } from './utils/cookies.js';
-import { verifyToken } from './utils/auth.js';
 import { prisma } from './db.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -110,7 +109,7 @@ mutation Register{
 
       type RenderFn = (
         request: Request,
-        options: { isAuthenticated: boolean; locale?: string },
+        options: { locale?: string },
       ) => Promise<{
         pipe: (s: Writable) => void;
         statusCode: number;
@@ -134,37 +133,18 @@ mutation Register{
         render = (await import('../dist/server/entry-server.js')).render as RenderFn;
       }
 
-      let isAuthenticated = false;
-      const authCookie = req.cookies?.['auth-token'];
-      if (authCookie) {
-        try {
-          const payload = verifyToken(authCookie);
-          const session = await prisma.session.findFirst({
-            where: {
-              token: payload.jti,
-              expiresAt: { gt: new Date() },
-            },
-            select: { token: true },
-          });
-          isAuthenticated = !!session;
-        } catch {
-          isAuthenticated = false;
-        }
-      }
-
+      const origin = `${req.protocol}://${req.get('host') ?? 'localhost'}`;
       const locale = getLocaleFromCookies(req.cookies);
 
-      // Build Web Request from Express req, forwarding all headers plus auth/locale context
-      const origin = `${req.protocol}://${req.get('host') ?? 'localhost'}`;
+      // Build Web Request from Express req, forwarding all headers plus locale context
       const headerEntries: [string, string][] = Object.entries(req.headers)
         .filter((entry): entry is [string, string | string[]] => entry[1] !== undefined)
         .map(([k, v]): [string, string] => [k, Array.isArray(v) ? v.join(', ') : v]);
       const webHeaders = new Headers(headerEntries);
-      webHeaders.set('x-authenticated', isAuthenticated ? 'true' : 'false');
       webHeaders.set('x-locale', locale);
       const webRequest = new Request(`${origin}${url}`, { method: req.method, headers: webHeaders });
 
-      const rendered = await render(webRequest, { isAuthenticated, locale });
+      const rendered = await render(webRequest, { locale });
 
       // Handle redirect — return immediately without rendering HTML
       if (rendered.redirectUrl) {
@@ -191,7 +171,6 @@ mutation Register{
       // needed for subsequent client-side navigations and initial locale resolution
       const initialStateScript = [
         `<script>`,
-        `window.__INITIAL_AUTH__=${JSON.stringify({ isAuthenticated })};`,
         `window.__INITIAL_TRANSLATIONS__=${JSON.stringify(rendered.translations)};`,
         `window.__INITIAL_LOCALE__=${JSON.stringify(rendered.locale)};`,
         `</script>`,

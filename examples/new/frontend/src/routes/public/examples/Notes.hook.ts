@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '@/stores';
+import { useAuth } from '@/hooks';
 import { query, mutation, noteSelector, type NoteItem, NoteStatus } from '@/api';
+import { queryKeys } from '@/lib/queryKeys.js';
 
 export type { NoteItem };
 
@@ -10,13 +11,13 @@ interface CreateNoteInput {
 }
 
 export const useNotes = () => {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
 
   // --- Notes Query ---
 
   const { data: notes = [], isLoading } = useQuery({
-    queryKey: ['notes'],
+    queryKey: queryKeys.notes,
     queryFn: async (): Promise<NoteItem[]> => {
       const data = await query()({
         user: { notes: noteSelector },
@@ -35,7 +36,7 @@ export const useNotes = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notes });
     },
   });
 
@@ -48,7 +49,7 @@ export const useNotes = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notes });
     },
   });
 

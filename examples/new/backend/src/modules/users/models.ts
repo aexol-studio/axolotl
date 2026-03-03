@@ -52,6 +52,11 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
         password: string;
       };
     };
+    verifyEmail: {
+      args: {
+        token: string;
+      };
+    };
   };
   ['AuthorizedUserMutation']: {
     changePassword: {
@@ -129,6 +134,7 @@ export interface Session<S extends { [P in keyof Scalars]: any } = { [P in keyof
 export interface Mutation<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   login: string;
   register: string;
+  verifyEmail: string;
 }
 export interface AuthorizedUserMutation<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   changePassword?: boolean | undefined | null;

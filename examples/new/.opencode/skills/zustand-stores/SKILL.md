@@ -3,30 +3,30 @@ name: zustand-stores
 description: Zustand state management patterns - auth store with SSR-safe initialization and store best practices
 ---
 
-## Auth Store
+## When to Use Zustand
 
-**State:** `isAuthenticated: boolean`, `setAuthenticated(value)`, `logout()`
+Zustand is for **shared client state** — UI preferences, sidebar collapsed, feature toggles, etc.
 
-**SSR-safe init** — read from `window.__INITIAL_AUTH__` (injected by server on every render):
+Auth state is managed by React Query (`queryKeys.me` cache + `useAuth()` hook) — not Zustand.
+
+## Store Pattern
 
 ```typescript
-const getInitialAuth = (): boolean => {
-  if (typeof window !== 'undefined' && window.__INITIAL_AUTH__) {
-    return window.__INITIAL_AUTH__.isAuthenticated;
-  }
-  return false;
-};
+import { create } from 'zustand';
 
-export const useAuthStore = create<AuthState>()((set) => ({
-  isAuthenticated: getInitialAuth(),
-  setAuthenticated: (value) => set({ isAuthenticated: value }),
-  logout: () => set({ isAuthenticated: false }),
+interface UIState {
+  sidebarOpen: boolean;
+  toggleSidebar: () => void;
+}
+
+export const useUIStore = create<UIState>()((set) => ({
+  sidebarOpen: true,
+  toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
 }));
 ```
 
 ## Rules
 
-- Always check `typeof window !== 'undefined'` before accessing browser globals
-- **Use selectors** — `useAuthStore((s) => s.isAuthenticated)`, never destructure the whole store
-- Access state outside React with `useAuthStore.getState()`
-- No `persist` needed for auth — state is derived from httpOnly cookies + SSR-injected `__INITIAL_AUTH__`
+- Check `typeof window !== 'undefined'` before accessing browser globals
+- Use selectors: `useUIStore((s) => s.sidebarOpen)`, never destructure the whole store
+- Access outside React: `useUIStore.getState()`

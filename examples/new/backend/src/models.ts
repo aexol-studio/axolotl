@@ -72,6 +72,11 @@ export type Models<S extends { [P in keyof Scalars]: any } = { [P in keyof Scala
         password: string;
       };
     };
+    verifyEmail: {
+      args: {
+        token: string;
+      };
+    };
   };
   ['Subscription']: {
     todoUpdates: {
@@ -246,6 +251,7 @@ export interface Mutation<S extends { [P in keyof Scalars]: any } = { [P in keyo
   user?: AuthorizedUserMutation | undefined | null;
   login: string;
   register: string;
+  verifyEmail: string;
 }
 export interface Subscription<S extends { [P in keyof Scalars]: any } = { [P in keyof Scalars]: any }> {
   todoUpdates: TodoUpdate;

@@ -5,15 +5,11 @@ import { toast } from 'sonner';
 import { useDynamite } from '@aexol/dynamite';
 
 import { query, mutation, subscription, todoSelector, type TodoType } from '@/api';
-import { useAuthStore } from '@/stores';
 
 import { createChangePasswordSchema, type ChangePasswordValues } from '../../Examples.schema';
 
 export const useGraphQLShowcase = () => {
   const { t } = useDynamite();
-
-  // --- Auth ---
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   // --- Change Password ---
   const changePasswordForm = useForm<ChangePasswordValues>({
@@ -212,8 +208,6 @@ export const useGraphQLShowcase = () => {
   }, [cleanupAiChat]);
 
   return {
-    // Auth
-    isAuthenticated,
     // Change password
     changePasswordForm,
     onChangePasswordSubmit,

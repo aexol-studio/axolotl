@@ -4,6 +4,7 @@ import { createResolvers } from '../../axolotl.js';
 import { prisma } from '@/src/db.js';
 import { verifyPassword, signToken, generateSessionToken, getSessionExpiryDate } from '@/src/utils/auth.js';
 import { parseInput, emailSchema, passwordSchema } from '@/src/utils/validation.js';
+import { DISABLE_EMAIL_VERIFICATION } from '@/src/config/email.js';
 
 const loginSchema = z.object({ email: emailSchema, password: passwordSchema });
 
@@ -24,6 +25,14 @@ export default createResolvers({
 
       if (!isValid) {
         throw new GraphQLError('Invalid credentials', { extensions: { code: 'INVALID_CREDENTIALS' } });
+      }
+
+      // Reject unverified users when email verification is required
+      if (!DISABLE_EMAIL_VERIFICATION && !user.emailVerified) {
+        throw new GraphQLError(
+          'Please verify your email before signing in. Check your inbox for the verification link.',
+          { extensions: { code: 'EMAIL_NOT_VERIFIED' } },
+        );
       }
 
       // Create a new session for multi-device support
