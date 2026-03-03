@@ -1,34 +1,19 @@
-import { redirect } from 'react-router';
 import { useLoaderData } from 'react-router';
 import type { LoaderFunctionArgs } from 'react-router';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { Settings as SettingsIcon } from 'lucide-react';
 import { useDynamite } from '@aexol/dynamite';
-import { useAuthStore } from '@/stores';
-import { queryClient } from '@/lib/queryClient';
+import { queryClient, type AppLoadContext } from '@/lib/queryClient';
+import { queryKeys } from '@/lib/queryKeys.js';
 import { loaderQuery, sessionSelector } from '@/api';
 import { ProfileSection, ChangePasswordSection, SessionsSection, DeleteAccountSection } from './components';
 
 // --- Loader ---
 
-export const settingsLoader = async ({ request }: LoaderFunctionArgs) => {
-  const isAuthenticated =
-    request.headers.get('x-authenticated') === 'true' ||
-    (typeof window !== 'undefined' && useAuthStore.getState().isAuthenticated);
-  if (!isAuthenticated) throw redirect('/login');
-
-  // Pre-fetch queries that Settings actually uses (matching exact queryKeys)
-  await queryClient.fetchQuery({
-    queryKey: ['me'],
-    queryFn: async () => {
-      const q = loaderQuery(request);
-      const data = await q({ user: { me: { _id: true, email: true, createdAt: true } } });
-      return data.user?.me ?? null;
-    },
-  });
-
-  await queryClient.fetchQuery({
-    queryKey: ['sessions'],
+export const settingsLoader = async ({ request, context }: LoaderFunctionArgs) => {
+  const qc = (context as AppLoadContext | undefined)?.queryClient ?? queryClient;
+  await qc.fetchQuery({
+    queryKey: queryKeys.sessions,
     queryFn: async () => {
       const q = loaderQuery(request);
       const data = await q({ user: { sessions: sessionSelector } });
@@ -38,7 +23,7 @@ export const settingsLoader = async ({ request }: LoaderFunctionArgs) => {
 
   return {
     meta: { title: 'Settings — Axolotl', description: '' },
-    dehydratedState: dehydrate(queryClient),
+    dehydratedState: dehydrate(qc),
   };
 };
 

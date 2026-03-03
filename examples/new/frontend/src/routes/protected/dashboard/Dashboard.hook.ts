@@ -2,8 +2,9 @@ import { useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useDynamite } from '@aexol/dynamite';
-import { useAuthStore } from '@/stores';
+import { useAuth } from '@/hooks';
 import { query, mutation, subscription, getGraphQLErrorMessage, todoSelector, type TodoType } from '@/api';
+import { queryKeys } from '@/lib/queryKeys.js';
 
 interface TodoUpdateEvent {
   todoUpdates: {
@@ -22,7 +23,7 @@ interface UseDashboardOptions {
 
 export const useDashboard = ({ ownerId }: UseDashboardOptions) => {
   const { t } = useDynamite();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
 
   // --- Todo Query ---
@@ -32,7 +33,7 @@ export const useDashboard = ({ ownerId }: UseDashboardOptions) => {
     isLoading: todosLoading,
     error: queryError,
   } = useQuery({
-    queryKey: ['todos'],
+    queryKey: queryKeys.todos,
     queryFn: async (): Promise<TodoType[]> => {
       const data = await query()({
         user: { todos: todoSelector },
@@ -51,7 +52,7 @@ export const useDashboard = ({ ownerId }: UseDashboardOptions) => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['todos'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.todos });
       toast.success(t('Todo created!'));
     },
   });
@@ -65,7 +66,7 @@ export const useDashboard = ({ ownerId }: UseDashboardOptions) => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['todos'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.todos });
       toast.success(t('Todo updated!'));
     },
   });
@@ -107,7 +108,7 @@ export const useDashboard = ({ ownerId }: UseDashboardOptions) => {
   const subscriptionRef = useRef<any>(null);
   useEffect(() => {
     // Invalidate todo query cache on any subscription event
-    const invalidateTodos = () => queryClient.invalidateQueries({ queryKey: ['todos'] });
+    const invalidateTodos = () => queryClient.invalidateQueries({ queryKey: queryKeys.todos });
 
     // Only subscribe when we have a valid ownerId
     if (!ownerId) {

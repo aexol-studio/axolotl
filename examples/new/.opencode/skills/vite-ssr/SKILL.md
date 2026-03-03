@@ -7,19 +7,16 @@ Vite + React Router v7 Data Router + `renderToPipeableStream` + TanStack Query `
 ```
 browser request
   └─▶ backend/src/index.ts (Express)
-        ├─ verifies auth cookie → sets x-authenticated / x-locale headers
-        ├─ calls render(webRequest, { isAuthenticated, locale })
+        ├─ NO auth — just locale + translations + render
+        ├─ calls render(webRequest, { locale })
         └─▶ frontend/src/entry-server.tsx
-              ├─ createStaticHandler(routeConfig) → handler.query(request)  [runs all loaders]
+              ├─ createQueryClient() — fresh per-request instance (no shared singleton)
+              ├─ seeds queryKeys.me from auth cookie before loaders run (guards can read auth state)
+              ├─ handler.query(request, { requestContext: { queryClient } })  [loaders get per-request client]
+              ├─ loaderQuery auto-selects SSR chain (forwards cookies) or client chain
               ├─ createStaticRouter(handler.dataRoutes, context)
               ├─ renderToPipeableStream(<StaticRouterProvider …/>)
               └─ buildMetaHead(context.matches) → <title> + <meta> tags
-
-hydration
-  └─▶ frontend/src/entry-client.tsx
-        ├─ createBrowserRouter(routeConfig)  // local const — NOT exported from routes
-        ├─ reads window.__INITIAL_AUTH__
-        └─ hydrateRoot(…<RouterProvider router={browserRouter} />…)
 ```
 
 **Critical facts:**
@@ -28,17 +25,18 @@ hydration
 - `createBrowserRouter` is in `entry-client.tsx` only — never in `routes/index.tsx`
 - `hydrateRoot` not `createRoot`; `renderToPipeableStream` not `renderToString`
 - `<StaticRouterProvider … />` — **NO `hydrate={false}`**
-- `queryClient.clear()` at top of `render()` — per-request isolation
+- Fresh `QueryClient` created per request — true per-request isolation (no `clear()` on shared singleton)
 
 ## Loader Pattern
 
-Loaders live in `{RouteName}.data.ts` next to the page file. See `frontend-navigation` skill for the auth guard pattern.
+Loaders are route-scoped and commonly exported from `{RouteName}.page.tsx`. Split to `{RouteName}.data.ts` only when the loader grows or needs reuse. See `frontend-navigation` for auth guard patterns.
 
 ```tsx
-// loader return shape
+// In loader — extract per-request queryClient (falls back to CSR singleton)
+const qc = (context as AppLoadContext | undefined)?.queryClient ?? queryClient;
 return {
-  dehydratedState: dehydrate(queryClient),
-  meta: { title: 'Page Title', description: '…', 'og:title': '…', 'og:description': '…' },
+  dehydratedState: dehydrate(qc),
+  meta: { title: 'Page Title', description: '…' },
 };
 // fetchQuery throws on error → errorElement; wrap in try/catch for public routes
 ```
@@ -68,25 +66,30 @@ Return from any loader: `{ dehydratedState, meta: { title, description, 'og:titl
 
 ## `index.html` Placeholders
 
-| Placeholder                | Replaced with                                                                                   |
-| -------------------------- | ----------------------------------------------------------------------------------------------- |
-| `<!--app-head-->`          | `<title>` + `<meta>` from `buildMetaHead()` (`rendered.head`)                                   |
-| `<!--app-initial-state-->` | `<script>window.__INITIAL_AUTH__=…; __INITIAL_TRANSLATIONS__=…; __INITIAL_LOCALE__=…;</script>` |
-| `<!--app-html-->`          | Server-rendered HTML from `renderToPipeableStream`                                              |
+| Placeholder                | Replaced with                                                                                            |
+| -------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `<!--app-head-->`          | `<title>` + `<meta>` from `buildMetaHead()` (`rendered.head`)                                            |
+| `<!--app-initial-state-->` | `<script>__INITIAL_TRANSLATIONS__=…; __INITIAL_LOCALE__=…;</script>` (auth via queryClient, not globals) |
+| `<!--app-html-->`          | Server-rendered HTML from `renderToPipeableStream`                                                       |
 
 `lang="en"` on `<html>` is replaced with `lang="${rendered.locale}"`.
 
 ## Quick Reference
 
-| Task                          | Pattern                                                                                        |
-| ----------------------------- | ---------------------------------------------------------------------------------------------- |
-| Auth check in loader (SSR)    | `request.headers.get('x-authenticated') === 'true'`                                            |
-| Auth check in loader (client) | `typeof window !== 'undefined' && useAuthStore.getState().isAuthenticated`                     |
-| Fetch data in loader          | `await queryClient.fetchQuery(…)` — throws on error → `errorElement`                           |
-| Public route fetch            | wrap `fetchQuery` in `try/catch` — never throw                                                 |
-| Hydrate page component        | `const { dehydratedState } = useLoaderData<typeof loader>()` + `<HydrationBoundary state={…}>` |
-| SSR redirect                  | `throw redirect('/login')`                                                                     |
-| Provide meta                  | `return { meta: { title, description, 'og:title', 'og:description' }, dehydratedState }`       |
-| Client title update           | automatic via `<MetaUpdater />` in `RootLayout` — do not add manually                          |
-| Error boundary                | `errorElement: <ErrorPage />` on every route with a loader                                     |
-| `StaticRouterProvider`        | **NO** `hydrate={false}`; use `renderToPipeableStream` not `renderToString`                    |
+| Task                   | Pattern                                                                                        |
+| ---------------------- | ---------------------------------------------------------------------------------------------- |
+| Auth check in loader   | `isAuthenticated(qc)` where `qc` is from loader context (`@/lib/queryClient`)                  |
+| Fetch data in loader   | `await qc.fetchQuery(…)` where `qc` is extracted from loader context                           |
+| Public route fetch     | wrap `fetchQuery` in `try/catch` — never throw                                                 |
+| Hydrate page component | `const { dehydratedState } = useLoaderData<typeof loader>()` + `<HydrationBoundary state={…}>` |
+| SSR redirect           | `throw redirect('/login')`                                                                     |
+| Provide meta           | `return { meta: { title, description, 'og:title', 'og:description' }, dehydratedState }`       |
+| Client title update    | automatic via `<MetaUpdater />` in `RootLayout` — do not add manually                          |
+| Error boundary         | `errorElement: <ErrorPage />` on every route with a loader                                     |
+| `StaticRouterProvider` | **NO** `hydrate={false}`; use `renderToPipeableStream` not `renderToString`                    |
+
+## Auth Cache Sync + Guest Optimization
+
+- Keep guest optimization for `me` query with `enabled: !!queryClient.getQueryData(queryKeys.me)` (guests should not auto-refetch `me`).
+- Auth mutation exception (`login`/`register`): after success, explicitly run `await queryClient.fetchQuery({ queryKey: queryKeys.me, queryFn: ... })` to sync auth state deterministically; do not rely on invalidation alone.
+- Auth ownership: React Query `queryKeys.me` cache is the single source of truth; do not mirror auth in Zustand.

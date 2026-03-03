@@ -628,7 +628,7 @@ export interface GraphQLResponse {
 }
 export class GraphQLError extends Error {
   constructor(public response: GraphQLResponse) {
-    super('');
+    super(response.errors?.[0]?.message || 'GraphQL Response Error');
     console.error(response);
   }
   toString() {
@@ -1109,6 +1109,7 @@ export type ValueTypes = {
 	user?:ValueTypes["AuthorizedUserMutation"],
 login?: [{	email: string | Variable<any, string>,	password: string | Variable<any, string>},boolean | `@${string}`],
 register?: [{	email: string | Variable<any, string>,	password: string | Variable<any, string>},boolean | `@${string}`],
+verifyEmail?: [{	token: string | Variable<any, string>},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`,
 	['...on Mutation']?: Omit<ValueTypes["Mutation"], "...on Mutation">
 }>;
@@ -1213,6 +1214,7 @@ export type ResolverInputTypes = {
 	user?:ResolverInputTypes["AuthorizedUserMutation"],
 login?: [{	email: string,	password: string},boolean | `@${string}`],
 register?: [{	email: string,	password: string},boolean | `@${string}`],
+verifyEmail?: [{	token: string},boolean | `@${string}`],
 		__typename?: boolean | `@${string}`
 }>;
 	["Subscription"]: AliasType<{
@@ -1310,7 +1312,8 @@ export type ModelTypes = {
 	["Mutation"]: {
 		user?: ModelTypes["AuthorizedUserMutation"] | undefined | null,
 	login: string,
-	register: string
+	register: string,
+	verifyEmail: string
 };
 	["Subscription"]: {
 		todoUpdates: ModelTypes["TodoUpdate"],
@@ -1409,6 +1412,7 @@ export type GraphQLTypes = {
 	user?: GraphQLTypes["AuthorizedUserMutation"] | undefined | null,
 	login: string,
 	register: string,
+	verifyEmail: string,
 	['...on Mutation']: Omit<GraphQLTypes["Mutation"], "...on Mutation">
 };
 	["Subscription"]: {

@@ -1,54 +1,57 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useDynamite } from '@aexol/dynamite';
-import { useAuthStore } from '../stores';
-import { query, mutation, getGraphQLErrorMessage } from '../api';
-import { useInitialAuth } from '../contexts/AuthContext';
+import { query, mutation, userSelector, getGraphQLErrorMessage, getGraphQLErrorCode } from '../api';
+import { queryKeys } from '@/lib/queryKeys.js';
 
 export type AuthMode = 'login' | 'register';
 
+export type AuthResult =
+  | { status: 'authenticated' }
+  | { status: 'verification_required'; message: string }
+  | { status: 'error' };
+
+// Fetch current user data from the `me` query.
+// Throws on auth errors — the global QueryCache onError handler catches those.
+const fetchMe = async () => {
+  const data = await query()({ user: { me: userSelector } });
+  return data.user?.me ?? null;
+};
+
 export const useAuth = () => {
   const { t } = useDynamite();
-  const storeIsAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const setAuthenticated = useAuthStore((s) => s.setAuthenticated);
-  const storeLogout = useAuthStore((s) => s.logout);
   const queryClient = useQueryClient();
-  const initialAuth = useInitialAuth();
 
-  // SSR: store is always false (no window), so use AuthContext (set from cookie)
-  // Client: store is initialized synchronously from window.__INITIAL_AUTH__, so trust it
-  // After logout: store is false → correctly returns false
-  const isAuthenticated = typeof window === 'undefined' ? initialAuth.isAuthenticated : storeIsAuthenticated;
-
-  // Fetch current user — only when authenticated
-  // React Query deduplicates: multiple components calling useAuth() = 1 request
+  // Single source of truth: React Query cache for queryKeys.me
+  // - SSR populates the cache (either user data or null) via root loader
+  // - HydrationBoundary rehydrates it on the client
+  // - staleTime prevents refetch within 5 minutes
+  // - After login, invalidateQueries forces a fresh fetch
+  // - retry: false avoids retrying auth errors (expired token etc.)
   const {
-    data: user,
+    data: user = null,
     isLoading: isUserLoading,
     error: userError,
   } = useQuery({
-    queryKey: ['me'],
-    queryFn: async () => {
-      const data = await query()({
-        user: { me: { _id: true, email: true, createdAt: true } },
-      });
-      return data.user?.me ?? null;
-    },
-    enabled: isAuthenticated, // uses computed isAuthenticated (SSR-safe)
-    staleTime: 1000 * 60 * 5, // 5 min
+    queryKey: queryKeys.me,
+    queryFn: fetchMe,
+    staleTime: 1000 * 60 * 5,
+    retry: false,
+    // Skip auto-refetch for guests: root loader always seeds cache (user or null).
+    // Login/register call invalidateQueries(queryKeys.me) which overrides enabled.
+    enabled: !!queryClient.getQueryData(queryKeys.me),
   });
+
+  const isAuthenticated = !!user;
 
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const data = await mutation()({
-        login: [{ email, password }, true],
-      });
+      const data = await mutation()({ login: [{ email, password }, true] });
       return data.login as string;
     },
-    onSuccess: () => {
-      setAuthenticated(true);
-      queryClient.invalidateQueries({ queryKey: ['me'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.me });
       toast.success(t('Welcome back!'));
     },
   });
@@ -56,47 +59,72 @@ export const useAuth = () => {
   // Register mutation
   const registerMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const data = await mutation()({
-        register: [{ email, password }, true],
-      });
+      const data = await mutation()({ register: [{ email, password }, true] });
       return data.register as string;
-    },
-    onSuccess: () => {
-      setAuthenticated(true);
-      queryClient.invalidateQueries({ queryKey: ['me'] });
-      toast.success(t('Account created successfully!'));
     },
   });
 
-  const authenticate = async (mode: AuthMode, email: string, password: string) => {
+  const authenticate = async (mode: AuthMode, email: string, password: string): Promise<AuthResult> => {
     try {
       if (mode === 'register') {
-        await registerMutation.mutateAsync({ email, password });
+        const result = await registerMutation.mutateAsync({ email, password });
+        // Always try to fetch `me` — if backend set an auth cookie, this returns user data.
+        // Uses fetchQuery to bypass the `enabled` guard on the `me` query (which is false for guests).
+        try {
+          const meData = await queryClient.fetchQuery({
+            queryKey: queryKeys.me,
+            queryFn: fetchMe,
+          });
+          if (meData) {
+            toast.success(t('Account created successfully!'));
+            return { status: 'authenticated' };
+          }
+        } catch {
+          // fetchMe threw — no auth cookie was set
+        }
+        // No user data → email verification is required
+        return { status: 'verification_required', message: result };
       } else {
         await loginMutation.mutateAsync({ email, password });
+        const meData = await queryClient.fetchQuery({
+          queryKey: queryKeys.me,
+          queryFn: fetchMe,
+        });
+        if (!meData) {
+          return { status: 'error' };
+        }
+        return { status: 'authenticated' };
       }
-      return true;
     } catch {
-      return false;
+      return { status: 'error' };
     }
   };
 
-  const isLoading = isUserLoading || loginMutation.isPending || registerMutation.isPending;
-  const error =
-    (userError ? getGraphQLErrorMessage(userError) : null) ??
-    (loginMutation.error ? getGraphQLErrorMessage(loginMutation.error) : null) ??
-    (registerMutation.error ? getGraphQLErrorMessage(registerMutation.error) : null) ??
-    null;
+  // Build error message — detect EMAIL_NOT_VERIFIED for a specific user-friendly message
+  const loginErrorCode = loginMutation.error ? getGraphQLErrorCode(loginMutation.error) : null;
+  const isEmailNotVerified = loginErrorCode === 'EMAIL_NOT_VERIFIED';
 
-  // Logout: call API to clear cookie, then update local state
+  const isLoading = isUserLoading || loginMutation.isPending || registerMutation.isPending;
+  const error = isEmailNotVerified
+    ? t('Please verify your email before signing in. Check your inbox for the verification link.')
+    : ((userError ? getGraphQLErrorMessage(userError) : null) ??
+      (loginMutation.error ? getGraphQLErrorMessage(loginMutation.error) : null) ??
+      (registerMutation.error ? getGraphQLErrorMessage(registerMutation.error) : null) ??
+      null);
+
+  // Logout: call API to clear cookie, then clear React Query cache
   const handleLogout = async () => {
+    await queryClient.cancelQueries();
     try {
       await mutation()({ user: { logout: true } });
     } catch {
       // Even if the API call fails, clear local state
     }
-    storeLogout();
+    queryClient.setQueryData(queryKeys.me, null);
     queryClient.clear();
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
   };
 
   const clearError = () => {
@@ -105,10 +133,11 @@ export const useAuth = () => {
   };
 
   return {
-    user: user ?? null,
+    user,
     isLoading,
     error,
     isAuthenticated,
+    isEmailNotVerified,
     authenticate,
     logout: handleLogout,
     clearError,

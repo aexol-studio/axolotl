@@ -13,3 +13,12 @@ prisma.config.js.map
 
 # Environment variables
 .env
+
+# Playwright test artifacts
+.playwright/
+playwright-report/
+test-results/
+.basecamp/
+
+# Local email files (dev email mode)
+temp/emails/

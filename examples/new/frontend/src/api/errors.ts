@@ -1,5 +1,11 @@
 import { GraphQLError } from '@/zeus/index.js';
 
+/** Extended GraphQL error entry — Zeus omits `extensions` from its generated types. */
+interface GraphQLErrorEntry {
+  message: string;
+  extensions?: { code?: string; [key: string]: unknown };
+}
+
 // NOTE: These error constants are used outside React context (e.g., in queryClient.ts).
 // Translation should happen at the display/render site where useDynamite() is available.
 // The keys are registered in public/locales/en/common.json for completeness.
@@ -18,13 +24,21 @@ export const getGraphQLErrorMessage = (error: unknown): string => {
   return GENERIC_ERROR;
 };
 
+export const getGraphQLErrorCode = (error: unknown): string | null => {
+  if (error instanceof GraphQLError) {
+    const entry = error.response.errors?.[0] as GraphQLErrorEntry | undefined;
+    return (entry?.extensions?.code as string) ?? null;
+  }
+  return null;
+};
+
 export const isAuthError = (error: unknown): boolean => {
   if (error instanceof GraphQLError) {
     const errors = error.response.errors ?? [];
     for (const err of errors) {
       // Check extensions.code (primary signal — most reliable)
-      const ext = (err as any).extensions;
-      const code = (ext?.code ?? '').toUpperCase();
+      const entry = err as GraphQLErrorEntry;
+      const code = (entry.extensions?.code ?? '').toUpperCase();
       if (code === 'UNAUTHORIZED' || code === 'FORBIDDEN') {
         return true;
       }
