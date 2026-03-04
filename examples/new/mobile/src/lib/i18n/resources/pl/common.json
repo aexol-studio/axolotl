@@ -1,0 +1,82 @@
+{
+  "home": {
+    "title": "Starter mobilny",
+    "listTitle": "Bloki architektury",
+    "listSubtitle": "Gotowe, wielokrotnego uzytku elementy",
+    "listLoading": "Ladowanie listy...",
+    "listErrorTitle": "Lista nie zaladowala sie",
+    "listErrorMessage": "Nie udalo sie pobrac listy kart. Sprobuj odswiezenia.",
+    "listSuspenseFailed": "Przeplyw Suspense listy nie udal sie. Uzyj odswiezania.",
+    "listRefresh": "Odswiez liste",
+    "listRecoveryButton": "Recovery: przycisk {{selected}}",
+    "listRecoveryPull": "Recovery: pull-to-refresh {{selected}}",
+    "listOrientationVertical": "Lista: pionowa {{selected}}",
+    "listOrientationHorizontal": "Lista: pozioma {{selected}}",
+    "showcaseLoading": "Pokaz loading",
+    "showcaseError": "Pokaz blad",
+    "showcaseEmpty": "Pokaz pusty stan",
+    "showcaseSuccess": "Pokaz sukces",
+    "showcaseListError": "Pokaz blad listy",
+    "showcaseListSuspenseFailure": "Pokaz blad suspense listy",
+    "showcaseCardListTitle": "Karty inspirowane referencjami",
+    "showcaseCardListSubtitle": "Tokenizowany, reuzywalny kierunek showcase",
+    "showcaseCardTagDesign": "System designu",
+    "showcaseCardDesignTitle": "Jezyk wizualny oparty o tokeny",
+    "showcaseCardDesignDescription": "Buduj karty na tokenach spacingu, shape i kolorow dla latwego skalowania.",
+    "showcaseCardDesignCta": "Otworz design",
+    "showcaseCardDesignMeta": "Karta AI · gradient · 4 szybkie chipy",
+    "showcaseCardTagForms": "Przeplyw klawiatury",
+    "showcaseCardFormsTitle": "Scaffold formularza gotowy na klawiature",
+    "showcaseCardFormsDescription": "Provider i keyboard-aware komponenty utrzymuja pola widoczne podczas pisania.",
+    "showcaseCardFormsCta": "Otworz formularz",
+    "showcaseCardFormsMeta": "Karta travel · kompaktowe metadane · 2 trasy",
+    "showcaseCardTagFlow": "Odporna lista",
+    "showcaseCardFlowTitle": "Reaktywne warianty listy",
+    "showcaseCardFlowDescription": "Pionowe i poziome warianty listy zachowuja flow suspense/error recovery.",
+    "showcaseCardFlowCta": "Otworz liste",
+    "showcaseCardFlowMeta": "Karta invoice · grupowane chipy · recent activity"
+  },
+  "empty": {
+    "title": "Tu jeszcze nic nie ma",
+    "description": "Uzyj tego szablonu do startu kolejnych modulow."
+  },
+  "actions": {
+    "primary": "Akcja glowna",
+    "changeLanguage": "Przelacz na {{language}}",
+    "retry": "Sprobuj ponownie",
+    "dismiss": "Zamknij"
+  },
+  "auth": {
+    "signInTitle": "Witaj ponownie",
+    "signInSubtitle": "Wybierz wariant CTA i kontynuuj z keyboard-safe flow formularza.",
+    "emailPlaceholder": "Adres e-mail",
+    "continue": "Dalej",
+    "ctaTop": "CTA gora {{selected}}",
+    "ctaSticky": "CTA sticky {{selected}}",
+    "invalidEmail": "Wpisz poprawny adres e-mail",
+    "success": "Zalogowano (symulacja startera)"
+  },
+  "devTranslate": {
+    "title": "Dev translate jest wlaczone",
+    "description": "Brakujace klucze sa widoczne w trybie deweloperskim."
+  },
+  "greeting": {
+    "morning": "Dzien dobry",
+    "day": "Czesc",
+    "evening": "Dobry wieczor"
+  },
+  "states": {
+    "loading": "Ladowanie danych...",
+    "errorTitle": "Cos poszlo nie tak",
+    "emptyTitle": "Brak rekordow",
+    "emptyDescription": "Utworz pierwszy wpis, aby wypelnic ten ekran."
+  },
+  "errors": {
+    "unknown": "Wystapil nieoczekiwany blad.",
+    "network": "Problem z siecia. Sprawdz polaczenie i sprobuj ponownie."
+  },
+  "toast": {
+    "errorTitle": "Zapytanie nieudane",
+    "languageChanged": "Jezyk zmieniono na {{language}}"
+  }
+}

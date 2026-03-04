@@ -344,7 +344,7 @@ frontend/
 - **Co-located hooks** — extracted page/component hooks use `.hook.ts` suffix and live next to their component (e.g., `AuthForm.tsx` + `AuthForm.hook.ts`). The function inside is still `useAuthForm` per React convention. These are distinct from shared hooks in `hooks/` which keep the `useX.ts` naming.
 - **One hook per file** — co-located hooks should export a SINGLE hook per file (not multiple small hooks). All related data fetching and mutations for a view/component should be consolidated into one hook that returns a flat object with all data and mutation results
 
-> **Full guide:** Load the `frontend-components` skill for detailed patterns, examples, and decision flowchart.
+> **Full guide (reference):** Agent routing can apply `frontend-components` guidance automatically; use the skill file as an optional deep-dive reference.
 
 ### Toast Notifications (Sonner)
 
@@ -387,7 +387,7 @@ const MyComponent = () => {
 - Don't translate: brand names, code, URLs
 - Locale stored in cookie (not localStorage/Zustand) — see `frontend-translations` skill
 
-> **Full guide:** Load the `frontend-translations` skill for detailed patterns and rules.
+> **Full guide (reference):** Agent routing can apply `frontend-translations` guidance automatically; use the skill file as an optional deep-dive reference.
 
 ### SSR Patterns (Data Router)
 
@@ -396,7 +396,7 @@ const MyComponent = () => {
 - Data fetch in loader: `await queryClient.fetchQuery(...)` — throws on error → `errorElement`; wrap in `try/catch` for non-fatal public routes
 - Page hydration: `const { dehydratedState } = useLoaderData<typeof loader>()` → `<HydrationBoundary state={dehydratedState}>`
 - Meta tags: return `{ meta: { title, description } }` from loader → auto-injected in `<head>` server-side via `buildMetaHead()`
-- Full reference: load the `vite-ssr` skill
+- Full reference: `vite-ssr` guidance may be auto-routed by agents; consult the skill file when extra detail is needed
 
 ### Frontend Troubleshooting
 
@@ -481,4 +481,27 @@ deleteNote: async ([, , context], { id }) => {
 };
 ```
 
-**Before writing any code, always check available skills for detailed guidance on the topic you're working on.**
+## Mobile Starter Skills (examples/new/mobile)
+
+Ratio-scaling guidance for mobile starter lives in `mobile/AGENTS.md` (local source of truth).
+
+For mobile work in `examples/new/mobile`, agents can auto-route relevant skill guidance; these files are optional references:
+
+- `mobile/.opencode/skills/mobile-starter-architecture/SKILL.md`
+- `mobile/.opencode/skills/mobile-routing-expo-router/SKILL.md`
+- `mobile/.opencode/skills/mobile-components/SKILL.md`
+- `mobile/.opencode/skills/mobile-graphql-react-query-zeus/SKILL.md`
+- `mobile/.opencode/skills/mobile-i18n-dev-translate/SKILL.md`
+
+Mobile scope in this starter is block-based initialization (reusable components/templates/providers/routing/data layer), not full product completion.
+
+**Before writing code, follow AGENTS/instructions first; consult skill files when additional detail is useful (or when agent routing surfaces them).**
+
+## Preemptive Quality-Check (examples/new)
+
+For implementation work in this repository, run quality checks proactively (during coding), not only after completion:
+
+- Optional reference: `.opencode/skills/quality-check/SKILL.md` (agent routing can apply this guidance automatically)
+- Instruction addendum: `.opencode/instructions/10-quality-check-pattern-checks.md`
+
+Apply especially when touching backend/frontend files and lint configuration.

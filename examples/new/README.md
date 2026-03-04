@@ -69,6 +69,14 @@ This starts both the GraphQL backend and React frontend on the same port (http:/
 - React Query for server state
 - Zustand for client state
 
+## Mobile (Expo)
+
+Mobile starter lives in `mobile/` and is designed as reusable init blocks (not full app features).
+
+- Mobile guide: `mobile/README.md`
+- Mobile stack: Expo Router + React Query + Zeus + i18n
+- Before mobile implementation, use skills from `mobile/.opencode/skills/`
+
 ## Architecture
 
 - **Backend**: Express + GraphQL Yoga (served at `/graphql`)

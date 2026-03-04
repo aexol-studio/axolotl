@@ -1,0 +1,82 @@
+{
+  "home": {
+    "title": "Starter Home",
+    "listTitle": "Architecture blocks",
+    "listSubtitle": "Reusable pieces ready to scale",
+    "listLoading": "Loading list...",
+    "listErrorTitle": "List failed to load",
+    "listErrorMessage": "Could not fetch card list. Try explicit refresh.",
+    "listSuspenseFailed": "Suspense list flow failed. Recover using refresh.",
+    "listRefresh": "Refresh list",
+    "listRecoveryButton": "Recovery: button {{selected}}",
+    "listRecoveryPull": "Recovery: pull-to-refresh {{selected}}",
+    "listOrientationVertical": "List: vertical {{selected}}",
+    "listOrientationHorizontal": "List: horizontal {{selected}}",
+    "showcaseLoading": "Show loading",
+    "showcaseError": "Show error",
+    "showcaseEmpty": "Show empty",
+    "showcaseSuccess": "Show success",
+    "showcaseListError": "Show list error",
+    "showcaseListSuspenseFailure": "Show list suspense failure",
+    "showcaseCardListTitle": "Reference-inspired cards",
+    "showcaseCardListSubtitle": "Tokenized, reusable showcase direction",
+    "showcaseCardTagDesign": "Design system",
+    "showcaseCardDesignTitle": "Token-first visual language",
+    "showcaseCardDesignDescription": "Use spacing, shape, and color tokens for scalable card composition.",
+    "showcaseCardDesignCta": "Open design",
+    "showcaseCardDesignMeta": "AI card · gradient · 4 quick chips",
+    "showcaseCardTagForms": "Keyboard flow",
+    "showcaseCardFormsTitle": "Keyboard-ready form scaffold",
+    "showcaseCardFormsDescription": "Provider + keyboard-aware components keep inputs visible while typing.",
+    "showcaseCardFormsCta": "Open form",
+    "showcaseCardFormsMeta": "Travel card · compact metadata · 2 routes",
+    "showcaseCardTagFlow": "List resilience",
+    "showcaseCardFlowTitle": "Reactive list variants",
+    "showcaseCardFlowDescription": "Vertical and horizontal list variants keep suspense/error recovery intact.",
+    "showcaseCardFlowCta": "Open list",
+    "showcaseCardFlowMeta": "Invoice card · grouped chips · recent activity"
+  },
+  "empty": {
+    "title": "Nothing here yet",
+    "description": "Use this template to bootstrap each feature module."
+  },
+  "actions": {
+    "primary": "Primary action",
+    "changeLanguage": "Switch to {{language}}",
+    "retry": "Try again",
+    "dismiss": "Dismiss"
+  },
+  "auth": {
+    "signInTitle": "Welcome back",
+    "signInSubtitle": "Pick your CTA pattern and continue with keyboard-safe form flow.",
+    "emailPlaceholder": "Email address",
+    "continue": "Continue",
+    "ctaTop": "CTA top {{selected}}",
+    "ctaSticky": "CTA sticky {{selected}}",
+    "invalidEmail": "Please enter a valid email address",
+    "success": "Signed in (starter simulation)"
+  },
+  "devTranslate": {
+    "title": "Dev translate is enabled",
+    "description": "Missing keys will be visible in development mode."
+  },
+  "greeting": {
+    "morning": "Good morning",
+    "day": "Hello",
+    "evening": "Good evening"
+  },
+  "states": {
+    "loading": "Loading data...",
+    "errorTitle": "Something went wrong",
+    "emptyTitle": "No records yet",
+    "emptyDescription": "Create your first entry to populate this screen."
+  },
+  "errors": {
+    "unknown": "Something unexpected happened.",
+    "network": "Network issue. Check connection and retry."
+  },
+  "toast": {
+    "errorTitle": "Request failed",
+    "languageChanged": "Language changed to {{language}}"
+  }
+}
