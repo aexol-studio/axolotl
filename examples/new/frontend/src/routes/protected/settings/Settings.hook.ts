@@ -2,13 +2,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useDynamite } from '@aexol/dynamite';
 import { query, mutation, sessionSelector } from '@/api';
+import { queryKeys } from '@/lib/queryKeys.js';
 
 export const useSettings = () => {
   const { t } = useDynamite();
   const queryClient = useQueryClient();
 
   const { data: sessions, isLoading: isLoadingSessions } = useQuery({
-    queryKey: ['sessions'],
+    queryKey: queryKeys.sessions,
     queryFn: async () => {
       const data = await query()({ user: { sessions: sessionSelector } });
       return data.user?.sessions ?? [];
@@ -20,7 +21,7 @@ export const useSettings = () => {
       await mutation()({ user: { revokeSession: [{ sessionId }, true] } });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sessions'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.sessions });
       toast.success(t('Session revoked'));
     },
   });
@@ -30,7 +31,7 @@ export const useSettings = () => {
       await mutation()({ user: { revokeAllSessions: true } });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sessions'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.sessions });
       toast.success(t('All other sessions revoked'));
     },
   });

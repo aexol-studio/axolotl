@@ -20,35 +20,44 @@ React Router v7 **Data Router** — `RouteObject[]` config, not JSX `<Routes>/<R
 Structure:
 
 - Root route (`id: 'root'`) with `<RootLayout />` and `rootLoader`
-- `<GuestLayout />` group → guest routes (`/`, `/login`)
+- `<GuestLayout />` group → guest routes (`/`, `/login`, `/verify-email`)
 - `<ProtectedLayout />` group → protected routes (`/app`, `/settings`)
 - Public routes at root level (`/examples`)
 - `{ path: '*', element: <NotFound /> }` catch-all
 
 To add a route: add a `RouteObject` to the correct group's `children[]` in `routes/index.tsx`.
 
-| Path        | Component   | Auth                    | Group             |
-| ----------- | ----------- | ----------------------- | ----------------- |
-| `/`         | `Landing`   | No (→ `/app` if authed) | `GuestLayout`     |
-| `/login`    | `Login`     | No (→ `/app` if authed) | `GuestLayout`     |
-| `/examples` | `Examples`  | No                      | Public (no wrap)  |
-| `/app`      | `Dashboard` | Yes (→ `/login`)        | `ProtectedLayout` |
-| `/settings` | `Settings`  | Yes (→ `/login`)        | `ProtectedLayout` |
-| `*`         | `NotFound`  | No                      | Root              |
+| Path            | Component     | Auth                    | Group             |
+| --------------- | ------------- | ----------------------- | ----------------- |
+| `/`             | `Landing`     | No (→ `/app` if authed) | `GuestLayout`     |
+| `/login`        | `Login`       | No (→ `/app` if authed) | `GuestLayout`     |
+| `/verify-email` | `VerifyEmail` | No (→ `/app` if authed) | `GuestLayout`     |
+| `/examples`     | `Examples`    | No                      | Public (no wrap)  |
+| `/app`          | `Dashboard`   | Yes (→ `/login`)        | `ProtectedLayout` |
+| `/settings`     | `Settings`    | Yes (→ `/login`)        | `ProtectedLayout` |
+| `*`             | `NotFound`    | No                      | Root              |
 
 ## Auth Guards — Loaders Only
 
+Auth is centralized in `ProtectedLayout` loader — page loaders do data fetching only.
+
 ```tsx
-// isomorphic auth check (use in every loader that needs auth)
-const isAuthenticated =
-  request.headers.get('x-authenticated') === 'true' || // SSR
-  (typeof window !== 'undefined' && useAuthStore.getState().isAuthenticated); // client
+// protected layout loader — extracts per-request queryClient from context
+import { type LoaderFunctionArgs, redirect } from 'react-router';
+import { isAuthenticated, queryClient, type AppLoadContext } from '@/lib/queryClient.js';
 
-// protected loader → throw redirect
-if (!isAuthenticated) throw redirect('/login');
+export const protectedLoader = ({ context }: LoaderFunctionArgs) => {
+  const qc = (context as AppLoadContext | undefined)?.queryClient ?? queryClient;
+  if (!isAuthenticated(qc)) return redirect('/login');
+  return null;
+};
 
-// guest loader → return redirect
-if (isAuthenticated) return redirect('/app');
+// guest loader — redirect if already authenticated
+export const loginLoader = ({ context }: LoaderFunctionArgs) => {
+  const qc = (context as AppLoadContext | undefined)?.queryClient ?? queryClient;
+  if (isAuthenticated(qc)) return redirect('/app');
+  return { meta: { title: 'Sign In', description: '' } };
+};
 ```
 
 ## Navigation
@@ -73,6 +82,7 @@ frontend/src/routes/
 ├── guest/Layout.tsx   # GuestLayout — pure <Outlet />
 ├── guest/landing/     # path: '/'
 ├── guest/login/       # path: '/login'
+├── guest/verify-email/  # path: '/verify-email'
 ├── protected/Layout.tsx  # ProtectedLayout — pure <Outlet />
 ├── protected/dashboard/  # path: '/app'
 ├── protected/settings/   # path: '/settings'
@@ -84,19 +94,19 @@ frontend/src/routes/
 
 - `RouteObject[]` config only — never JSX `<Routes>/<Route>`
 - Auth in loaders — layouts are pure `<Outlet />`
-- Protected: `throw redirect('/login')` — Guest: `return redirect('/app')`
+- Protected: `return redirect('/login')` — Guest: `return redirect('/app')`
 - `.js` extensions in imports — ESM requirement (`from './Layout.js'`)
 - Arrow functions everywhere: `const X = () => {}`
 - Route-scoped components → `routes/{group}/{route}/components/`
 
 ## Quick Reference
 
-| Task                     | Code/Pattern                                                           |
-| ------------------------ | ---------------------------------------------------------------------- |
-| Import router primitives | `import { Link, useNavigate, useLoaderData } from 'react-router'`      |
-| Navigate with link       | `<Link to="/app">Dashboard</Link>`                                     |
-| Redirect component       | `<Navigate to="/" replace />`                                          |
-| Programmatic navigation  | `const navigate = useNavigate(); navigate('/app')`                     |
-| Auth guard (protected)   | `if (!isAuthenticated) throw redirect('/login')` in loader             |
-| Auth guard (guest)       | `if (authed) return redirect('/app')` in loader                        |
-| Add route                | Add `RouteObject` to correct layout's `children` in `routes/index.tsx` |
+| Task                     | Code/Pattern                                                                                                                        |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Import router primitives | `import { Link, useNavigate, useLoaderData } from 'react-router'`                                                                   |
+| Navigate with link       | `<Link to="/app">Dashboard</Link>`                                                                                                  |
+| Redirect component       | `<Navigate to="/" replace />`                                                                                                       |
+| Programmatic navigation  | `const navigate = useNavigate(); navigate('/app')`                                                                                  |
+| Auth guard (protected)   | `const qc = (context as AppLoadContext)?.queryClient ?? queryClient; if (!isAuthenticated(qc)) return redirect('/login')` in loader |
+| Auth guard (guest)       | `const qc = (context as AppLoadContext)?.queryClient ?? queryClient; if (isAuthenticated(qc)) return redirect('/app')` in loader    |
+| Add route                | Add `RouteObject` to correct layout's `children` in `routes/index.tsx`                                                              |

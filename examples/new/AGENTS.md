@@ -5,7 +5,7 @@
 This is a fullstack project with an **Axolotl GraphQL backend** and a **React frontend**.
 
 - **Backend**: Axolotl - a type-safe, schema-first GraphQL framework that generates TypeScript types from your schema
-- **Frontend**: React + Vite + Tailwind CSS v4 + shadcn/ui + Zustand + Zeus (type-safe GraphQL client) + Sonner (toasts)
+- **Frontend**: React + Vite + Tailwind CSS v4 + shadcn/ui + Zeus (type-safe GraphQL client) + Zustand + Sonner (toasts)
 
 ---
 
@@ -35,8 +35,9 @@ project/
 │   │   ├── index.ts      # Server entry point
 │   │   ├── db.ts         # Shared Prisma client
 │   │   ├── context.ts    # AppContext type & AuthUser type
-│   │   ├── config/       # App-specific constants
-│   │   │   └── cookies.ts
+│   │   ├── config/       # App configuration (NOT env vars)
+│   │   │   ├── cookies.ts  # Cookie names, options, locales
+│   │   │   └── email.ts    # Email verification, delivery mode, Mailgun defaults
 │   │   ├── utils/        # Domain-agnostic reusable utilities
 │   │   │   ├── auth.ts
 │   │   │   ├── cookies.ts
@@ -67,10 +68,31 @@ project/
 #### Backend Folder Placement Rules
 
 - **`src/utils/`** — Domain-agnostic utility functions only (auth primitives, cookie parsing, validation helpers). If it's specific to one module, it doesn't belong here.
-- **`src/config/`** — App-specific constants (cookie names, options, supported locales). No functions.
+- **`src/config/`** — Application configuration that is the SAME for all environments. Feature flags, delivery modes, cookie options, supported locales. These are hardcoded values checked into git — NOT read from `process.env`. Only true secrets (API keys) may come from env vars within config files.
 - **`src/context.ts`** — App-level `AppContext` and `AuthUser` types. Not a utility — it's the application contract.
 - **`modules/{name}/lib/`** — Module-specific helpers, types, or domain logic (e.g., AI providers, domain validation schemas).
 - **NEVER** put domain-specific code in `utils/` or `config/`. Move it to the owning module's `lib/` folder.
+
+### Configuration vs Environment Variables
+
+This project distinguishes between **application config** and **environment variables**:
+
+**Application Config** (`backend/src/config/`):
+
+- Hardcoded values that are the SAME across all environments
+- Feature flags: `DISABLE_EMAIL_VERIFICATION`, `EMAIL_MODE`
+- Service defaults: Mailgun URL, cookie options, supported locales
+- Checked into git — changing these is a code change, not a deployment change
+- To adjust for local development convenience, edit the file directly
+
+**Environment Variables** (`.env` files):
+
+- True secrets: `JWT_SECRET`, `MAILGUN_API_KEY`, `OPENAI_API_KEY`, `DATABASE_URL`
+- Production overrides: `APP_URL` (real domain), `PORT`
+- Testing credentials: `TESTING_USER_EMAIL`, `TESTING_USER_PASSWORD`
+- NEVER put feature flags or app behavior toggles in env vars
+
+**Rule:** If a value should be the same in dev, staging, and production — it's config, not an env var. If it varies per environment or is secret — it's an env var.
 
 ### Critical Rules
 
@@ -241,14 +263,13 @@ frontend/
 │   │   │   ├── Button.tsx, Card.tsx, Dialog.tsx, Form.tsx, ...
 │   │   │   └── index.ts
 │   │   └── index.ts
-│   ├── contexts/                # React context providers
-│   │   └── AuthContext.tsx      # Auth context & provider
 │   ├── hooks/                   # Shared data-fetching hooks
 │   │   ├── useAuth.ts           # Authentication logic
 │   │   ├── useIsMobile.ts       # Responsive breakpoint hook
 │   │   └── index.ts
 │   ├── lib/                     # Shared utilities
-│   │   ├── queryClient.ts       # React Query client config
+│   │   ├── queryClient.ts       # React Query client config + isAuthenticated()
+│   │   ├── queryKeys.ts         # Centralized React Query cache keys
 │   │   └── utils.ts             # cn() and general helpers
 │   ├── routes/                  # Route pages & layouts
 │   │   ├── index.tsx            # Route definitions
@@ -291,13 +312,9 @@ frontend/
 │   │   └── not-found/
 │   │       ├── NotFound.page.tsx
 │   │       └── index.ts
-│   ├── stores/                  # Zustand state stores
-│   │   ├── authStore.ts         # Auth state (isAuthenticated)
-│   │   └── index.ts
 │   ├── zeus/                    # Auto-generated (DO NOT EDIT)
 │   │   ├── const.ts
 │   │   └── index.ts
-│   ├── App.tsx                  # Compatibility shim (re-exports RootLayout)
 │   ├── global.d.ts              # Global type declarations
 │   ├── index.css                # Tailwind v4 theme config
 │   ├── entry-client.tsx         # Client hydration entry
@@ -321,18 +338,19 @@ frontend/
 
 1. **ALWAYS use Zeus** for GraphQL communication - never write raw GraphQL queries
 2. **Use the api/ layer** - import from `../api` not directly from Zeus
-3. **Use Zustand stores** for shared state (auth, UI state)
-4. **SSR-safe code** - check `typeof window` before accessing browser APIs
-5. **Use hooks** for data fetching logic - keep components presentational
-6. **ALWAYS define Selectors** for reusable query shapes
-7. **ALWAYS use `FromSelector`** to derive TypeScript types from selectors
-8. **NEVER manually duplicate backend types** - derive them from selectors
-9. **Use `$` function** for GraphQL variables when values come from user input or props
-10. **ALWAYS use semantic color tokens** (`bg-primary`, `text-muted-foreground`, `border-border`, etc.) — avoid hardcoded Tailwind colors (`bg-blue-500`, `text-gray-400`) as they won't respond to theme changes
-11. **PascalCase for React component files** — `AuthForm.tsx`, `ThemeProvider.tsx`, `UserList.tsx`. **Shared hooks** in `hooks/` keep `useX.ts` naming (e.g., `useAuth.ts`, `useIsMobile.ts`). **Co-located hooks** (extracted from a page/component) use `ComponentName.hook.ts` naming (e.g., `Settings.hook.ts`, `AuthForm.hook.ts`). The exported function is still `useComponentName` per React convention.
-12. **Route pages use `.page.tsx` suffix** — each route gets its own folder inside a route group: `routes/guest/landing/Landing.page.tsx`, `routes/protected/dashboard/Dashboard.page.tsx`. Route groups (`guest/`, `protected/`, `public/`) provide shared layouts. Sub-page content without its own route stays as regular `.tsx`
-13. **ALWAYS use arrow functions** — `const MyComponent = () => {}` instead of `function MyComponent() {}`. Applies to components, hooks, handlers, helpers — everything. Only exception: generator functions (`function*`)
-14. **ALL user-visible strings MUST use `useDynamite().t()`** — never hardcode user-facing text. Import `useDynamite` from `@aexol/dynamite`, destructure `t`, and wrap every label, title, message, placeholder, error message, and button text with `t('English text')`. For files outside the React tree (data files, schemas), use the factory pattern: accept `t` as a parameter.
+3. **Use Zustand stores** for shared client state (UI preferences, non-auth state). Auth state lives in React Query `queryKeys.me` cache — see `useAuth` hook.
+4. **ALWAYS use `queryKeys`** from `@/lib/queryKeys.js` for all React Query cache operations — never hardcode strings like `['me']` or `['todos']`. When adding a new query, add its key to `queryKeys` first.
+5. **SSR-safe code** - check `typeof window` before accessing browser APIs
+6. **Use hooks** for data fetching logic - keep components presentational
+7. **ALWAYS define Selectors** for reusable query shapes
+8. **ALWAYS use `FromSelector`** to derive TypeScript types from selectors
+9. **NEVER manually duplicate backend types** - derive them from selectors
+10. **Use `$` function** for GraphQL variables when values come from user input or props
+11. **ALWAYS use semantic color tokens** (`bg-primary`, `text-muted-foreground`, `border-border`, etc.) — avoid hardcoded Tailwind colors (`bg-blue-500`, `text-gray-400`) as they won't respond to theme changes
+12. **PascalCase for React component files** — `AuthForm.tsx`, `ThemeProvider.tsx`, `UserList.tsx`. **Shared hooks** in `hooks/` keep `useX.ts` naming (e.g., `useAuth.ts`, `useIsMobile.ts`). **Co-located hooks** (extracted from a page/component) use `ComponentName.hook.ts` naming (e.g., `Settings.hook.ts`, `AuthForm.hook.ts`). The exported function is still `useComponentName` per React convention.
+13. **Route pages use `.page.tsx` suffix** — each route gets its own folder inside a route group: `routes/guest/landing/Landing.page.tsx`, `routes/protected/dashboard/Dashboard.page.tsx`. Route groups (`guest/`, `protected/`, `public/`) provide shared layouts. Sub-page content without its own route stays as regular `.tsx`
+14. **ALWAYS use arrow functions** — `const MyComponent = () => {}` instead of `function MyComponent() {}`. Applies to components, hooks, handlers, helpers — everything. Only exception: generator functions (`function*`)
+15. **ALL user-visible strings MUST use `useDynamite().t()`** — never hardcode user-facing text. Import `useDynamite` from `@aexol/dynamite`, destructure `t`, and wrap every label, title, message, placeholder, error message, and button text with `t('English text')`. For files outside the React tree (data files, schemas), use the factory pattern: accept `t` as a parameter. See the `frontend-translations` skill for full patterns.
 
 ### Component Architecture
 
@@ -388,8 +406,11 @@ const MyComponent = () => {
 ### SSR Patterns (Data Router)
 
 - Route config in `frontend/src/routes/index.tsx` as `RouteObject[]` — loaders attached per route
-- Loader auth: `request.headers.get('x-authenticated') === 'true'` (SSR) or `useAuthStore.getState().isAuthenticated` (client)
-- Data fetch in loader: `await queryClient.fetchQuery(...)` — throws on error → `errorElement`; wrap in `try/catch` for non-fatal public routes
+- SSR uses per-request `QueryClient` — `entry-server.tsx` creates a fresh instance per request and passes it to loaders via React Router's `requestContext`. No shared singleton on the server.
+- On SSR: cookies forwarded via `createSsrChain` → backend validates JWT through normal GraphQL context
+- Express SSR handler does NO auth — just locale + translations + render
+- Auth state flows through React Query `queryKeys.me` cache only — no Zustand store, no injected globals
+- Data fetch in loader: extract `queryClient` from loader context (falls back to singleton on CSR): `const qc = (context as AppLoadContext)?.queryClient ?? queryClient;` then `await qc.fetchQuery(…)`
 - Page hydration: `const { dehydratedState } = useLoaderData<typeof loader>()` → `<HydrationBoundary state={dehydratedState}>`
 - Meta tags: return `{ meta: { title, description } }` from loader → auto-injected in `<head>` server-side via `buildMetaHead()`
 
@@ -416,14 +437,16 @@ const MyComponent = () => {
 
 ### Frontend Quick Reference
 
-| Task                   | Code                                                    |
-| ---------------------- | ------------------------------------------------------- |
-| Create query           | `query()({ user: { me: { _id: true, email: true } } })` |
-| Create mutation        | `mutation()({ login: [{ email, password }, true] })`    |
-| Access auth state      | `useAuthStore((s) => s.isAuthenticated)`                |
-| Show toast (sonner)    | `toast.success('Done!')`                                |
-| Mutation with args     | `mutation()({ field: [{ arg: value }, selector] })`     |
-| Return scalar directly | `field: [{ args }, true]`                               |
+| Task                    | Code                                                                                         |
+| ----------------------- | -------------------------------------------------------------------------------------------- |
+| Create query            | `query()({ user: { me: { _id: true, email: true } } })`                                      |
+| Create mutation         | `mutation()({ login: [{ email, password }, true] })`                                         |
+| Access auth (component) | `useAuth().isAuthenticated` or `useAuth().user`                                              |
+| Access auth (loader)    | `isAuthenticated(qc)` from `@/lib/queryClient` — pass per-request queryClient in SSR loaders |
+| Query keys              | `import { queryKeys } from '@/lib/queryKeys.js'`                                             |
+| Show toast (sonner)     | `toast.success('Done!')`                                                                     |
+| Mutation with args      | `mutation()({ field: [{ arg: value }, selector] })`                                          |
+| Return scalar directly  | `field: [{ args }, true]`                                                                    |
 
 ---
 
@@ -431,15 +454,46 @@ const MyComponent = () => {
 
 This project uses **JWT+JTI session-based cookie authentication** with a **gateway resolver pattern** for authorization.
 
-**How it works:**
+**Backend auth flow:**
 
 - Passwords hashed with bcrypt (12 rounds). JWTs signed with HS256 containing `{ userId, email, jti }` where `jti` is a session UUID
-- Sessions stored in a `Session` table (Prisma) for server-side revocation. 30-day expiry
-- Tokens sent via httpOnly `Set-Cookie` header — frontend never touches tokens directly. Resolvers set cookies via `context.setCookie(token)` and clear via `context.clearCookie()`
-- Auth check: context builder calls `verifyAuth()` on every request (try/catch, non-throwing) → sets `context.authUser` if valid. Gateway resolvers (`Query.user` / `Mutation.user`) check `context.authUser` exists → throw if not → return `{}`. Domain resolvers access auth data via `context.authUser`
-- Logout: GraphQL mutation `user { logout }` deletes session from DB + clears httpOnly cookie via `context.clearCookie()`
+- Sessions stored in `Session` table (Prisma) for server-side revocation. 30-day expiry
+- Tokens sent via httpOnly `Set-Cookie` header — frontend never touches tokens directly
+- Context builder calls `verifyAuth()` on every request (try/catch, non-throwing) → sets `context.authUser`
+- Gateway resolvers (`Query.user` / `Mutation.user`) check `context.authUser` exists → throw if not → return `{}`
+- Logout: `user { logout }` deletes session from DB + clears cookie via `context.clearCookie()`
 - Password change invalidates all other sessions (keeps current one)
-- SSR: server verifies cookie on every page render, injects `window.__INITIAL_AUTH__ = { isAuthenticated: true/false }`
+
+**SSR auth flow:**
+
+- Express SSR handler does NO auth — just locale + translations + render
+- `entry-server.tsx` creates a per-request QueryClient, detects auth cookie (`COOKIE_NAME` imported from backend config), and seeds `queryKeys.me` before loaders run
+- `loaderQuery` auto-selects SSR chain (forwards cookies via `createSsrChain`) or client chain
+- On SSR: cookies forwarded → backend validates JWT through normal GraphQL context
+- Per-request queryClient is passed to loaders via React Router `requestContext` — child loaders read via `isAuthenticated(qc)`
+- No AuthProvider or Zustand store — React Query cache is the single source of truth
+
+**Client auth flow:**
+
+- HydrationBoundary rehydrates React Query cache from SSR — `queryKeys.me` data available immediately
+- `useAuth()` hook uses `useQuery({ queryKey: queryKeys.me })` — single source of truth
+- `enabled: !!queryClient.getQueryData(queryKeys.me)` remains a guest optimization (guests never auto-refetch `me`)
+- Login/register do not rely on invalidation alone: after success they intentionally run `fetchQuery(queryKeys.me)` for deterministic auth sync before treating the user as authenticated
+- This explicit `fetchQuery` check confirms the backend-set auth cookie without frontend JWT parsing
+- Auth errors (401): React Query global error handler catches → calls logout mutation → clears cache
+
+**Route guards:**
+
+- `protectedLoader`: extracts queryClient from loader context, calls `isAuthenticated(qc)` — redirects to `/login` if not authenticated
+- Guest loaders (login, verify-email): same pattern — `isAuthenticated(qc)` to redirect to `/app` if already authenticated
+- Page loaders (Dashboard, Settings): data fetching ONLY, zero auth logic
+
+**Auth state:**
+
+- React Query `queryKeys.me` cache holds `UserType | null` — single source of truth
+- `useAuth()` hook: `useQuery({ queryKey: queryKeys.me })` + login/register/logout mutations
+- In components: `const { user, isAuthenticated } = useAuth()`
+- In loaders: `isAuthenticated(qc)` where `qc` is extracted from loader context (`@/lib/queryClient`)
 
 **Key files:**
 
@@ -447,13 +501,20 @@ This project uses **JWT+JTI session-based cookie authentication** with a **gatew
 - `backend/src/axolotl.ts` — Context builder: extracts cookie/token → calls `verifyAuth` → sets `authUser`
 - `backend/src/utils/auth.ts` — JWT sign/verify, bcrypt hash/verify, session token generation
 - `backend/src/config/cookies.ts` — `COOKIE_NAME`, `COOKIE_OPTIONS`, locale constants
+- `backend/src/config/email.ts` — `DISABLE_EMAIL_VERIFICATION` flag, `EMAIL_MODE`, Mailgun defaults
 - `backend/src/utils/cookies.ts` — Cookie serialize/parse utilities
 - `backend/src/modules/auth/lib/verifyAuth.ts` — JWT + session verification (used by context builder)
 - `backend/src/modules/auth/resolvers/Query/user.ts` — Gateway: checks `context.authUser`, returns `{}`
 - `backend/src/modules/auth/resolvers/Mutation/user.ts` — Gateway: checks `context.authUser`, returns `{}`
-- `frontend/src/stores/authStore.ts` — `isAuthenticated` boolean from `__INITIAL_AUTH__`
 - `backend/src/modules/users/resolvers/AuthorizedUserMutation/logout.ts` — Logout resolver: deletes session, clears cookie
-- `frontend/src/hooks/useAuth.ts` — Login/register/logout + user query
+- `backend/src/index.ts` — SSR server (zero auth, just rendering)
+- `frontend/src/lib/queryKeys.ts` — Centralized React Query cache keys (`queryKeys.me`, `.todos`, `.notes`, `.sessions`)
+- `frontend/src/lib/queryClient.ts` — QueryClient config, `createQueryClient()` factory, `AppLoadContext` type, global auth error handler, `isAuthenticated(qc?)` helper
+- `frontend/src/hooks/useAuth.ts` — Auth hook: `useQuery({ queryKey: queryKeys.me })` + login/register (uses `fetchQuery` for auth detection)/logout
+- `frontend/src/routes/index.tsx` — Root loader: translations + dehydration (auth seeded by `entry-server.tsx` before loaders)
+- `frontend/src/routes/protected/Layout.tsx` — `protectedLoader`: `isAuthenticated(qc)` guard
+- `frontend/src/api/query.ts` — `loaderQuery(request)` auto-selects SSR/client chain
+- `frontend/src/api/errors.ts` — `GraphQLErrorEntry` typed interface, `getGraphQLErrorMessage()`, `getGraphQLErrorCode()`, `isAuthError()` — no `as any`
 
 **Adding protected resolvers:** Add field to `AuthorizedUserQuery` or `AuthorizedUserMutation` in your domain module's schema, run `axolotl build`, implement resolver using `context.authUser` (access via `([, , context])` destructuring). Auth is already enforced by the gateway — `context.authUser!` is safe to use with non-null assertion. **Every resolver MUST verify the user owns/has access to the resource** using `context.authUser!._id`.
 
@@ -476,6 +537,17 @@ deleteNote: async ([, , context], { id }) => {
 };
 ```
 
+### E2E Testing (Playwright)
+
+- **Config**: `playwright.config.ts` at project root
+- **Test files**: `tests/` directory with `*.spec.ts` files
+- **Infrastructure**: `tests/fixtures.ts` (custom fixtures), `tests/page-objects/` (page objects), `tests/helpers/` (utilities)
+- **Auth setup**: `tests/auth.setup.ts` — creates authenticated browser state
+- **Projects**: `setup` (auth), `chromium` (unauthenticated tests), `chromium-auth` (authenticated tests)
+- **Run**: `npm run test:e2e`, `npm run test:e2e:ui` (interactive), `npm run test:e2e:headed` (visible browser)
+- **Principle**: Consolidate assertions — ONE test per logical flow, navigate ONCE, assert many things. Avoid granular tests that each reload the page.
+
 ## Mobile (examples/new/mobile)
 
 Informacje dotyczące mobile znajdują się w `mobile/AGENTS.md`.
+**Before writing any code, always check available skills for detailed guidance on the topic you're working on.**

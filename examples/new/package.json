@@ -28,6 +28,9 @@
     "seed": "tsx backend/src/prisma/seed.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
     "postinstall": "prisma generate --schema backend/src/prisma/schema.prisma"
   },
   "author": "GraphQL Editor Centaur Generator",
@@ -67,6 +70,7 @@
     "@radix-ui/react-toggle": "^1.1.10",
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@react-email/components": "^1.0.8",
     "@tanstack/react-query": "^5.90.19",
     "ai": "^4.0.0",
     "bcryptjs": "^3.0.3",
@@ -78,11 +82,13 @@
     "dotenv": "^16.5.0",
     "embla-carousel-react": "^8.6.0",
     "express": "^5.1.0",
+    "form-data": "^4.0.5",
     "graphql": "^16.9.0",
     "graphql-yoga": "^5.10.4",
     "input-otp": "^1.4.2",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.563.0",
+    "mailgun.js": "^12.7.0",
     "react": "^19.1.0",
     "react-day-picker": "^9.13.0",
     "react-dom": "^19.1.0",
@@ -100,6 +106,7 @@
   "devDependencies": {
     "@aexol/axolotl": "^2.2.0",
     "@eslint/js": "^9.39.2",
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/vite": "^4.1.8",
     "@tanstack/react-query-devtools": "^5.90.19",
     "@types/bcryptjs": "^2.4.6",
@@ -130,6 +137,5 @@
   "prisma": {
     "schema": "backend/src/prisma/schema.prisma",
     "seed": "tsx backend/src/prisma/seed.ts"
-  },
-  "peerDependencies": {}
+  }
 }

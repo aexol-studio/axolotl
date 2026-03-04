@@ -8,12 +8,14 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  email     String    @unique
-  password  String
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  emailVerified Boolean   @default(false)
   todos     Todo[]
   notes     Note[]
   sessions  Session[]
+  emailVerificationTokens EmailVerificationToken[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -55,4 +57,18 @@ model Note {
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notes")
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("email_verification_tokens")
 }

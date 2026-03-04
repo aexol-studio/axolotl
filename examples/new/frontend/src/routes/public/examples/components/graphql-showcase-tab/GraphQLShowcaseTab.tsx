@@ -12,13 +12,13 @@ import { Separator } from '@/components/ui/Separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table';
 
 import { CodeSnippet } from '@/components/atoms';
+import { useAuth } from '@/hooks';
 
 import { useGraphQLShowcase } from './GraphQLShowcaseTab.hook';
 
 export const GraphQLShowcaseTab = () => {
   const { t } = useDynamite();
   const {
-    isAuthenticated,
     userData,
     isUserLoading,
     userError,
@@ -45,6 +45,7 @@ export const GraphQLShowcaseTab = () => {
     sendAiMessage,
     stopAiStreaming,
   } = useGraphQLShowcase();
+  const { isAuthenticated } = useAuth();
 
   return (
     <div className="space-y-6">

@@ -1,6 +1,7 @@
 import { useLoaderData } from 'react-router';
+import type { LoaderFunctionArgs } from 'react-router';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
-import { queryClient } from '@/lib/queryClient';
+import { queryClient, type AppLoadContext } from '@/lib/queryClient';
 import {
   AlignCenter,
   AlignLeft,
@@ -33,13 +34,16 @@ import { DataDisplaySection, FormsShowcaseTab, GraphQLShowcaseTab, NotesShowcase
 
 // --- Loader ---
 
-export const examplesLoader = () => ({
-  meta: {
-    title: 'Examples — Axolotl Showcase',
-    description: 'Explore components, forms, and live GraphQL examples powered by Axolotl.',
-  },
-  dehydratedState: dehydrate(queryClient),
-});
+export const examplesLoader = ({ context }: LoaderFunctionArgs) => {
+  const qc = (context as AppLoadContext | undefined)?.queryClient ?? queryClient;
+  return {
+    meta: {
+      title: 'Examples — Axolotl Showcase',
+      description: 'Explore components, forms, and live GraphQL examples powered by Axolotl.',
+    },
+    dehydratedState: dehydrate(qc),
+  };
+};
 
 const ExamplesPageContent = () => {
   const { t } = useDynamite();

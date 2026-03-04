@@ -5,10 +5,16 @@ description: GraphQL error extraction, global toast handling via QueryCache/Muta
 
 ## Error Extraction (`frontend/src/api/errors.ts`)
 
+Errors are typed via `GraphQLErrorEntry` interface (in `errors.ts`) — no `as any`:
+
+- `extensions.code` is `string | undefined`
+- `getGraphQLErrorCode(error)` extracts the error code from extensions
+
 ```typescript
-import { getGraphQLErrorMessage, isAuthError } from '../api';
+import { getGraphQLErrorMessage, getGraphQLErrorCode, isAuthError } from '../api';
 
 getGraphQLErrorMessage(error); // → errors[0].message, or "An unexpected error occurred"
+getGraphQLErrorCode(error); // → errors[0].extensions.code, or null
 isAuthError(error); // → true if code is UNAUTHORIZED or FORBIDDEN
 ```
 
@@ -17,14 +23,25 @@ Never access `extensions.originalError` — dev-only, breaks in production.
 ## Global Handlers (`frontend/src/lib/queryClient.ts`)
 
 ```typescript
+import { queryKeys } from './queryKeys.js';
+
+let isHandlingAuthError = false;
+
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
-    onError: (error) => {
-      if (isAuthError(error)) {
+    onError: async (error) => {
+      if (typeof window === 'undefined') return;
+      if (isAuthError(error) && !isHandlingAuthError) {
+        isHandlingAuthError = true;
+
         toast.info('Session expired. Please log in again.');
-        mutation()({ user: { logout: true } }).catch(() => {});
-        useAuthStore.getState().logout();
+
+        await queryClient.cancelQueries();
+        mutation()({ user: { logout: true } }).catch(() => {}); // best-effort (non-awaited)
+
+        queryClient.setQueryData(queryKeys.me, null);
         queryClient.clear();
+        window.location.href = '/login';
       }
     },
   }),
@@ -37,7 +54,7 @@ export const queryClient = new QueryClient({
 });
 ```
 
-- Auth error (any query/mutation) → toast info + auto-logout + cache clear
+- Auth error flow: SSR guard → de-dupe guard → cancel queries → best-effort non-awaited logout mutation → clear auth/cache state → `window.location.href = '/login'`
 - Non-auth mutation error → `toast.error()` with extracted message
 - **Do NOT add `onError` to individual hooks** — the global handler covers it
 
@@ -62,7 +79,7 @@ const createMutation = useMutation({
     /* ... */
   },
   onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['items'] });
+    queryClient.invalidateQueries({ queryKey: queryKeys.items });
     toast.success('Item created!');
     // ⛔ no onError here
   },

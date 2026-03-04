@@ -9,6 +9,9 @@ export const AllTypesProps: Record<string,any> = {
 		},
 		register:{
 
+		},
+		verifyEmail:{
+
 		}
 	},
 	Subscription:{
@@ -83,7 +86,8 @@ export const ReturnTypes: Record<string,any> = {
 	Mutation:{
 		user:"AuthorizedUserMutation",
 		login:"String",
-		register:"String"
+		register:"String",
+		verifyEmail:"String"
 	},
 	resolver:{
 
