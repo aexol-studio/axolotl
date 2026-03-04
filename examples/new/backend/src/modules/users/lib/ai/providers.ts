@@ -1,10 +1,11 @@
 import { createOpenAI } from '@ai-sdk/openai';
+import { OPENAI_API_KEY, OPENAI_BASE_URL } from '@/src/config/env.js';
 
 // Create OpenAI provider with configuration
 export const openai = createOpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: OPENAI_API_KEY,
   // Optional: customize base URL if using Azure or other providers
-  // baseURL: process.env.OPENAI_BASE_URL,
+  ...(OPENAI_BASE_URL ? { baseURL: OPENAI_BASE_URL } : {}),
 });
 
 // Export commonly used models for convenience

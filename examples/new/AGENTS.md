@@ -35,9 +35,9 @@ project/
 │   │   ├── index.ts      # Server entry point
 │   │   ├── db.ts         # Shared Prisma client
 │   │   ├── context.ts    # AppContext type & AuthUser type
-│   │   ├── config/       # App configuration (NOT env vars)
+│   │   ├── config/       # Runtime config + env parsing
 │   │   │   ├── cookies.ts  # Cookie names, options, locales
-│   │   │   └── email.ts    # Email verification, delivery mode, Mailgun defaults
+│   │   │   └── env.ts      # Centralized typed env config + validation
 │   │   ├── utils/        # Domain-agnostic reusable utilities
 │   │   │   ├── auth.ts
 │   │   │   ├── cookies.ts
@@ -68,31 +68,30 @@ project/
 #### Backend Folder Placement Rules
 
 - **`src/utils/`** — Domain-agnostic utility functions only (auth primitives, cookie parsing, validation helpers). If it's specific to one module, it doesn't belong here.
-- **`src/config/`** — Application configuration that is the SAME for all environments. Feature flags, delivery modes, cookie options, supported locales. These are hardcoded values checked into git — NOT read from `process.env`. Only true secrets (API keys) may come from env vars within config files.
+- **`src/config/`** — Runtime configuration layer (typed parsing of env vars + safe defaults). Keep config logic centralized here instead of scattering `process.env` access across modules.
 - **`src/context.ts`** — App-level `AppContext` and `AuthUser` types. Not a utility — it's the application contract.
 - **`modules/{name}/lib/`** — Module-specific helpers, types, or domain logic (e.g., AI providers, domain validation schemas).
 - **NEVER** put domain-specific code in `utils/` or `config/`. Move it to the owning module's `lib/` folder.
 
 ### Configuration vs Environment Variables
 
-This project distinguishes between **application config** and **environment variables**:
+This project uses `backend/src/config/` as a **typed runtime config facade** over env vars.
 
-**Application Config** (`backend/src/config/`):
+**Config Modules** (`backend/src/config/`):
 
-- Hardcoded values that are the SAME across all environments
-- Feature flags: `DISABLE_EMAIL_VERIFICATION`, `EMAIL_MODE`
-- Service defaults: Mailgun URL, cookie options, supported locales
-- Checked into git — changing these is a code change, not a deployment change
-- To adjust for local development convenience, edit the file directly
+- Centralize parsing/validation/defaulting of environment variables in `env.ts`
+- Export normalized values to the rest of the app
+- Keep domain code free of raw `process.env` access
 
 **Environment Variables** (`.env` files):
 
-- True secrets: `JWT_SECRET`, `MAILGUN_API_KEY`, `OPENAI_API_KEY`, `DATABASE_URL`
-- Production overrides: `APP_URL` (real domain), `PORT`
-- Testing credentials: `TESTING_USER_EMAIL`, `TESTING_USER_PASSWORD`
-- NEVER put feature flags or app behavior toggles in env vars
+- Secrets: `JWT_SECRET`, `MAILGUN_API_KEY`, `OPENAI_API_KEY`, `DATABASE_URL`
+- Runtime behavior toggles: `EMAIL_MODE`, `DISABLE_EMAIL_VERIFICATION`
+- Deployment/runtime overrides: `APP_URL`, `PORT`
 
-**Rule:** If a value should be the same in dev, staging, and production — it's config, not an env var. If it varies per environment or is secret — it's an env var.
+**E2E rule:** Playwright test runs always force `EMAIL_MODE=local` so verification flows consume local artifacts from `/temp/emails`, even if external env sets `EMAIL_MODE=mailgun`.
+
+**Rule:** If a value can vary by environment/runtime, model it as an env var and parse it in `src/config/*`.
 
 ### Critical Rules
 
@@ -506,7 +505,7 @@ This project uses **JWT+JTI session-based cookie authentication** with a **gatew
 - `backend/src/axolotl.ts` — Context builder: extracts cookie/token → calls `verifyAuth` → sets `authUser`
 - `backend/src/utils/auth.ts` — JWT sign/verify, bcrypt hash/verify, session token generation
 - `backend/src/config/cookies.ts` — `COOKIE_NAME`, `COOKIE_OPTIONS`, locale constants
-- `backend/src/config/email.ts` — `DISABLE_EMAIL_VERIFICATION` flag, `EMAIL_MODE`, Mailgun defaults
+- `backend/src/config/env.ts` — centralized typed env parsing, defaults, and required validation (DB, JWT, mailgun constraints)
 - `backend/src/utils/cookies.ts` — Cookie serialize/parse utilities
 - `backend/src/modules/auth/lib/verifyAuth.ts` — JWT + session verification (used by context builder)
 - `backend/src/modules/auth/resolvers/Query/user.ts` — Gateway: checks `context.authUser`, returns `{}`
@@ -547,9 +546,18 @@ deleteNote: async ([, , context], { id }) => {
 ### E2E Testing (Playwright)
 
 - **Config**: `playwright.config.ts` at project root
+- **Suite cleanup lifecycle**: E2E cleanup runs before and after the suite via `globalSetup` + `globalTeardown`
+- **Cleanup contract**: when adding a new user-related test resource/table, update E2E cleanup so setup/teardown removes it
 - **Test files**: `tests/` directory with `*.spec.ts` files
 - **Infrastructure**: `tests/fixtures.ts` (custom fixtures), `tests/page-objects/` (page objects), `tests/helpers/` (utilities)
 - **Auth setup**: `tests/auth.setup.ts` — creates authenticated browser state
 - **Projects**: `setup` (auth), `chromium` (unauthenticated tests), `chromium-auth` (authenticated tests)
+- **Agent guidance**: load skill `e2e-playwright` for concise E2E rules and execution checklist
+- **Mandatory AI rule**: if code changes, update/add corresponding E2E tests and run relevant E2E checks (full suite when behavior changes)
 - **Run**: `npm run test:e2e`, `npm run test:e2e:ui` (interactive), `npm run test:e2e:headed` (visible browser)
 - **Principle**: Consolidate assertions — ONE test per logical flow, navigate ONCE, assert many things. Avoid granular tests that each reload the page.
+
+### Documentation Drift Check (Mandatory)
+
+- After implementing changes, check whether `AGENTS.md` and relevant skills need updates when patterns/rules changed.
+- If updates are needed, include them in the same task/PR (do not defer).

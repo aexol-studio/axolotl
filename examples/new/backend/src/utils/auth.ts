@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
 import { COOKIE_OPTIONS } from '@/src/config/cookies.js';
+import { IS_PRODUCTION, JWT_SECRET } from '@/src/config/env.js';
 
 const BCRYPT_ROUNDS = 12;
 
@@ -23,11 +24,11 @@ export interface JwtPayload {
  * Throws in production if missing; uses a dev fallback otherwise.
  */
 const getJwtSecret = (): string => {
-  const secret = process.env.JWT_SECRET;
+  const secret = JWT_SECRET;
 
   if (secret) return secret;
 
-  if (process.env.NODE_ENV === 'production') {
+  if (IS_PRODUCTION) {
     throw new Error('JWT_SECRET environment variable is required in production');
   }
 

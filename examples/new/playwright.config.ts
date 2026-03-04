@@ -12,9 +12,16 @@ const __dirname = path.dirname(__filename);
  * - Fall back to local dev server at http://localhost:8080
  */
 const E2E_URL = process.env.E2E_URL;
-const LOCAL_URL = 'http://localhost:8080';
+const LOCAL_PORT = process.env.PORT || '8080';
+const LOCAL_URL = `http://localhost:${LOCAL_PORT}`;
 const baseURL = E2E_URL || LOCAL_URL;
 const isLocalDev = !E2E_URL;
+const isCI = !!process.env.CI;
+
+/**
+ * E2E must always use local email artifacts (/temp/emails).
+ */
+process.env.EMAIL_MODE = 'local';
 
 /**
  * Storage state file path for authenticated sessions
@@ -27,21 +34,24 @@ const USER_AUTH_FILE = path.join(__dirname, '.playwright', 'user-auth.json');
 export default defineConfig({
   testDir: './tests',
   globalSetup: './tests/global-setup.ts',
+  globalTeardown: './tests/global-teardown.ts',
 
-  /* Run tests in files in parallel */
-  fullyParallel: !process.env.CI,
+  /*
+   * Always-parallel policy (local + CI):
+   * keep full parallelism enabled and rely on test isolation patterns
+   * (unique test data + explicit empty storageState contexts where needed)
+   * instead of globally reducing workers.
+   */
+  fullyParallel: true,
 
   /* Fail the build on CI if you accidentally left test.only in the source code. */
-  forbidOnly: !!process.env.CI,
+  forbidOnly: isCI,
 
   /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
-
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  retries: isCI ? 2 : 0,
 
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: process.env.CI ? 'dot' : 'html',
+  reporter: isCI ? 'dot' : 'html',
 
   /* Global timeout for each test */
   timeout: 60_000,
@@ -110,6 +120,10 @@ export default defineConfig({
         webServer: {
           command: 'npm run dev',
           url: LOCAL_URL,
+          env: {
+            ...(process.env as Record<string, string>),
+            EMAIL_MODE: 'local',
+          },
           reuseExistingServer: !process.env.CI,
           timeout: 120_000,
         },

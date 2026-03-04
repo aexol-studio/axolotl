@@ -16,9 +16,13 @@ import { test, expect } from './fixtures';
 test.describe('Dashboard page', () => {
   test('page structure — heading, input, button, and sections', async ({ dashboardPage, page }) => {
     await dashboardPage.goto();
+    await dashboardPage.waitForReady();
 
     // Main heading
     await expect(dashboardPage.heading).toBeVisible({ timeout: 15_000 });
+
+    // Route-level error boundary should not be present
+    await expect(dashboardPage.errorBoundaryHeading).toBeHidden();
 
     // Todo input and Add button
     await expect(dashboardPage.todoInput).toBeVisible();
@@ -33,6 +37,9 @@ test.describe('Dashboard page', () => {
   test('user-specific content — welcome message and footer', async ({ dashboardPage, page }) => {
     await dashboardPage.goto();
     await dashboardPage.waitForReady();
+
+    // Route-level error boundary should not be present
+    await expect(dashboardPage.errorBoundaryHeading).toBeHidden();
 
     // Welcome text displays "Welcome, {email}"
     const welcomeText = await dashboardPage.getWelcomeText();

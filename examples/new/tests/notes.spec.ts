@@ -8,65 +8,117 @@
  */
 
 import { test, expect } from './fixtures';
-import { generateNoteContent, ROUTES } from './helpers';
-import { waitForPageReady } from './fixtures';
+import type { Page } from '@playwright/test';
+import { LoginPage, NotesPage } from './page-objects';
+import { generateNoteContent, readAuthSetupUser, ROUTES } from './helpers';
+
+const ensureAuthenticatedNotesCreateControls = async (params: { notesPage: NotesPage; page: Page }) => {
+  const { notesPage, page } = params;
+  const hasCreateInput = await notesPage.createInput.isVisible().catch(() => false);
+
+  if (hasCreateInput) {
+    return;
+  }
+
+  const hasGuestState = await notesPage.guestStateMessage.isVisible().catch(() => false);
+
+  if (!hasGuestState) {
+    await expect(notesPage.createInput).toBeVisible({ timeout: 10_000 });
+    await expect(notesPage.createSubmit).toBeVisible({ timeout: 10_000 });
+    return;
+  }
+
+  const { email, password } = readAuthSetupUser();
+  const loginPage = new LoginPage(page);
+
+  await loginPage.goto();
+  await loginPage.waitForReady();
+  await loginPage.login(email, password);
+  await page.waitForURL(`**${ROUTES.DASHBOARD}`, { timeout: 30_000 });
+
+  await notesPage.goto();
+  await notesPage.openNotesTab();
+  await expect(notesPage.createInput).toBeVisible({ timeout: 10_000 });
+  await expect(notesPage.createSubmit).toBeVisible({ timeout: 10_000 });
+};
 
 // ============================================================================
 // Notes CRUD operations
 // ============================================================================
 
 test.describe('Notes CRUD', () => {
-  test('can create notes', async ({ page }) => {
-    await page.goto(ROUTES.EXAMPLES);
-    await waitForPageReady(page);
+  test('can create notes', async ({ notesPage, page }) => {
+    await notesPage.goto();
+    await notesPage.openNotesTab();
 
-    // Open the Notes tab
-    await page.getByRole('tab', { name: 'Notes' }).click();
-    await expect(page.getByText('Your Notes')).toBeVisible({ timeout: 10_000 });
-
-    // The authenticated create form should be visible
-    await expect(page.getByText('Create a Note')).toBeVisible();
-    await expect(page.getByPlaceholder('Write a note...')).toBeVisible();
-    await expect(page.getByRole('button', { name: /Create Note/ })).toBeVisible();
+    await ensureAuthenticatedNotesCreateControls({ notesPage, page });
 
     // Create a note and verify it appears with an Active badge
     const noteText = generateNoteContent();
-    await page.getByPlaceholder('Write a note...').fill(noteText);
-    await page.getByRole('button', { name: /Create Note/ }).click();
+    await notesPage.createNote(noteText);
 
-    const noteItem = page.locator('li').filter({ hasText: noteText });
+    const noteItem = notesPage.getNoteByText(noteText);
     await expect(noteItem).toBeVisible({ timeout: 10_000 });
     await expect(noteItem.getByText('Active')).toBeVisible();
 
     // Input should be cleared after successful creation
-    await expect(page.getByPlaceholder('Write a note...')).toHaveValue('');
+    await expect(notesPage.createInput).toHaveValue('');
   });
 
-  test('can delete notes without affecting others', async ({ page }) => {
-    await page.goto(ROUTES.EXAMPLES);
-    await waitForPageReady(page);
+  test('can delete notes without affecting others', async ({ notesPage, page }) => {
+    await notesPage.goto();
+    await notesPage.openNotesTab();
 
-    // Open the Notes tab
-    await page.getByRole('tab', { name: 'Notes' }).click();
-    await expect(page.getByText('Your Notes')).toBeVisible({ timeout: 10_000 });
+    await ensureAuthenticatedNotesCreateControls({ notesPage, page });
 
     // Create two notes
     const noteToKeep = generateNoteContent('Keep Me');
-    await page.getByPlaceholder('Write a note...').fill(noteToKeep);
-    await page.getByRole('button', { name: /Create Note/ }).click();
-    await expect(page.getByText(noteToKeep)).toBeVisible({ timeout: 10_000 });
+    await notesPage.createNote(noteToKeep);
+    await expect(notesPage.getNoteByText(noteToKeep)).toBeVisible({ timeout: 10_000 });
 
     const noteToDelete = generateNoteContent('Delete Me');
-    await page.getByPlaceholder('Write a note...').fill(noteToDelete);
-    await page.getByRole('button', { name: /Create Note/ }).click();
-    await expect(page.getByText(noteToDelete)).toBeVisible({ timeout: 10_000 });
+    await notesPage.createNote(noteToDelete);
+    await expect(notesPage.getNoteByText(noteToDelete)).toBeVisible({ timeout: 10_000 });
 
     // Delete only the second note
-    const noteItem = page.locator('li').filter({ hasText: noteToDelete });
-    await noteItem.getByLabel('Delete note').click();
+    await notesPage.getDeleteButtonByNoteText(noteToDelete).click();
 
     // The deleted note should be gone, the other should remain
-    await expect(page.getByText(noteToDelete)).not.toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText(noteToKeep)).toBeVisible();
+    await expect(notesPage.getNoteByText(noteToDelete)).toHaveCount(0, { timeout: 10_000 });
+    await expect(notesPage.getNoteByText(noteToKeep)).toBeVisible();
+  });
+});
+
+test.describe('Notes negative paths', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test('guest sees notes unauthenticated state and no create controls', async ({ notesPage }) => {
+    await notesPage.goto();
+    await notesPage.openNotesTab();
+
+    await expect(notesPage.guestStateMessage).toBeVisible({ timeout: 10_000 });
+    await expect(notesPage.createForm).toHaveCount(0);
+    await expect(notesPage.createInput).toHaveCount(0);
+    await expect(notesPage.createSubmit).toHaveCount(0);
+  });
+});
+
+test.describe('Notes validation', () => {
+  test('invalid note submission shows validation error and does not create note', async ({ notesPage }) => {
+    await notesPage.goto();
+    await notesPage.openNotesTab();
+
+    const validControlNote = generateNoteContent('Validation Control Note');
+    await notesPage.createNote(validControlNote);
+    await expect(notesPage.getNoteByText(validControlNote)).toBeVisible({ timeout: 10_000 });
+
+    const baselineCount = await notesPage.notesItems.count();
+
+    await notesPage.createInput.fill('');
+    await notesPage.createSubmit.click();
+
+    await expect(notesPage.validationError).toBeVisible({ timeout: 10_000 });
+    await expect(notesPage.notesItems).toHaveCount(baselineCount);
+    await expect(notesPage.getNoteByText(validControlNote)).toBeVisible();
   });
 });
