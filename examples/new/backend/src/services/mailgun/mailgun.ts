@@ -1,17 +1,17 @@
 /**
  * Email Service — Mailgun Integration with Local Development Mode
  *
- * Environment Variables:
- * - EMAIL_MODE: Controls email sending behavior
+ * Application Config:
+ * - EMAIL_MODE controls email sending behavior
  *   - "local" (default): Save emails as HTML files to temp/emails/ (development/testing)
  *   - "mailgun": Send emails via Mailgun API (production)
  *
- * When EMAIL_MODE=local:
+ * When EMAIL_MODE is "local" in app config:
  * - Emails are saved to temp/emails/ with timestamp and subject in filename
  * - Email metadata (to, from, subject) is included as HTML comment
  * - No Mailgun API keys required
  *
- * When EMAIL_MODE=mailgun:
+ * When EMAIL_MODE is "mailgun" in app config:
  * - Emails are sent via Mailgun API
  * - Requires: MAILGUN_API_KEY, MAILGUN_URL, MAILGUN_DOMAIN, MAILGUN_SENDER
  */
@@ -21,11 +21,11 @@ import Mailgun from 'mailgun.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { EMAIL_MODE, MAILGUN_API_KEY, MAILGUN_DOMAIN, MAILGUN_SENDER, MAILGUN_URL } from '@/src/config/email.js';
+import { EMAIL_MODE, MAILGUN_API_KEY, MAILGUN_DOMAIN, MAILGUN_SENDER, MAILGUN_URL } from '@/src/config/env.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-/** Project root — 3 levels up from backend/src/services/mailgun/ */
-const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..');
+
+const STARTER_APP_ROOT = path.resolve(__dirname, '..', '..', '..');
 
 export interface EmailResponse {
   success: boolean;
@@ -58,11 +58,11 @@ const getMailgunClient = (): ReturnType<Mailgun['client']> | null => {
 
 /**
  * Save email HTML to local temp folder for development/testing.
- * Files are saved to temp/emails/ relative to the project root.
+ * Files are saved to temp/emails/ at the starter app root.
  */
 const sendViaLocalFile = async ({ to, subject, html }: SendEmailOptions): Promise<EmailResponse> => {
   try {
-    const tempDir = path.join(PROJECT_ROOT, 'temp', 'emails');
+    const tempDir = path.join(STARTER_APP_ROOT, 'temp', 'emails');
 
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });
@@ -126,7 +126,7 @@ const sendViaMailgun = async ({ to, subject, html }: SendEmailOptions): Promise<
 /**
  * Send an email using the configured mode (local file or Mailgun API).
  *
- * In local mode, saves an HTML file to <project-root>/temp/emails/ for easy inspection.
+ * In local mode, saves an HTML file to <starter-app-root>/temp/emails/ for easy inspection.
  * In mailgun mode, sends via the Mailgun API.
  */
 export const sendEmail = async (options: SendEmailOptions): Promise<EmailResponse> => {

@@ -5,7 +5,7 @@ import { createResolvers } from '../../axolotl.js';
 import { prisma } from '@/src/db.js';
 import { hashPassword, signToken, generateSessionToken, getSessionExpiryDate } from '@/src/utils/auth.js';
 import { parseInput, emailSchema, passwordSchema } from '@/src/utils/validation.js';
-import { DISABLE_EMAIL_VERIFICATION } from '@/src/config/email.js';
+import { DISABLE_EMAIL_VERIFICATION } from '@/src/config/env.js';
 import { sendVerificationEmail } from '@/src/services/mailgun/templates/renderVerificationEmail.js';
 
 const registerSchema = z.object({
@@ -55,7 +55,7 @@ export default createResolvers({
         // Set auth cookie on the response so the browser stores the JWT automatically
         context.setCookie(jwt);
 
-        return jwt;
+        return 'Account created successfully';
       }
 
       // Flag ON: create unverified user + verification token, send email, no session/cookie

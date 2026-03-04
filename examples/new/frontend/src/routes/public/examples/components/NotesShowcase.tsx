@@ -89,7 +89,10 @@ export const NotesShowcase = () => {
 
           {/* Not authenticated */}
           {!isAuthenticated && (
-            <p className="text-sm text-muted-foreground rounded-md border border-dashed p-4 text-center">
+            <p
+              className="text-sm text-muted-foreground rounded-md border border-dashed p-4 text-center"
+              data-testid="notes-guest-state"
+            >
               Log in to create and view notes.
             </p>
           )}
@@ -103,13 +106,17 @@ export const NotesShowcase = () => {
 
           {/* Notes list */}
           {isAuthenticated && !isLoading && notes.length > 0 && (
-            <ul className="space-y-2">
+            <ul className="space-y-2" data-testid="notes-list">
               {notes.map((note) => {
                 // Zeus maps the ID scalar to `any`, which becomes `unknown` via FromSelector.
                 // Cast once here — the value is always a string at runtime.
                 const noteId = note.id as string;
                 return (
-                  <li key={noteId} className="flex items-start justify-between gap-3 rounded-md border p-3">
+                  <li
+                    key={noteId}
+                    className="flex items-start justify-between gap-3 rounded-md border p-3"
+                    data-testid="notes-list-item"
+                  >
                     <div className="min-w-0 flex-1 space-y-1">
                       <p className="text-sm text-foreground break-words">{note.content}</p>
                       <div className="flex items-center gap-2">
@@ -126,6 +133,7 @@ export const NotesShowcase = () => {
                         disabled={isDeleting}
                         onClick={() => deleteNote(noteId)}
                         aria-label="Delete note"
+                        data-testid="notes-delete-button"
                       >
                         {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                       </Button>
@@ -146,7 +154,7 @@ export const NotesShowcase = () => {
               <h4 className="text-sm font-medium text-muted-foreground">Create a Note</h4>
 
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3" data-testid="notes-create-form">
                   <FormField
                     control={form.control}
                     name="content"
@@ -154,14 +162,20 @@ export const NotesShowcase = () => {
                       <FormItem>
                         <FormLabel>Content</FormLabel>
                         <FormControl>
-                          <Input placeholder="Write a note..." autoComplete="off" disabled={isCreating} {...field} />
+                          <Input
+                            placeholder="Write a note..."
+                            autoComplete="off"
+                            disabled={isCreating}
+                            data-testid="notes-create-input"
+                            {...field}
+                          />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage data-testid="notes-create-content-error" />
                       </FormItem>
                     )}
                   />
 
-                  <Button type="submit" disabled={isCreating}>
+                  <Button type="submit" disabled={isCreating} data-testid="notes-create-submit">
                     {isCreating ? <Loader2 className="h-4 w-4 animate-spin" /> : <NotebookPen className="h-4 w-4" />}
                     {isCreating ? 'Creating...' : 'Create Note'}
                   </Button>

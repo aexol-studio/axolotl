@@ -2,11 +2,12 @@ import { createSubscriptionHandler } from '@aexol/axolotl-core';
 import { createResolvers } from '../../axolotl.js';
 import { streamText, CoreMessage } from 'ai';
 import { gpt4oMini } from '../../lib/ai/index.js';
+import { OPENAI_API_KEY } from '@/src/config/env.js';
 
 export default createResolvers({
   Subscription: {
     aiChat: createSubscriptionHandler(async function* (_, { messages, system }) {
-      if (!process.env.OPENAI_API_KEY) {
+      if (!OPENAI_API_KEY) {
         yield { content: 'Error: OPENAI_API_KEY is not configured', done: true };
         return;
       }

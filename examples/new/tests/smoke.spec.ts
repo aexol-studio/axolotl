@@ -13,7 +13,22 @@
  */
 
 import { test, expect } from './fixtures';
+import type { Locator, Page } from '@playwright/test';
 import { ROUTES } from './helpers';
+
+const ensureAuthenticatedTopNav = async (params: { userMenuTrigger: Locator; myTodosLink: Locator; page: Page }) => {
+  const { userMenuTrigger, myTodosLink, page } = params;
+  const hasAuthenticatedNav = await userMenuTrigger.isVisible().catch(() => false);
+
+  if (hasAuthenticatedNav) {
+    return;
+  }
+
+  await page.reload();
+  await page.waitForURL(`**${ROUTES.DASHBOARD}`, { timeout: 15_000 });
+  await expect(myTodosLink).toBeVisible({ timeout: 10_000 });
+  await expect(userMenuTrigger).toBeVisible({ timeout: 10_000 });
+};
 
 // ============================================================================
 // Unauthenticated Smoke Tests
@@ -83,6 +98,12 @@ test.describe('Unauthenticated smoke tests', () => {
 // ============================================================================
 
 test.describe('Authenticated smoke tests', () => {
+  test('authenticated users are redirected away from guest login route', async ({ page }) => {
+    await page.goto(ROUTES.LOGIN);
+    await page.waitForURL(`**${ROUTES.DASHBOARD}`, { timeout: 15_000 });
+    await expect(page).toHaveURL(new RegExp(ROUTES.DASHBOARD));
+  });
+
   test('authenticated app structure', async ({ dashboardPage, page }) => {
     await dashboardPage.goto();
 
@@ -97,19 +118,26 @@ test.describe('Authenticated smoke tests', () => {
     await expect(header).toBeVisible();
     await expect(header.getByRole('link', { name: 'Axolotl' })).toBeVisible();
 
-    const nav = page.locator('nav');
-    await expect(nav.getByText(/My Todos/i)).toBeVisible();
-    await expect(nav.getByText(/Examples/i)).toBeVisible();
+    const myTodosLink = page.getByRole('link', { name: /My Todos/i });
+    const examplesLink = page.getByRole('link', { name: /Examples/i });
+
+    await ensureAuthenticatedTopNav({
+      userMenuTrigger: dashboardPage.userMenuTrigger,
+      myTodosLink,
+      page,
+    });
+
+    await expect(myTodosLink).toBeVisible();
+    await expect(examplesLink).toBeVisible();
 
     // Avatar dropdown contains Settings and Logout
-    const avatarButton = page.locator('button').filter({ has: page.locator('[class*="avatar"]') });
-    await avatarButton.click();
+    await dashboardPage.openUserMenu();
 
-    await expect(page.getByRole('menuitem', { name: /Settings/i })).toBeVisible();
-    await expect(page.getByRole('menuitem', { name: /Logout/i })).toBeVisible();
+    await expect(dashboardPage.userMenuSettingsAction).toBeVisible();
+    await expect(dashboardPage.userMenuLogoutAction).toBeVisible();
 
     // Navigate to Settings via dropdown
-    await page.getByRole('menuitem', { name: /Settings/i }).click();
+    await dashboardPage.userMenuSettingsAction.click();
     await page.waitForURL(`**${ROUTES.SETTINGS}`, { timeout: 15_000 });
     await expect(page).toHaveURL(new RegExp(ROUTES.SETTINGS));
 

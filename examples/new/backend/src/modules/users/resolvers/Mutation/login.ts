@@ -4,7 +4,7 @@ import { createResolvers } from '../../axolotl.js';
 import { prisma } from '@/src/db.js';
 import { verifyPassword, signToken, generateSessionToken, getSessionExpiryDate } from '@/src/utils/auth.js';
 import { parseInput, emailSchema, passwordSchema } from '@/src/utils/validation.js';
-import { DISABLE_EMAIL_VERIFICATION } from '@/src/config/email.js';
+import { DISABLE_EMAIL_VERIFICATION } from '@/src/config/env.js';
 
 const loginSchema = z.object({ email: emailSchema, password: passwordSchema });
 

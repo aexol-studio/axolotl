@@ -1,13 +1,14 @@
 export {
+  followVerificationPathFromLocalEmail,
   generateTestEmail,
   extractLinkFromEmail,
+  extractVerificationPath,
   extractVerificationLink,
   getVerificationLinkFromLocalEmail,
+  isEmailVerificationDisabled,
   waitForVerificationLink,
 } from './email';
 export {
-  TESTING_USER_EMAIL,
-  TESTING_USER_PASSWORD,
   E2E_URL,
   GRAPHQL_URL,
   ROUTES,
@@ -15,3 +16,5 @@ export {
   generateNoteContent,
   generateTestPassword,
 } from './test-data';
+export { readAuthSetupUser, saveAuthSetupUser } from './auth-setup-user';
+export { completeRegistrationAuthFlow } from './auth-flow';

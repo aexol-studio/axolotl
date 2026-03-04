@@ -105,7 +105,11 @@ export const TopNav = () => {
           {isAuthenticated && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                <Button
+                  variant="ghost"
+                  className="relative h-9 w-9 rounded-full"
+                  data-testid="topnav-user-menu-trigger"
+                >
                   <Avatar className="h-8 w-8">
                     <AvatarFallback>{getUserInitial(user?.email)}</AvatarFallback>
                   </Avatar>
@@ -118,12 +122,12 @@ export const TopNav = () => {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild className="cursor-pointer">
-                  <Link to="/settings">
+                  <Link to="/settings" data-testid="topnav-user-menu-settings">
                     <SettingsIcon className="h-4 w-4" />
                     <span>{t('Settings')}</span>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={logout} className="cursor-pointer">
+                <DropdownMenuItem onClick={logout} className="cursor-pointer" data-testid="topnav-user-menu-logout">
                   <LogOut className="h-4 w-4" />
                   <span>{t('Logout')}</span>
                 </DropdownMenuItem>

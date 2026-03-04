@@ -1,4 +1,5 @@
 import type { Page, Locator } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { waitForPageReady } from '../fixtures';
 import { ROUTES } from '../helpers';
 
@@ -41,11 +42,13 @@ export class LoginPage {
   /** Switch to Login mode (if not already) */
   async switchToLogin() {
     await this.loginToggle.click();
+    await expect(this.submitButton).toHaveText(/Sign In/i);
   }
 
   /** Switch to Register mode */
   async switchToRegister() {
     await this.registerToggle.click();
+    await expect(this.submitButton).toHaveText(/Sign Up/i);
   }
 
   /**

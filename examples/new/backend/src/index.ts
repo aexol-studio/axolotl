@@ -9,16 +9,17 @@ import resolvers from '@/src/resolvers.js';
 import directives from './directives.js';
 import { parseCookies, getLocaleFromCookies } from './utils/cookies.js';
 import { prisma } from './db.js';
+import { IS_PRODUCTION, PORT } from './config/env.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = IS_PRODUCTION;
 
 // Cached production assets
 const templateHtml = isProduction ? await fs.readFile(resolve(__dirname, '../dist/client/index.html'), 'utf-8') : '';
 
 const startServer = async () => {
   const app = express();
-  const port = parseInt(process.env.PORT || '8080', 10);
+  const port = PORT;
 
   // Parse cookies from request headers
   app.use((req, _res, next) => {

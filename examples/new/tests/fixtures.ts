@@ -1,7 +1,7 @@
 import { test as base, expect, type Page } from '@playwright/test';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { LoginPage, DashboardPage, SettingsPage } from './page-objects';
+import { LoginPage, DashboardPage, SettingsPage, NotesPage } from './page-objects';
 
 // ESM-compatible __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -19,22 +19,17 @@ export const USER_AUTH_FILE = path.join(__dirname, '..', '.playwright', 'user-au
 // ============================================================================
 
 /**
- * Safe page load helper that avoids networkidle hanging issues in Firefox/WebKit.
- * Uses domcontentloaded with a small buffer for React hydration instead of networkidle.
+ * Deterministic page readiness helper.
+ *
+ * Waits for DOM content to load and for the document readiness state to move
+ * past the initial "loading" phase. This avoids fixed sleeps while still
+ * providing a stable baseline before page-specific assertions.
  *
  * @param page - The Playwright Page instance
- * @param options - Optional timeout override
  */
-export const waitForPageReady = async (page: Page, options?: { timeout?: number }) => {
-  const timeout = options?.timeout ?? 30_000;
-  try {
-    // Use domcontentloaded — it's more reliable than networkidle on Firefox/WebKit
-    await page.waitForLoadState('domcontentloaded', { timeout });
-    // Small buffer for React hydration
-    await page.waitForTimeout(300);
-  } catch {
-    // If that fails, just continue — the page might be ready enough
-  }
+export const waitForPageReady = async (page: Page) => {
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForFunction(() => document.readyState === 'interactive' || document.readyState === 'complete');
 };
 
 // ============================================================================
@@ -52,6 +47,8 @@ interface TestFixtures {
   dashboardPage: DashboardPage;
   /** SettingsPage page object — pre-constructed with the current page */
   settingsPage: SettingsPage;
+  /** NotesPage page object — pre-constructed with the current page */
+  notesPage: NotesPage;
 }
 
 /**
@@ -82,6 +79,10 @@ export const test = base.extend<TestFixtures>({
 
   settingsPage: async ({ page }, use) => {
     await use(new SettingsPage(page));
+  },
+
+  notesPage: async ({ page }, use) => {
+    await use(new NotesPage(page));
   },
 });
 

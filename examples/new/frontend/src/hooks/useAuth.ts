@@ -22,6 +22,13 @@ export const useAuth = () => {
   const { t } = useDynamite();
   const queryClient = useQueryClient();
 
+  const fetchFreshMe = () =>
+    queryClient.fetchQuery({
+      queryKey: queryKeys.me,
+      queryFn: fetchMe,
+      staleTime: 0,
+    });
+
   // Single source of truth: React Query cache for queryKeys.me
   // - SSR populates the cache (either user data or null) via root loader
   // - HydrationBoundary rehydrates it on the client
@@ -68,13 +75,10 @@ export const useAuth = () => {
     try {
       if (mode === 'register') {
         const result = await registerMutation.mutateAsync({ email, password });
-        // Always try to fetch `me` — if backend set an auth cookie, this returns user data.
-        // Uses fetchQuery to bypass the `enabled` guard on the `me` query (which is false for guests).
+        // Always force a fresh `me` fetch after register.
+        // This avoids relying on invalidation and bypasses the guest `enabled` guard.
         try {
-          const meData = await queryClient.fetchQuery({
-            queryKey: queryKeys.me,
-            queryFn: fetchMe,
-          });
+          const meData = await fetchFreshMe();
           if (meData) {
             toast.success(t('Account created successfully!'));
             return { status: 'authenticated' };
@@ -86,10 +90,7 @@ export const useAuth = () => {
         return { status: 'verification_required', message: result };
       } else {
         await loginMutation.mutateAsync({ email, password });
-        const meData = await queryClient.fetchQuery({
-          queryKey: queryKeys.me,
-          queryFn: fetchMe,
-        });
+        const meData = await fetchFreshMe();
         if (!meData) {
           return { status: 'error' };
         }
