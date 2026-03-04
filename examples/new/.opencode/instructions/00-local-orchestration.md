@@ -24,8 +24,3 @@ This local instruction set is **additive only**.
 4. **Minimal local config/docs changes**
    - Prefer short, targeted instruction updates.
    - Keep `opencode.jsonc` minimal and valid JSONC.
-
-5. **Preemptive quality-check usage**
-   - Agent routing may auto-apply `.opencode/skills/quality-check/SKILL.md` guidance for backend/frontend/config changes; use the skill file as optional reference when deeper detail is needed.
-   - Treat pattern checks as implementation-time guardrails, not just end-of-task lint.
-   - Use `.opencode/instructions/10-quality-check-pattern-checks.md` as local checklist for anti-pattern prevention.

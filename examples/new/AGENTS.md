@@ -250,7 +250,7 @@ frontend/
 │   ├── lib/                     # Shared utilities
 │   │   ├── queryClient.ts       # React Query client config
 │   │   └── utils.ts             # cn() and general helpers
-│   ├── routes/                  # Route pages & layouts  # See frontend-navigation skill for full route details
+│   ├── routes/                  # Route pages & layouts
 │   │   ├── index.tsx            # Route definitions
 │   │   ├── RootLayout.tsx       # Root route layout
 │   │   ├── MetaUpdater.tsx      # Client-side document.title updater
@@ -332,7 +332,7 @@ frontend/
 11. **PascalCase for React component files** — `AuthForm.tsx`, `ThemeProvider.tsx`, `UserList.tsx`. **Shared hooks** in `hooks/` keep `useX.ts` naming (e.g., `useAuth.ts`, `useIsMobile.ts`). **Co-located hooks** (extracted from a page/component) use `ComponentName.hook.ts` naming (e.g., `Settings.hook.ts`, `AuthForm.hook.ts`). The exported function is still `useComponentName` per React convention.
 12. **Route pages use `.page.tsx` suffix** — each route gets its own folder inside a route group: `routes/guest/landing/Landing.page.tsx`, `routes/protected/dashboard/Dashboard.page.tsx`. Route groups (`guest/`, `protected/`, `public/`) provide shared layouts. Sub-page content without its own route stays as regular `.tsx`
 13. **ALWAYS use arrow functions** — `const MyComponent = () => {}` instead of `function MyComponent() {}`. Applies to components, hooks, handlers, helpers — everything. Only exception: generator functions (`function*`)
-14. **ALL user-visible strings MUST use `useDynamite().t()`** — never hardcode user-facing text. Import `useDynamite` from `@aexol/dynamite`, destructure `t`, and wrap every label, title, message, placeholder, error message, and button text with `t('English text')`. For files outside the React tree (data files, schemas), use the factory pattern: accept `t` as a parameter. See the `frontend-translations` skill for full patterns.
+14. **ALL user-visible strings MUST use `useDynamite().t()`** — never hardcode user-facing text. Import `useDynamite` from `@aexol/dynamite`, destructure `t`, and wrap every label, title, message, placeholder, error message, and button text with `t('English text')`. For files outside the React tree (data files, schemas), use the factory pattern: accept `t` as a parameter.
 
 ### Component Architecture
 
@@ -343,8 +343,6 @@ frontend/
 - **Promote when shared** — if a route-scoped component starts being used by multiple routes, move it to the atomic design system
 - **Co-located hooks** — extracted page/component hooks use `.hook.ts` suffix and live next to their component (e.g., `AuthForm.tsx` + `AuthForm.hook.ts`). The function inside is still `useAuthForm` per React convention. These are distinct from shared hooks in `hooks/` which keep the `useX.ts` naming.
 - **One hook per file** — co-located hooks should export a SINGLE hook per file (not multiple small hooks). All related data fetching and mutations for a view/component should be consolidated into one hook that returns a flat object with all data and mutation results
-
-> **Full guide (reference):** Agent routing can apply `frontend-components` guidance automatically; use the skill file as an optional deep-dive reference.
 
 ### Toast Notifications (Sonner)
 
@@ -385,9 +383,7 @@ const MyComponent = () => {
 - Use `t('English text')` for ALL labels, titles, buttons, messages, placeholders, error messages, toasts
 - Factory pattern for data files/schemas outside React tree: `const getData = (t: (key: string) => string) => ...`
 - Don't translate: brand names, code, URLs
-- Locale stored in cookie (not localStorage/Zustand) — see `frontend-translations` skill
-
-> **Full guide (reference):** Agent routing can apply `frontend-translations` guidance automatically; use the skill file as an optional deep-dive reference.
+- Locale stored in cookie (not localStorage/Zustand)
 
 ### SSR Patterns (Data Router)
 
@@ -396,7 +392,6 @@ const MyComponent = () => {
 - Data fetch in loader: `await queryClient.fetchQuery(...)` — throws on error → `errorElement`; wrap in `try/catch` for non-fatal public routes
 - Page hydration: `const { dehydratedState } = useLoaderData<typeof loader>()` → `<HydrationBoundary state={dehydratedState}>`
 - Meta tags: return `{ meta: { title, description } }` from loader → auto-injected in `<head>` server-side via `buildMetaHead()`
-- Full reference: `vite-ssr` guidance may be auto-routed by agents; consult the skill file when extra detail is needed
 
 ### Frontend Troubleshooting
 
@@ -481,27 +476,6 @@ deleteNote: async ([, , context], { id }) => {
 };
 ```
 
-## Mobile Starter Skills (examples/new/mobile)
+## Mobile (examples/new/mobile)
 
-Ratio-scaling guidance for mobile starter lives in `mobile/AGENTS.md` (local source of truth).
-
-For mobile work in `examples/new/mobile`, agents can auto-route relevant skill guidance; these files are optional references:
-
-- `mobile/.opencode/skills/mobile-starter-architecture/SKILL.md`
-- `mobile/.opencode/skills/mobile-routing-expo-router/SKILL.md`
-- `mobile/.opencode/skills/mobile-components/SKILL.md`
-- `mobile/.opencode/skills/mobile-graphql-react-query-zeus/SKILL.md`
-- `mobile/.opencode/skills/mobile-i18n-dev-translate/SKILL.md`
-
-Mobile scope in this starter is block-based initialization (reusable components/templates/providers/routing/data layer), not full product completion.
-
-**Before writing code, follow AGENTS/instructions first; consult skill files when additional detail is useful (or when agent routing surfaces them).**
-
-## Preemptive Quality-Check (examples/new)
-
-For implementation work in this repository, run quality checks proactively (during coding), not only after completion:
-
-- Optional reference: `.opencode/skills/quality-check/SKILL.md` (agent routing can apply this guidance automatically)
-- Instruction addendum: `.opencode/instructions/10-quality-check-pattern-checks.md`
-
-Apply especially when touching backend/frontend files and lint configuration.
+Informacje dotyczące mobile znajdują się w `mobile/AGENTS.md`.

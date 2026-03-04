@@ -16,18 +16,16 @@ Apply these checks whenever changes touch:
 
 ## Implementation-time checklist
 
-1. Before coding, identify relevant quality-check patterns; agent routing may auto-apply `quality-check` guidance, with the skill file as optional reference.
-2. While coding, actively avoid:
+1. While coding, actively avoid:
    - `as any` casts
    - hardcoded user-visible toast strings
    - raw JSX user-facing text not wrapped with `t(...)`
-3. After edits, run lint for validation and classify violations:
+2. After edits, run lint for validation and classify violations:
    - new violations introduced by this change
    - pre-existing baseline violations
 
 ## ESLint policy (local)
 
-- Enforce practical anti-pattern checks through local quality-check rules.
 - Keep rules high-signal and avoid wide noisy bans.
 - Prefer staged strictness:
   - `error`: clear anti-patterns (`as any`, hardcoded toast literals)
@@ -38,6 +36,5 @@ Apply these checks whenever changes touch:
 Each implementation report should include:
 
 - changed files
-- quality-check rules wired/enabled
 - lint result summary
 - explicit baseline-vs-introduced classification for any violations
