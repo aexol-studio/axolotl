@@ -34,7 +34,8 @@ const remapPackages = async () => {
     roots.map(async (relative) => {
       const root = path.join(process.cwd(), relative);
       try {
-        const dir = await fs.readdir(root);
+        const entries = await fs.readdir(root, { withFileTypes: true });
+        const dir = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
         return { root, dir };
       } catch (error) {
         const err = error as NodeJS.ErrnoException;
@@ -47,14 +48,22 @@ const remapPackages = async () => {
   );
   const allJsons = await Promise.all(
     dirs.map(async ({ dir, root }) => {
-      const all = await Promise.all(
-        dir.map(async (p) => {
-          const packagePath = path.join(root, p, 'package.json');
+      const all: { packageJSON: PackageJSON; packagePath: string }[] = [];
+      for (const p of dir) {
+        const packagePath = path.join(root, p, 'package.json');
+        try {
           const packageJSONString = await fs.readFile(packagePath, 'utf-8');
           const packageJSON = JSON.parse(packageJSONString) as PackageJSON;
-          return { packageJSON, packagePath };
-        }),
-      );
+          all.push({ packageJSON, packagePath });
+        } catch (error) {
+          const err = error as NodeJS.ErrnoException;
+          if (err.code === 'ENOENT') {
+            console.warn(`Skipping "${path.join(root, p)}" because package.json is missing`);
+            continue;
+          }
+          throw err;
+        }
+      }
       return all;
     }),
   );
