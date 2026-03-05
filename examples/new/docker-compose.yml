@@ -1,6 +1,6 @@
-# Standalone Docker deployment for yoga-federated example
+# Standalone Docker deployment for the new starter
 # Run: docker-compose up --build
-name: axolotl-yoga-federated
+name: axolotl-new
 services:
   db:
     image: pgvector/pgvector:pg16

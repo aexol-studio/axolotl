@@ -1,21 +1,28 @@
 # Development
 
 To develop locally:
+
 - This is an npm workspaces monorepo.
 - Build in workspace order when needed:
+
 ```sh
 npm run build --ws --if-present
 ```
-- To run the federation example:
+
+- To run the `new` starter (includes micro-federation with GraphQL Yoga):
+
 ```sh
-npm run start -w examples/yoga-federated
+npm run dev -w examples/new
 ```
 
 ## Repository
 
 ### Adapters
+
 Place to develop adapters for popular Node.js frameworks.
+
 #### How to write adapter
+
 ```ts
 import { AxolotlAdapter } from '@aexol/axolotl-core';
 ```
@@ -24,4 +31,5 @@ Wrap your adapter with `AxolotlAdapter(...)` and map raw framework inputs to
 Axolotl resolver signatures.
 
 ### Examples
+
 Place to experiment with Axolotl and its packages.

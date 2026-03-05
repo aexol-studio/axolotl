@@ -16,7 +16,7 @@ Use this file to brief any AI coding agent before they work in the Axolotl repos
 - `packages/cli` – `@aexol/axolotl` CLI used for scaffolding, builds, inspections, and AI helpers.
 - `packages/config` – shared configuration, loaded by the CLI for AI commands.
 - `adapters/graphql-yoga` – the only adapter in the repo; bridges Axolotl resolvers to GraphQL Yoga.
-- `examples/yoga-federated` – canonical example for running Axolotl with Yoga and module composition.
+- `examples/new` – canonical fullstack example: GraphQL Yoga + micro-federation (auth, users, todos, notes), Prisma, React SSR frontend.
 - `deno/` – Deno-compatible output and samples (still active).
 - `docs/` – Next.js documentation site (this file lives here).
 
@@ -53,6 +53,7 @@ Install locally with `npm i -g @aexol/axolotl` or use `npx`.
 
 - Adapter entrypoint: `adapters/graphql-yoga/index.ts`.
 - Create resolvers:
+
   ```ts
   import { Axolotl } from '@aexol/axolotl-core';
   import { graphqlYogaAdapter } from '@aexol/axolotl-graphql-yoga';
@@ -65,6 +66,7 @@ Install locally with `npm i -g @aexol/axolotl` or use `npx`.
     Query: { hello: () => 'world' },
   });
   ```
+
 - Start server:
   ```ts
   const { server } = graphqlYogaAdapter({ resolvers }).adapter({ resolvers });
@@ -72,7 +74,7 @@ Install locally with `npm i -g @aexol/axolotl` or use `npx`.
   ```
 - To extend context types use `graphqlYogaWithContextAdapter<Ctx>()` and provide a per-request `context` factory.
 - Scalars/directives come from `createScalars` / `createDirectives` in `@aexol/axolotl-core`.
-- See `examples/yoga-federated/src/server.ts` for the full pipeline (schema, models, resolvers, server).
+- See `examples/new/backend/src/index.ts` for the full pipeline (schema, models, resolvers, server).
 
 ## Quickstart: New Axolotl + Yoga Project
 
@@ -92,7 +94,7 @@ Adjust the root `package.json` `workspaces` array if you add new folders under `
 - Forgetting to rerun `axolotl build` after schema edits causes stale TS types.
 - Missing `.ts` file extensions in ESM imports breaks runtime resolution.
 - AI commands fail silently if `@aexol/axolotl-config` can’t find required credentials; check environment variables first.
-- Examples assume port `4000`; free it before running `npm -w examples/yoga-federated run dev`.
+- Examples assume port `8080`; free it before running `npm -w examples/new run dev`.
 
 ## Sharing This With Agents
 

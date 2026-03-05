@@ -11,7 +11,7 @@ graph LR
     m_docs["docs\n(docs)"]
     m_adapters_graphql_yoga["@aexol/axolotl-graphql-yoga\n(adapters/graphql-yoga)"]
     m_root["@aexol/axolotl-engine\n(.)"]
-    m_examples_yoga_federated["yoga-federated\n(examples/yoga-federated)"]
+    m_examples_new["new-starter\n(examples/new)"]
     m_packages_core["@aexol/axolotl-core\n(packages/core)"]
     m_packages_config["@aexol/axolotl-config\n(packages/config)"]
     m_packages_cli["@aexol/axolotl\n(packages/cli)"]
@@ -85,22 +85,19 @@ graph LR
   m_root-->t_tsx
   m_root-->t_typescript_transform_paths
   m_root-->t_wrangler
-  m_examples_yoga_federated-->t_typescript
-  m_examples_yoga_federated-->t_aexol_axolotl_core
-  m_examples_yoga_federated-->t_graphql_yoga
-  m_examples_yoga_federated-->t_graphql
-  m_examples_yoga_federated-->t_node_fetch
-  m_examples_yoga_federated-->t_ws
-  m_examples_yoga_federated-->t_eslint
-  m_examples_yoga_federated-->t_jiti
-  m_examples_yoga_federated-->t_prettier
-  m_examples_yoga_federated-->t_ts_patch
-  m_examples_yoga_federated-->t_tsx
-  m_examples_yoga_federated-->t_typescript_transform_paths
-  m_examples_yoga_federated-->t_aexol_axolotl
-  m_examples_yoga_federated-->t_nodemon
-  m_examples_yoga_federated-->t_globals
-  m_examples_yoga_federated-->t_playwright
+  m_examples_new-->t_typescript
+  m_examples_new-->t_aexol_axolotl_core
+  m_examples_new-->t_graphql_yoga
+  m_examples_new-->t_graphql
+  m_examples_new-->t_eslint
+  m_examples_new-->t_prettier
+  m_examples_new-->t_ts_patch
+  m_examples_new-->t_tsx
+  m_examples_new-->t_typescript_transform_paths
+  m_examples_new-->t_aexol_axolotl
+  m_examples_new-->t_nodemon
+  m_examples_new-->t_globals
+  m_examples_new-->t_playwright
   m_packages_core-->t_graphql
   m_packages_config-->t_config_maker
   m_packages_cli-->t_aexol_axolotl_core
@@ -115,14 +112,15 @@ graph LR
   m_packages_cli-->t_ora
   %% Module -> Module edges (internal dependencies)
   m_adapters_graphql_yoga-->m_packages_core
-  m_examples_yoga_federated-->m_packages_core
-  m_examples_yoga_federated-->m_adapters_graphql_yoga
-  m_examples_yoga_federated-->m_packages_cli
+  m_examples_new-->m_packages_core
+  m_examples_new-->m_adapters_graphql_yoga
+  m_examples_new-->m_packages_cli
   m_packages_cli-->m_packages_config
   m_packages_cli-->m_packages_core
 ```
 
 ## @aexol/axolotl-engine (.)
+
 - ESLint: @eslint/js, @typescript-eslint/eslint-plugin, @typescript-eslint/parser, eslint, eslint-config-prettier, eslint-plugin-prettier, typescript-eslint
 - glob: glob
 - GraphQL: graphql
@@ -140,11 +138,13 @@ graph LR
 - ws: ws
 
 ## @aexol/axolotl-graphql-yoga (adapters/graphql-yoga)
+
 - @aexol/axolotl-core: @aexol/axolotl-core
 - GraphQL: @graphql-tools/utils, graphql
 - GraphQL Yoga: graphql-yoga
 
 ## docs (docs)
+
 - autoprefixer: autoprefixer
 - Next.js: next
 - nextra: nextra
@@ -155,25 +155,27 @@ graph LR
 - tailwindcss: tailwindcss
 - TypeScript: typescript
 
-## yoga-federated (examples/yoga-federated)
+## new-starter (examples/new)
+
 - @aexol/axolotl: @aexol/axolotl
 - @aexol/axolotl-core: @aexol/axolotl-core
 - ESLint: @eslint/js, @typescript-eslint/eslint-plugin, @typescript-eslint/parser, eslint, eslint-config-prettier, eslint-plugin-prettier, typescript-eslint
 - globals: globals
 - GraphQL: @aexol/axolotl-graphql-yoga, graphql
 - GraphQL Yoga: graphql-yoga
-- jiti: jiti
-- node-fetch: node-fetch
 - nodemon: nodemon
-- Playwright: playwright
+- Playwright: @playwright/test
 - Prettier: prettier
+- Prisma: prisma, @prisma/client
+- React: react, react-dom
 - ts-patch: ts-patch
 - tsx: tsx
 - TypeScript: typescript
 - typescript-transform-paths: typescript-transform-paths
-- ws: ws
+- Vite: vite
 
 ## @aexol/axolotl (packages/cli)
+
 - @aexol/axolotl-config: @aexol/axolotl-config
 - @aexol/axolotl-core: @aexol/axolotl-core
 - @modelcontextprotocol/sdk: @modelcontextprotocol/sdk
@@ -186,10 +188,13 @@ graph LR
 - ora: ora
 
 ## @aexol/axolotl-config (packages/config)
+
 - config-maker: config-maker
 
 ## @aexol/axolotl-core (packages/core)
+
 - GraphQL: @graphql-tools/utils, graphql, graphql-js-tree
 
 ## @aexol/axolotl-scripts (packages/scripts)
+
 - (no recognized technologies)

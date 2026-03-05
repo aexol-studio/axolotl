@@ -1488,14 +1488,20 @@ export default mergeAxolotls(usersResolvers, ...otherResolvers);
 
 ### Running the Federation Example
 
-The repository includes a complete federated example:
+The repository includes a complete federated example in `examples/new` — a fullstack app with GraphQL Yoga, micro-federation (auth, users, todos, notes modules), Prisma, and a React SSR frontend:
 
 ```bash
 # Navigate to the example
-cd examples/yoga-federated
+cd examples/new
 
 # Install dependencies (if not already done at root)
 npm install
+
+# Start the database
+docker-compose up -d
+
+# Push the schema
+npm run db:push
 
 # Generate models
 npm run models
@@ -1504,22 +1510,20 @@ npm run models
 npm run dev
 ```
 
-Visit `http://localhost:4002/graphql` and try these operations:
+Visit `http://localhost:8080/graphql` and try these operations:
 
 ```graphql
 # Register a user
 mutation Register {
-  register(username: "user", password: "password")
+  register(email: "user@example.com", password: "password")
 }
 
-# Login (returns token)
+# Login (returns token via httpOnly cookie)
 mutation Login {
-  login(username: "user", password: "password")
+  login(email: "user@example.com", password: "password")
 }
 
-# Set the token in headers: { "token": "your-token-here" }
-
-# Create a todo
+# Create a todo (requires auth cookie)
 mutation CreateTodo {
   user {
     createTodo(content: "Learn Axolotl Federation")
@@ -1531,7 +1535,7 @@ query MyData {
   user {
     me {
       _id
-      username
+      email
     }
     todos {
       _id

@@ -10,7 +10,7 @@ npx axolotl build
 The `-m/--models` and `-s/--schema` flags are supported; if omitted, the CLI
 prompts for paths and saves them into `axolotl.json` for future runs.
 
-Based on the [yoga-federated example](/examples/yoga-federated) run `axolotl build`:
+Based on the [new starter example](/examples/new) run `axolotl build`:
 
 Axolotl writes `axolotl.json` with the paths used to build models. Example:
 
@@ -28,25 +28,26 @@ for end‑to‑end setups.
 
 Config supports built‑in micro‑federation. When `federation` is provided, the
 CLI:
-1) generates models for each subgraph,
-2) merges schemas into a supergraph saved at `schema`,
-3) generates supergraph models.
 
-See the [yoga-federated example](/examples/yoga-federated).
+1. generates models for each subgraph,
+2. merges schemas into a supergraph saved at `schema`,
+3. generates supergraph models.
+
+See the [new starter example](/examples/new).
 
 ```json filename="axolotl.json"
 {
-    "schema": "schema.graphql",
-    "models": "src/models.ts",
-    "federation":[
-        {
-            "schema":"src/beers/schema.graphql",
-            "models":"src/beers/models.ts"
-        },
-        {
-            "schema":"src/shop/schema.graphql",
-            "models":"src/shop/models.ts"
-        }
-    ]
+  "schema": "schema.graphql",
+  "models": "src/models.ts",
+  "federation": [
+    {
+      "schema": "src/beers/schema.graphql",
+      "models": "src/beers/models.ts"
+    },
+    {
+      "schema": "src/shop/schema.graphql",
+      "models": "src/shop/models.ts"
+    }
+  ]
 }
 ```
