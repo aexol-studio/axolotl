@@ -1,30 +1,45 @@
-import { TFunction } from 'i18next';
-import { Pressable, StyleSheet } from 'react-native';
+import { TFunction } from 'i18next'
+import { Pressable, StyleSheet } from 'react-native'
 
-import { AppText } from '../../../components/primitives/AppText';
-import { useAppTheme } from '../../../theme';
-import { HomeStateMode, ListFailureMode, ListOrientation, ListRecoveryMode } from '../types';
+import { AppText } from '../../../components/primitives/AppText'
+import { useAppTheme } from '../../../theme'
+import {
+  HomeButtonVariant,
+  HomeStateMode,
+  ListFailureMode,
+  ListOrientation,
+  ListRecoveryMode,
+  ShowcaseCardVariant,
+} from '../types'
 
 type HomeControlsProps = {
-  t: TFunction;
-  listRecoveryMode: ListRecoveryMode;
-  listOrientation: ListOrientation;
-  setForcedMode: (mode: HomeStateMode) => void;
-  forceError: () => void;
-  handleTriggerListFailure: (mode: Exclude<ListFailureMode, 'success'>) => void;
-  handleSetListRecoveryMode: (mode: ListRecoveryMode) => void;
-  handleSetListOrientation: (orientation: ListOrientation) => void;
-  handleListRefresh: () => Promise<void>;
-};
+  t: TFunction
+  listRecoveryMode: ListRecoveryMode
+  listOrientation: ListOrientation
+  setForcedMode: (mode: HomeStateMode) => void
+  forceError: () => void
+  handleTriggerListFailure: (mode: Exclude<ListFailureMode, 'success'>) => void
+  handleSetListRecoveryMode: (mode: ListRecoveryMode) => void
+  handleSetListOrientation: (orientation: ListOrientation) => void
+  handleListRefresh: () => Promise<void>
+  buttonVariant: HomeButtonVariant
+  setButtonVariant: (variant: HomeButtonVariant) => void
+  showcaseCardVariant: ShowcaseCardVariant
+  setShowcaseCardVariant: (variant: ShowcaseCardVariant) => void
+}
 
 type HomeControlButtonProps = {
-  testID: string;
-  label: string;
-  onPress: () => void;
-};
+  testID: string
+  label: string
+  onPress: () => void
+}
 
-function HomeControlButton({ testID, label, onPress }: HomeControlButtonProps) {
-  const { colors, shape, spacing } = useAppTheme();
+const HomeControlButton = ({
+  testID,
+  label,
+  onPress,
+}: HomeControlButtonProps) => {
+  const { colors, shape, spacing } = useAppTheme()
 
   return (
     <Pressable
@@ -44,10 +59,10 @@ function HomeControlButton({ testID, label, onPress }: HomeControlButtonProps) {
     >
       <AppText variant="body">{label}</AppText>
     </Pressable>
-  );
+  )
 }
 
-export function HomeControls({
+export const HomeControls = ({
   t,
   listRecoveryMode,
   listOrientation,
@@ -57,7 +72,11 @@ export function HomeControls({
   handleSetListRecoveryMode,
   handleSetListOrientation,
   handleListRefresh,
-}: HomeControlsProps) {
+  buttonVariant,
+  setButtonVariant,
+  showcaseCardVariant,
+  setShowcaseCardVariant,
+}: HomeControlsProps) => {
   return (
     <>
       <HomeControlButton
@@ -65,7 +84,11 @@ export function HomeControls({
         label={t('common.home.showcaseLoading')}
         onPress={() => setForcedMode('loading')}
       />
-      <HomeControlButton testID="home-show-error-btn" label={t('common.home.showcaseError')} onPress={forceError} />
+      <HomeControlButton
+        testID="home-show-error-btn"
+        label={t('common.home.showcaseError')}
+        onPress={forceError}
+      />
       <HomeControlButton
         testID="home-show-empty-btn"
         label={t('common.home.showcaseEmpty')}
@@ -113,16 +136,74 @@ export function HomeControls({
         testID="home-show-success-btn"
         label={t('common.home.showcaseSuccess')}
         onPress={() => {
-          setForcedMode('success');
-          void handleListRefresh();
+          setForcedMode('success')
+          void handleListRefresh()
         }}
       />
+
+      <HomeControlButton
+        testID="home-button-variant-soft-btn"
+        label={t('common.home.buttonVariantSoft', {
+          selected: buttonVariant === 'soft' ? '✓' : '',
+        })}
+        onPress={() => setButtonVariant('soft')}
+      />
+      <HomeControlButton
+        testID="home-button-variant-solid-btn"
+        label={t('common.home.buttonVariantSolid', {
+          selected: buttonVariant === 'solid' ? '✓' : '',
+        })}
+        onPress={() => setButtonVariant('solid')}
+      />
+      <HomeControlButton
+        testID="home-button-variant-outline-btn"
+        label={t('common.home.buttonVariantOutline', {
+          selected: buttonVariant === 'outline' ? '✓' : '',
+        })}
+        onPress={() => setButtonVariant('outline')}
+      />
+      <HomeControlButton
+        testID="home-button-variant-ghost-btn"
+        label={t('common.home.buttonVariantGhost', {
+          selected: buttonVariant === 'ghost' ? '✓' : '',
+        })}
+        onPress={() => setButtonVariant('ghost')}
+      />
+      <HomeControlButton
+        testID="home-button-variant-danger-btn"
+        label={t('common.home.buttonVariantDanger', {
+          selected: buttonVariant === 'danger' ? '✓' : '',
+        })}
+        onPress={() => setButtonVariant('danger')}
+      />
+
+      <HomeControlButton
+        testID="home-card-variant-elevated-btn"
+        label={t('common.home.cardVariantElevated', {
+          selected: showcaseCardVariant === 'elevated' ? '✓' : '',
+        })}
+        onPress={() => setShowcaseCardVariant('elevated')}
+      />
+      <HomeControlButton
+        testID="home-card-variant-outlined-btn"
+        label={t('common.home.cardVariantOutlined', {
+          selected: showcaseCardVariant === 'outlined' ? '✓' : '',
+        })}
+        onPress={() => setShowcaseCardVariant('outlined')}
+      />
+      <HomeControlButton
+        testID="home-card-variant-compact-btn"
+        label={t('common.home.cardVariantCompact', {
+          selected: showcaseCardVariant === 'compact' ? '✓' : '',
+        })}
+        onPress={() => setShowcaseCardVariant('compact')}
+      />
     </>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   miniAction: {
     borderWidth: 1,
   },
-});
+})

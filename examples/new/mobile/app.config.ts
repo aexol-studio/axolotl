@@ -1,4 +1,4 @@
-import { ConfigContext, ExpoConfig } from 'expo/config';
+import { ConfigContext, ExpoConfig } from 'expo/config'
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -14,4 +14,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     bundleIdentifier: 'com.aexol-studio.axolotl-mobile',
   },
-});
+  extra: {
+    graphqlUrl:
+      process.env.EXPO_PUBLIC_GRAPHQL_URL ?? 'http://localhost:4002/graphql',
+  },
+})

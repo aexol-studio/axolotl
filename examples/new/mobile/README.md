@@ -32,9 +32,25 @@ npm install
 npm run start
 ```
 
+## Backend prerequisites (for starter demo)
+
+Starter demo auth/todo flows use real GraphQL operations from generated Zeus types.
+
+1. Start backend from `examples/new/backend`.
+2. Ensure GraphQL endpoint is reachable (default expected by mobile: `http://localhost:4002/graphql`).
+3. Ensure Zeus files are generated (user noted they are already built).
+
 ## Expo Config
 
 - Project uses typed Expo config in `app.config.ts`.
+- GraphQL URL is configured via `extra.graphqlUrl` in `app.config.ts`:
+
+```bash
+EXPO_PUBLIC_GRAPHQL_URL=http://localhost:4002/graphql
+```
+
+If env var is missing, mobile falls back to `http://localhost:4002/graphql`.
+
 - Validate resolved public config with:
 
 ```bash
@@ -62,6 +78,102 @@ mobile/
       onesignal/            # Opt-in setup template + manifest
       mixpanel/             # Opt-in setup template + manifest
 ```
+
+## Custom mobile primitives
+
+This starter includes reusable custom primitives (mobile-only):
+
+- custom Reanimated slider (`AppSlider`)
+- extended button variants (`PrimaryButton`)
+- list strategy + orientation wrappers (`CardList`, `FlashCardList`, `StaticCardList`)
+- prop-driven showcase card variants (`ShowcaseCard`)
+
+Detailed API and usage notes are documented in:
+
+- `docs/mobile-primitives.md`
+
+## Feature wave additions (todo + onboarding + spotlight)
+
+- **Persistent onboarding/tour state**: `src/stores/onboardingStore.ts`
+  - `hasCompletedOnboarding`
+  - `hasCompletedSpotlightTour`
+  - complete/reset actions persisted with AsyncStorage
+- **Todo flow screen**: `app/(tabs)/todo.tsx` + `src/screens/todo/**`
+  - reusable section/composer/filter/item/list components
+  - backend-backed operations: load todos, create todo, mark done (`todoOps.markDone`)
+  - UI adapts to backend starter capability (no delete mutation in demo flow)
+- **Onboarding flow**: `app/onboarding.tsx` + `src/screens/onboarding/OnboardingScreen.tsx`
+  - native horizontal paging via `ScrollView pagingEnabled`
+  - progress bar from active page index
+  - skip/next/finish with persisted completion flag
+- **Spotlight/coachmark**: `src/features/spotlight/**`
+  - provider + target wrapper + overlay
+  - dim + blur mask with highlight rectangle and step actions
+  - dim-only fallback is always present (`spotlight-overlay-dim` layer)
+- **Auth flow**: `app/(auth)/**` + `src/screens/auth/**` + `src/features/auth/useAuthSession.ts`
+  - real login/register mutations
+  - auth session token persisted in Zustand store
+  - deterministic gate order in root layout: onboarding first, then auth
+
+## Production-like hardening notes (mobile-only wave)
+
+This starter now includes a practical hardening baseline for auth/todos in mobile scope.
+
+### 1) Auth hardening: logout + invalidation fallback
+
+- **Visible logout action** is available in authenticated todo flow (`todo-logout-btn`).
+- Logout behavior:
+  1. best-effort backend mutation `user.logout`
+  2. deterministic local cleanup regardless of network/backend result:
+     - clear auth session in store
+     - clear React Query cache
+     - clear offline todo cache/queue state
+     - route back to sign-in
+- **No silent refresh loop** is implemented (backend has no refresh endpoint in current contract).
+- On auth invalidation signals (e.g. unauth/forbidden/expired token markers), mobile performs explicit session invalidation cleanup and redirects user back to sign-in flow.
+
+### 2) Offline todos fallback + pending sync
+
+- Last successful todos fetch is persisted as offline snapshot.
+- If online read fails and snapshot exists, app shows offline fallback data.
+- Offline/pending intent queue:
+  - supports `createTodo` and `markDone`
+  - dedupes repeated queued operations where possible (same content for create, same todoId for markDone)
+  - queued items are rendered with pending sync marker in todo list
+- Sync behavior:
+  - flush queue on reconnect/auth recovery and after successful online mutations
+  - bounded retries (`MAX_SYNC_ATTEMPTS=3`)
+  - failed operations move to dead-letter list (no infinite retry loops)
+  - explicit retry action promotes dead letters back to queue for next sync attempt
+
+### 3) Known backend-contract limitations (non-blocking for starter)
+
+- **No refresh endpoint**: only explicit invalidation + sign-in fallback strategy is possible.
+- **`createTodo` contract returns scalar/boolean-style success signal, not rich created entity payload**:
+  - offline create reconciliation is best-effort and snapshot/query refresh based
+  - robust idempotency/conflict resolution for offline creates is limited in this starter contract
+
+### 4) Storybook showcase updates
+
+- Todo flow stories include an offline/pending state showcase:
+  - `Default` -> regular authenticated flow shell
+  - `OfflinePendingState` -> seeded cached snapshot + queued operations demo
+
+## Starter demo walkthrough
+
+1. Launch app and complete onboarding.
+2. Sign in or register in auth routes.
+3. App enters tabs (`Home`, `Todo`).
+4. In `Todo` tab:
+   - add todo (backend `createTodo`)
+   - mark todo done (backend `todoOps.markDone`)
+   - filter list (all/active/completed)
+5. Start or restart coachmark tour from todo overview card.
+
+- **Storybook real-flow demos**:
+  - `src/screens/todo/TodoFlow.stories.tsx`
+  - `src/screens/onboarding/OnboardingFlow.stories.tsx`
+  - `src/screens/todo/SpotlightFlow.stories.tsx`
 
 ## app vs src vs templates
 
@@ -113,7 +225,7 @@ Use this flow for new screens/features:
 6. Keep all interactive elements with explicit `testID`.
 7. Validate with:
    - `npm run test`
-   - `npm run tsc`
+   - `npm run typecheck`
    - `npm run lint`
 
 ## Optional Integrations (Template-only)
@@ -141,7 +253,7 @@ Use this exact runbook for each integration:
 5. Keep env guards in copied code (`isMixpanelConfigured`, `isOneSignalConfigured`) so runtime stays no-op when env is missing.
 6. Wire providers in `src/providers/AppProviders.tsx` only after copied files compile.
 7. Add or copy tests from template `src/*.test.*` files into your runtime locations.
-8. Re-run `npm run test`, `npm run tsc`, and `npm run lint`.
+8. Re-run `npm run test`, `npm run typecheck`, and `npm run lint`.
 
 Important: template code remains optional blueprint code under `templates/` and is not mounted in runtime by default.
 
@@ -221,16 +333,59 @@ Starter uses a reusable ratio contract designed for starter portability:
   - reusable runtime blocks in `src/**`
   - template manifests in `templates/**`
 
-## Lint/format semicolon policy (mobile scope)
+## Lint/format policy (mobile scope)
 
-- Mobile scope is canonical **no-semi**.
-- Local overrides:
-  - `mobile/.prettierrc` sets `semi: false`.
-  - `mobile/.eslintrc.json` extends parent config and sets:
-    - `semi: off`
-    - `prettier/prettier` with `{ semi: false }`
-- Why: parent workspace `.prettierrc` has `semi: true`, which produced `Insert \`;\`` diagnostics in mobile files through `plugin:prettier/recommended`.
-- This local override is intentionally scoped to `examples/new/mobile` to avoid cross-workspace style changes.
+- Mobile uses **ESLint flat config** in `mobile/eslint.config.mjs`.
+- Lint scripts are scoped to runtime files only:
+  - `npm run lint`
+  - `npm run lint:fix`
+- Type and test checks:
+  - `npm run typecheck`
+  - `npm run test`
+- Local Prettier policy remains no-semi in `mobile/.prettierrc` (`semi: false`).
+
+## Quality hardening checklist (mobile-only)
+
+Use this checklist for QC/review waves without adding unnecessary product logic.
+
+### 1) Scope safety
+
+- Keep edits in `mobile/**` only.
+- Focus on quality posture (guardrails, docs, skills, tests, config consistency).
+
+### 2) Runtime policy checks
+
+- No `as any` in runtime files (`src/**`, `app/**`).
+- No external slider/carousel usage in runtime dependencies.
+- Interactive elements keep explicit `testID`.
+- User-facing copy stays translated (i18n resources/hooks).
+
+### 3) Validation command matrix
+
+Run in `mobile/`:
+
+| Command                         | Purpose                   |
+| ------------------------------- | ------------------------- |
+| `npm run lint`                  | Lint + runtime guardrails |
+| `npm run typecheck`             | Type-safety gate          |
+| `npm run test`                  | Regression safety         |
+| `npx expo config --type public` | Expo config resolution    |
+| `npx expo-doctor`               | Expo ecosystem health     |
+
+### 4) Reporting contract (required)
+
+Every QC report should include:
+
+1. What changed and why.
+2. Exact changed files.
+3. Docs/skills alignment summary.
+4. Validation matrix with PASS/FAIL.
+5. Remaining risks/non-blockers.
+
+Additionally, classify violations explicitly:
+
+- **Introduced** by current change (must be fixed in-wave).
+- **Baseline** pre-existing (reported separately).
 
 ## Notes
 

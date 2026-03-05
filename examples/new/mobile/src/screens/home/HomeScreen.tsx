@@ -1,17 +1,18 @@
-import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
+import { StyleSheet, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 
-import { AppScreen } from '../../components/primitives/AppScreen';
-import { AppText } from '../../components/primitives/AppText';
-import { PrimaryButton } from '../../components/primitives/PrimaryButton';
-import { useAppTheme } from '../../theme';
-import { HomeControls } from './components/HomeControls';
-import { HomeStateSection } from './components/HomeStateSection';
-import { useHomeScreenState } from './useHomeScreenState';
+import { AppScreen } from '../../components/primitives/AppScreen'
+import { AppSlider } from '../../components/primitives/AppSlider'
+import { AppText } from '../../components/primitives/AppText'
+import { PrimaryButton } from '../../components/primitives/PrimaryButton'
+import { useAppTheme } from '../../theme'
+import { HomeControls } from './components/HomeControls'
+import { HomeStateSection } from './components/HomeStateSection'
+import { useHomeScreenState } from './useHomeScreenState'
 
-export function HomeScreen() {
-  const { t } = useTranslation();
-  const { colors, spacing, shape, shadows } = useAppTheme();
+export const HomeScreen = () => {
+  const { t } = useTranslation()
+  const { colors, spacing, shape, shadows } = useAppTheme()
   const {
     demoItems,
     forceError,
@@ -30,7 +31,13 @@ export function HomeScreen() {
     handleListRefresh,
     homeListErrorMessage,
     showcaseCards,
-  } = useHomeScreenState();
+    buttonVariant,
+    setButtonVariant,
+    showcaseCardVariant,
+    setShowcaseCardVariant,
+    listDensity,
+    setListDensity,
+  } = useHomeScreenState()
 
   return (
     <AppScreen>
@@ -58,11 +65,26 @@ export function HomeScreen() {
 
         <PrimaryButton
           testID="home-toggle-language-btn"
-          label={t('common.actions.changeLanguage', { language: nextLanguage.toUpperCase() })}
-          variant="soft"
+          label={t('common.actions.changeLanguage', {
+            language: nextLanguage.toUpperCase(),
+          })}
+          variant={buttonVariant}
           onPress={() => {
-            void handleToggleLanguage();
+            void handleToggleLanguage()
           }}
+        />
+
+        <AppSlider
+          testID="home-density-slider"
+          label={t('common.home.listDensityLabel')}
+          valueLabel={t('common.home.listDensityValue', {
+            value: String(listDensity),
+          })}
+          value={listDensity}
+          min={80}
+          max={140}
+          step={10}
+          onValueChange={setListDensity}
         />
 
         <View style={[styles.controls, { gap: spacing.sm }]}>
@@ -76,6 +98,10 @@ export function HomeScreen() {
             handleSetListRecoveryMode={handleSetListRecoveryMode}
             handleSetListOrientation={handleSetListOrientation}
             handleListRefresh={handleListRefresh}
+            buttonVariant={buttonVariant}
+            setButtonVariant={setButtonVariant}
+            showcaseCardVariant={showcaseCardVariant}
+            setShowcaseCardVariant={setShowcaseCardVariant}
           />
         </View>
 
@@ -91,10 +117,12 @@ export function HomeScreen() {
           handleListRefresh={handleListRefresh}
           demoItems={demoItems}
           showcaseCards={showcaseCards}
+          showcaseCardVariant={showcaseCardVariant}
+          listDensity={listDensity}
         />
       </View>
     </AppScreen>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -107,4 +135,4 @@ const styles = StyleSheet.create({
   hero: {
     borderWidth: 1,
   },
-});
+})

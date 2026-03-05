@@ -5,9 +5,20 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "src/*"
+      ]
     }
   },
-  "include": ["app", "src", "templates", "expo-env.d.ts"],
-  "exclude": ["**/*.stories.tsx"]
+  "include": [
+    "app",
+    "src",
+    "templates",
+    "expo-env.d.ts",
+    "src/types/**/*.d.ts",
+    ".expo/types/**/*.ts"
+  ],
+  "exclude": [
+    "**/*.stories.tsx"
+  ]
 }

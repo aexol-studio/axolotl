@@ -1,26 +1,38 @@
-import { TFunction } from 'i18next';
+import { TFunction } from 'i18next'
 
-import { CardList, ListErrorFallback, ListSuspenseBoundary } from '../../../components/lists';
-import { AppText } from '../../../components/primitives/AppText';
-import { ShowcaseCard } from '../../../components/showcase';
-import { EmptyState, ErrorState, LoadingState } from '../../../components/state';
-import { HomeStateMode, ListFailureMode, ListOrientation, ListRecoveryMode, ShowcaseCardItem } from '../types';
+import { CardList, ListErrorFallback } from '../../../components/lists'
+import { ListSuspenseBoundary } from '../../../components/lists/ListSuspenseBoundary'
+import { AppText } from '../../../components/primitives/AppText'
+import { ShowcaseCard } from '../../../components/showcase/ShowcaseCard'
+import { EmptyState } from '../../../components/state/EmptyState'
+import { ErrorState } from '../../../components/state/ErrorState'
+import { LoadingState } from '../../../components/state/LoadingState'
+import {
+  HomeStateMode,
+  ListFailureMode,
+  ListOrientation,
+  ListRecoveryMode,
+  ShowcaseCardItem,
+  ShowcaseCardVariant,
+} from '../types'
 
 type HomeStateSectionProps = {
-  t: TFunction;
-  stateMode: HomeStateMode;
-  setForcedMode: (mode: HomeStateMode) => void;
-  listFailureMode: ListFailureMode;
-  listRecoveryMode: ListRecoveryMode;
-  listOrientation: ListOrientation;
-  homeListErrorMessage: string;
-  isListRefreshing: boolean;
-  handleListRefresh: () => Promise<void>;
-  demoItems: readonly string[];
-  showcaseCards: readonly ShowcaseCardItem[];
-};
+  t: TFunction
+  stateMode: HomeStateMode
+  setForcedMode: (mode: HomeStateMode) => void
+  listFailureMode: ListFailureMode
+  listRecoveryMode: ListRecoveryMode
+  listOrientation: ListOrientation
+  homeListErrorMessage: string
+  isListRefreshing: boolean
+  handleListRefresh: () => Promise<void>
+  demoItems: readonly string[]
+  showcaseCards: readonly ShowcaseCardItem[]
+  showcaseCardVariant: ShowcaseCardVariant
+  listDensity: number
+}
 
-export function HomeStateSection({
+export const HomeStateSection = ({
   t,
   stateMode,
   setForcedMode,
@@ -32,9 +44,18 @@ export function HomeStateSection({
   handleListRefresh,
   demoItems,
   showcaseCards,
-}: HomeStateSectionProps) {
+  showcaseCardVariant,
+  listDensity,
+}: HomeStateSectionProps) => {
+  const baseItems =
+    demoItems.length > 0 ? demoItems : [t('common.states.emptyTitle')]
+  const repeatedItems = Array.from(
+    { length: Math.max(1, Math.round(listDensity / 20)) },
+    (_, index) => `${baseItems[index % baseItems.length]} ${index + 1}`,
+  )
+
   if (stateMode === 'loading') {
-    return <LoadingState label={t('common.states.loading')} />;
+    return <LoadingState label={t('common.states.loading')} />
   }
 
   if (stateMode === 'error') {
@@ -46,7 +67,7 @@ export function HomeStateSection({
         retryTestID="home-state-retry-btn"
         onRetry={() => setForcedMode('success')}
       />
-    );
+    )
   }
 
   if (stateMode === 'empty') {
@@ -58,7 +79,7 @@ export function HomeStateSection({
         actionTestID="home-state-empty-action-btn"
         onActionPress={() => setForcedMode('success')}
       />
-    );
+    )
   }
 
   if (listFailureMode !== 'success') {
@@ -68,14 +89,14 @@ export function HomeStateSection({
         message={homeListErrorMessage}
         retryLabel={t('common.home.listRefresh')}
         onRefresh={() => {
-          void handleListRefresh();
+          void handleListRefresh()
         }}
         isRefreshing={isListRefreshing}
         usePullToRefresh={listRecoveryMode === 'pull'}
         scrollTestID="home-list-error-scroll"
         refreshButtonTestID="home-list-refresh-btn"
       />
-    );
+    )
   }
 
   return (
@@ -85,7 +106,7 @@ export function HomeStateSection({
         strategy="scroll"
         title={t('common.home.listTitle')}
         subtitle={t('common.home.listSubtitle')}
-        data={demoItems}
+        data={repeatedItems}
         orientation={listOrientation}
         keyExtractor={(item) => item}
         renderItem={(item) => <AppText variant="body">{item}</AppText>}
@@ -109,10 +130,11 @@ export function HomeStateSection({
             ctaLabel={t(item.ctaKey)}
             meta={t(item.metaKey)}
             tone={item.tone}
+            variant={showcaseCardVariant}
             onPress={() => undefined}
           />
         )}
       />
     </ListSuspenseBoundary>
-  );
+  )
 }
