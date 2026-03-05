@@ -271,7 +271,7 @@ frontend/
 │   │   ├── queryClient.ts       # React Query client config + isAuthenticated()
 │   │   ├── queryKeys.ts         # Centralized React Query cache keys
 │   │   └── utils.ts             # cn() and general helpers
-│   ├── routes/                  # Route pages & layouts
+│   ├── routes/                  # Route pages & layouts  # See frontend-navigation skill for full route details
 │   │   ├── index.tsx            # Route definitions
 │   │   ├── RootLayout.tsx       # Root route layout
 │   │   ├── MetaUpdater.tsx      # Client-side document.title updater
@@ -362,6 +362,8 @@ frontend/
 - **Co-located hooks** — extracted page/component hooks use `.hook.ts` suffix and live next to their component (e.g., `AuthForm.tsx` + `AuthForm.hook.ts`). The function inside is still `useAuthForm` per React convention. These are distinct from shared hooks in `hooks/` which keep the `useX.ts` naming.
 - **One hook per file** — co-located hooks should export a SINGLE hook per file (not multiple small hooks). All related data fetching and mutations for a view/component should be consolidated into one hook that returns a flat object with all data and mutation results
 
+> **Full guide:** Load the `frontend-components` skill for detailed patterns, examples, and decision flowchart.
+
 ### Toast Notifications (Sonner)
 
 This project uses **Sonner** (`sonner`) for toast notifications. Import `toast` directly from sonner:
@@ -401,7 +403,9 @@ const MyComponent = () => {
 - Use `t('English text')` for ALL labels, titles, buttons, messages, placeholders, error messages, toasts
 - Factory pattern for data files/schemas outside React tree: `const getData = (t: (key: string) => string) => ...`
 - Don't translate: brand names, code, URLs
-- Locale stored in cookie (not localStorage/Zustand)
+- Locale stored in cookie (not localStorage/Zustand) — see `frontend-translations` skill
+
+> **Full guide:** Load the `frontend-translations` skill for detailed patterns and rules.
 
 ### SSR Patterns (Data Router)
 
@@ -413,6 +417,7 @@ const MyComponent = () => {
 - Data fetch in loader: extract `queryClient` from loader context (falls back to singleton on CSR): `const qc = (context as AppLoadContext)?.queryClient ?? queryClient;` then `await qc.fetchQuery(…)`
 - Page hydration: `const { dehydratedState } = useLoaderData<typeof loader>()` → `<HydrationBoundary state={dehydratedState}>`
 - Meta tags: return `{ meta: { title, description } }` from loader → auto-injected in `<head>` server-side via `buildMetaHead()`
+- Full reference: load the `vite-ssr` skill
 
 ### Frontend Troubleshooting
 
@@ -536,6 +541,8 @@ deleteNote: async ([, , context], { id }) => {
   return prisma.note.delete({ where: { id } });
 };
 ```
+
+**Before writing any code, always check available skills for detailed guidance on the topic you're working on.**
 
 ### E2E Testing (Playwright)
 
