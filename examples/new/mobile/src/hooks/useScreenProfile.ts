@@ -1,10 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo } from 'react'
+import * as reactNative from 'react-native'
 
-import { getViewportRatio, resolveScreenProfile } from '../config/mainConfig';
-import { useWindowDimensionsValue } from './useWindowDimensionsValue';
+import { getViewportRatio, resolveScreenProfile } from '../config/mainConfig'
 
 export function useScreenProfile() {
-  const { width, height } = useWindowDimensionsValue();
+  const { width, height } = reactNative.useWindowDimensions()
 
   return useMemo(
     () => ({
@@ -12,5 +12,5 @@ export function useScreenProfile() {
       viewportRatio: getViewportRatio(width, height),
     }),
     [height, width],
-  );
+  )
 }

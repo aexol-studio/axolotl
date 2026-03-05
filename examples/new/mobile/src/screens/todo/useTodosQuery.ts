@@ -1,11 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 
 import { useAuthSession } from '../../features/auth/useAuthSession'
-import { isAuthInvalidationError } from '../../features/auth/sessionPolicy'
-import { createGraphqlClient } from '../../lib/graphql/client'
+import {
+  classifyGraphqlError,
+  executeGraphqlRequest,
+  useGqlMutation,
+  useGqlQuery,
+} from '../../lib/graphql'
 import { AppTypedError } from '../../lib/errors/normalizeError'
 import { useAuthStore } from '../../stores/authStore'
+import {
+  authorizedUserTodosSelector,
+  todoItemSelector,
+  todoOpsSelector,
+} from '../../gql/selectors'
+import type { FromSelector } from '../../zeus'
+import type { GraphqlClient } from '../../lib/graphql'
 import {
   applyOfflineOverlay,
   clearTodoOfflineState,
@@ -20,25 +31,18 @@ import type { TodoFilter, TodoStats } from './types'
 
 export const todosQueryKey = ['todos', 'list'] as const
 
-const toTodoItem = (todo: {
-  _id: string
-  content: string
-  done?: boolean | null
-}) => ({
+type TodoModel = FromSelector<typeof todoItemSelector, 'Todo'>
+
+const toTodoItem = (todo: TodoModel) => ({
   id: todo._id,
   title: todo.content,
   completed: Boolean(todo.done),
 })
 
-const readTodos = async () => {
-  const client = createGraphqlClient()
+const readTodos = async (client: GraphqlClient) => {
   const data = await client('query')({
     user: {
-      todos: {
-        _id: true,
-        content: true,
-        done: true,
-      },
+      ...authorizedUserTodosSelector,
     },
   })
 
@@ -46,24 +50,20 @@ const readTodos = async () => {
   return todos.map(toTodoItem)
 }
 
-const markDoneRequest = async (id: string) => {
-  const client = createGraphqlClient()
+const markDoneRequest = async (client: GraphqlClient, id: string) => {
   await client('mutation')({
     user: {
       todoOps: [
         {
           _id: id,
         },
-        {
-          markDone: true,
-        },
+        todoOpsSelector,
       ],
     },
   })
 }
 
-const createTodoRequest = async (content: string) => {
-  const client = createGraphqlClient()
+const createTodoRequest = async (client: GraphqlClient, content: string) => {
   await client('mutation')({
     user: {
       createTodo: [
@@ -127,17 +127,18 @@ export const useTodosQuery = (enabled: boolean) => {
       for (const operation of offlineState.queue) {
         try {
           if (operation.type === 'create') {
-            await createTodoRequest(operation.payload.content)
+            await executeGraphqlRequest((client) =>
+              createTodoRequest(client, operation.payload.content),
+            )
           } else {
-            await markDoneRequest(operation.payload.todoId)
+            await executeGraphqlRequest((client) =>
+              markDoneRequest(client, operation.payload.todoId),
+            )
           }
 
           await removeQueuedOperation(operation.id)
         } catch (error) {
-          const message =
-            error instanceof Error ? error.message.toLowerCase() : String(error)
-
-          if (message.includes('unauth') || message.includes('forbidden')) {
+          if (classifyGraphqlError(error) === 'auth-invalidation') {
             await handleAuthInvalidation()
             return
           }
@@ -159,32 +160,49 @@ export const useTodosQuery = (enabled: boolean) => {
     refreshOfflineProjection,
   ])
 
-  const todosQuery = useQuery({
-    queryKey: todosQueryKey,
-    enabled,
-    queryFn: async () => {
-      try {
-        const items = await readTodos()
-        await saveTodoSnapshot(items)
-        setIsOfflineFallback(false)
-        return items
-      } catch (error) {
-        const offlineState = await readOfflineTodoState()
-        if (offlineState.snapshot) {
-          setIsOfflineFallback(true)
-          return applyOfflineOverlay(
-            offlineState.snapshot.items,
-            offlineState.queue,
-          )
-        }
-
-        throw error
-      }
+  const todosQuery = useGqlQuery(
+    todosQueryKey,
+    async (client) => {
+      const items = await readTodos(client)
+      await saveTodoSnapshot(items)
+      setIsOfflineFallback(false)
+      return items
     },
-  })
+    {
+      enabled,
+      errorHandling: {
+        fallback: {
+          network: async (error) => {
+            const offlineState = await readOfflineTodoState()
+            if (offlineState.snapshot) {
+              setIsOfflineFallback(true)
+              return applyOfflineOverlay(
+                offlineState.snapshot.items,
+                offlineState.queue,
+              )
+            }
 
-  const createTodoMutation = useMutation({
-    mutationFn: async (content: string) => {
+            throw error
+          },
+          unknown: async (error) => {
+            const offlineState = await readOfflineTodoState()
+            if (offlineState.snapshot) {
+              setIsOfflineFallback(true)
+              return applyOfflineOverlay(
+                offlineState.snapshot.items,
+                offlineState.queue,
+              )
+            }
+
+            throw error
+          },
+        },
+      },
+    },
+  )
+
+  const createTodoMutation = useGqlMutation<void, string>(
+    async (_, content) => {
       const normalized = content.trim()
       if (!normalized) {
         throw new AppTypedError(
@@ -211,31 +229,45 @@ export const useTodosQuery = (enabled: boolean) => {
         return
       }
 
-      try {
-        await createTodoRequest(normalized)
-      } catch (error) {
-        if (isAuthInvalidationError(error)) {
-          await handleAuthInvalidation()
-          throw error
-        }
-
-        await enqueueTodoOperation({
-          type: 'create',
-          payload: {
-            content: normalized,
+      await executeGraphqlRequest(
+        (client) => createTodoRequest(client, normalized),
+        {
+          errorHandling: {
+            onAuthInvalidation: handleAuthInvalidation,
+            fallback: {
+              network: async () => {
+                await enqueueTodoOperation({
+                  type: 'create',
+                  payload: {
+                    content: normalized,
+                  },
+                })
+                await refreshOfflineProjection()
+              },
+              unknown: async () => {
+                await enqueueTodoOperation({
+                  type: 'create',
+                  payload: {
+                    content: normalized,
+                  },
+                })
+                await refreshOfflineProjection()
+              },
+            },
           },
-        })
-        await refreshOfflineProjection()
-      }
+        },
+      )
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: todosQueryKey })
-      await flushQueue()
+    {
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({ queryKey: todosQueryKey })
+        await flushQueue()
+      },
     },
-  })
+  )
 
-  const markDoneMutation = useMutation({
-    mutationFn: async (id: string) => {
+  const markDoneMutation = useGqlMutation<void, string>(
+    async (_, id) => {
       if (!enabled || !accessToken) {
         throw new AppTypedError(
           'UNKNOWN_ERROR',
@@ -254,28 +286,39 @@ export const useTodosQuery = (enabled: boolean) => {
         return
       }
 
-      try {
-        await markDoneRequest(id)
-      } catch (error) {
-        if (isAuthInvalidationError(error)) {
-          await handleAuthInvalidation()
-          throw error
-        }
-
-        await enqueueTodoOperation({
-          type: 'markDone',
-          payload: {
-            todoId: id,
+      await executeGraphqlRequest((client) => markDoneRequest(client, id), {
+        errorHandling: {
+          onAuthInvalidation: handleAuthInvalidation,
+          fallback: {
+            network: async () => {
+              await enqueueTodoOperation({
+                type: 'markDone',
+                payload: {
+                  todoId: id,
+                },
+              })
+              await refreshOfflineProjection()
+            },
+            unknown: async () => {
+              await enqueueTodoOperation({
+                type: 'markDone',
+                payload: {
+                  todoId: id,
+                },
+              })
+              await refreshOfflineProjection()
+            },
           },
-        })
-        await refreshOfflineProjection()
-      }
+        },
+      })
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: todosQueryKey })
-      await flushQueue()
+    {
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({ queryKey: todosQueryKey })
+        await flushQueue()
+      },
     },
-  })
+  )
 
   useEffect(() => {
     void refreshOfflineProjection()

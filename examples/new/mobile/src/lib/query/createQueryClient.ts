@@ -1,7 +1,7 @@
 import { QueryCache, QueryClient } from '@tanstack/react-query'
 
 import { authMeQueryKey } from '../../features/auth/queryKeys'
-import { isAuthInvalidationError } from '../../features/auth/sessionPolicy'
+import { isAuthInvalidationError } from '../graphql/errorPolicy'
 import { clearTodoOfflineState } from '../../features/todo/offlinePersistence'
 import { useAuthStore } from '../../stores/authStore'
 

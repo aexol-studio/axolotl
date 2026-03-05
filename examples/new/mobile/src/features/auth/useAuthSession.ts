@@ -1,23 +1,28 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 
-import { createGraphqlClient } from '../../lib/graphql/client'
+import {
+  createGraphqlClient,
+  useGqlMutation,
+  useGqlQuery,
+} from '../../lib/graphql'
 import { AppTypedError } from '../../lib/errors/normalizeError'
 import { useAuthStore } from '../../stores/authStore'
 import { authMeQueryKey } from './queryKeys'
-import { isAuthInvalidationError, isNetworkLikeError } from './sessionPolicy'
 import { clearTodoOfflineState } from '../todo/offlinePersistence'
+import { authorizedUserMeSelector } from '../../gql/selectors'
+import type { FromSelector } from '../../zeus'
 
-const meSelector = {
-  _id: true,
-  email: true,
-  createdAt: true,
-} as const
+type AuthUser = FromSelector<
+  typeof authorizedUserMeSelector,
+  'AuthorizedUserQuery'
+>['me']
 
-const readMe = async (accessToken: string) => {
-  const client = createGraphqlClient(accessToken)
+const readMe = async (
+  client: ReturnType<typeof createGraphqlClient>,
+): Promise<AuthUser | null> => {
   const data = await client('query')({
     user: {
-      me: meSelector,
+      ...authorizedUserMeSelector,
     },
   })
 
@@ -52,35 +57,30 @@ export const useAuthSession = () => {
     await performLocalSessionCleanup('invalidated')
   }
 
-  const meQuery = useQuery({
-    queryKey: authMeQueryKey,
-    enabled: Boolean(accessToken),
-    retry: 0,
-    queryFn: async () => {
+  const meQuery = useGqlQuery(
+    authMeQueryKey,
+    async (client) => {
       if (!accessToken) {
         return null
       }
 
-      try {
-        return await readMe(accessToken)
-      } catch (error) {
-        if (isAuthInvalidationError(error)) {
-          await handleAuthInvalidation()
-          return null
-        }
-
-        if (isNetworkLikeError(error)) {
-          return null
-        }
-
-        throw error
-      }
+      return readMe(client)
     },
-  })
+    {
+      enabled: Boolean(accessToken),
+      retry: 0,
+      createClient: () => createGraphqlClient({ accessToken }),
+      errorHandling: {
+        onAuthInvalidation: handleAuthInvalidation,
+        fallback: {
+          network: () => null,
+        },
+      },
+    },
+  )
 
-  const loginMutation = useMutation({
-    mutationFn: async ({ email, password }: AuthCredentials) => {
-      const client = createGraphqlClient(null)
+  const loginMutation = useGqlMutation<string, AuthCredentials>(
+    async (client, { email, password }) => {
       const data = await client('mutation')({
         login: [
           {
@@ -93,25 +93,28 @@ export const useAuthSession = () => {
 
       return data.login
     },
-    onSuccess: async (nextAccessToken) => {
-      if (isEmptyToken(nextAccessToken)) {
-        throw new AppTypedError(
-          'UNKNOWN_ERROR',
-          'common.auth.invalidSessionToken',
-        )
-      }
+    {
+      onSuccess: async (nextAccessToken) => {
+        if (isEmptyToken(nextAccessToken)) {
+          throw new AppTypedError(
+            'UNKNOWN_ERROR',
+            'common.auth.invalidSessionToken',
+          )
+        }
 
-      setAccessToken(nextAccessToken)
-      await queryClient.fetchQuery({
-        queryKey: authMeQueryKey,
-        queryFn: () => readMe(nextAccessToken),
-      })
+        setAccessToken(nextAccessToken)
+        await queryClient.fetchQuery({
+          queryKey: authMeQueryKey,
+          queryFn: () =>
+            readMe(createGraphqlClient({ accessToken: nextAccessToken })),
+        })
+      },
+      createClient: () => createGraphqlClient(),
     },
-  })
+  )
 
-  const registerMutation = useMutation({
-    mutationFn: async ({ email, password }: AuthCredentials) => {
-      const client = createGraphqlClient(null)
+  const registerMutation = useGqlMutation<string, AuthCredentials>(
+    async (client, { email, password }) => {
       const data = await client('mutation')({
         register: [
           {
@@ -124,26 +127,30 @@ export const useAuthSession = () => {
 
       return data.register
     },
-    onSuccess: async (nextAccessToken) => {
-      if (isEmptyToken(nextAccessToken)) {
-        throw new AppTypedError(
-          'UNKNOWN_ERROR',
-          'common.auth.invalidSessionToken',
-        )
-      }
+    {
+      onSuccess: async (nextAccessToken) => {
+        if (isEmptyToken(nextAccessToken)) {
+          throw new AppTypedError(
+            'UNKNOWN_ERROR',
+            'common.auth.invalidSessionToken',
+          )
+        }
 
-      setAccessToken(nextAccessToken)
-      await queryClient.fetchQuery({
-        queryKey: authMeQueryKey,
-        queryFn: () => readMe(nextAccessToken),
-      })
+        setAccessToken(nextAccessToken)
+        await queryClient.fetchQuery({
+          queryKey: authMeQueryKey,
+          queryFn: () =>
+            readMe(createGraphqlClient({ accessToken: nextAccessToken })),
+        })
+      },
+      createClient: () => createGraphqlClient(),
     },
-  })
+  )
 
   const logout = async () => {
     if (accessToken) {
       try {
-        const client = createGraphqlClient(accessToken)
+        const client = createGraphqlClient({ accessToken })
         await client('mutation')({
           user: {
             logout: true,

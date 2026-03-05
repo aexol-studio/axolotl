@@ -7,6 +7,25 @@ type GraphQLErrorLike = {
   message?: string
 }
 
+export type GraphqlErrorKind = 'auth-invalidation' | 'network' | 'unknown'
+
+const AUTH_INVALIDATION_MARKERS = [
+  'unauthorized',
+  'unauthenticated',
+  'forbidden',
+  'invalid token',
+  'token expired',
+  'not authenticated',
+  'auth',
+]
+
+const NETWORK_MARKERS = [
+  'network',
+  'failed to fetch',
+  'network request failed',
+  'timeout',
+]
+
 const isGraphQLErrorLike = (error: unknown): error is GraphQLErrorLike => {
   if (!error || typeof error !== 'object') {
     return false
@@ -30,23 +49,6 @@ const toMessage = (value: unknown) => {
 
   return ''
 }
-
-const AUTH_INVALIDATION_MARKERS = [
-  'unauthorized',
-  'unauthenticated',
-  'forbidden',
-  'invalid token',
-  'token expired',
-  'not authenticated',
-  'auth',
-]
-
-const NETWORK_MARKERS = [
-  'network',
-  'failed to fetch',
-  'network request failed',
-  'timeout',
-]
 
 const includesAnyMarker = (value: string, markers: readonly string[]) =>
   markers.some((marker) => value.includes(marker))
@@ -80,3 +82,15 @@ export const isNetworkLikeError = (error: unknown) =>
   getErrorMessages(error)
     .map((message) => message.toLowerCase())
     .some((message) => includesAnyMarker(message, NETWORK_MARKERS))
+
+export const classifyGraphqlError = (error: unknown): GraphqlErrorKind => {
+  if (isAuthInvalidationError(error)) {
+    return 'auth-invalidation'
+  }
+
+  if (isNetworkLikeError(error)) {
+    return 'network'
+  }
+
+  return 'unknown'
+}

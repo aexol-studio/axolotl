@@ -2,7 +2,7 @@ import {
   getErrorMessages,
   isAuthInvalidationError,
   isNetworkLikeError,
-} from './sessionPolicy'
+} from '../../lib/graphql/errorPolicy'
 
 describe('sessionPolicy', () => {
   it('detects auth invalidation marker in graphql errors', () => {
