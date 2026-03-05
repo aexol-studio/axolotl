@@ -557,4 +557,5 @@ deleteNote: async ([, , context], { id }) => {
 ## Mobile (examples/new/mobile)
 
 Mobile-related guidance is available in `mobile/AGENTS.md`.
+
 **Before writing any code, always check available skills for detailed guidance on the topic you're working on.**
