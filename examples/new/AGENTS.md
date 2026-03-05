@@ -557,7 +557,13 @@ deleteNote: async ([, , context], { id }) => {
 - **Run**: `npm run test:e2e`, `npm run test:e2e:ui` (interactive), `npm run test:e2e:headed` (visible browser)
 - **Principle**: Consolidate assertions — ONE test per logical flow, navigate ONCE, assert many things. Avoid granular tests that each reload the page.
 
+## Mobile (examples/new/mobile)
+
+Mobile-related guidance is available in `mobile/AGENTS.md`.
+
 ### Documentation Drift Check (Mandatory)
 
 - After implementing changes, check whether `AGENTS.md` and relevant skills need updates when patterns/rules changed.
 - If updates are needed, include them in the same task/PR (do not defer).
+
+**Before writing any code, always check available skills for detailed guidance on the topic you're working on.**

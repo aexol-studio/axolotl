@@ -23,6 +23,10 @@
     {
       "generationPath": "../frontend/src",
       "esModule": true
+    },
+    {
+      "generationPath": "../mobile/src",
+      "esModule": true
     }
   ]
 }
