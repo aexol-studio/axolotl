@@ -50,60 +50,65 @@
 
 ## Overview
 
-Axolotl is organized as a workspace-enabled npm monorepo and ships as ESM. The top-level package.json defines workspaces for packages/*, adapters/graphql-yoga, and examples/yoga-federated. Repo-wide scripts (build/test/sync) live at the root and orchestrate individual packages.
+Axolotl is organized as a workspace-enabled npm monorepo and ships as ESM. The top-level package.json defines workspaces for packages/\*, adapters/graphql-yoga, and examples/new. Repo-wide scripts (build/test/sync) live at the root and orchestrate individual packages.
 
 - Core runtime and codegen primitives live in packages/core with TypeScript sources at the package root and compiled outputs in lib/.
 - Configuration helpers live in packages/config and are consumed by the CLI to persist schema/model paths.
 - The CLI (packages/cli) exposes the axolotl command via Commander, delegating to @aexol/axolotl-core and config.
-- Adapters implement concrete server bindings (e.g., GraphQL Yoga) under adapters/*.
-- Examples (e.g., examples/yoga-federated) demonstrate usage end-to-end, including schema, resolvers, and server bootstrapping.
+- Adapters implement concrete server bindings (e.g., GraphQL Yoga) under adapters/\*.
+- Examples (e.g., examples/new) demonstrate usage end-to-end, including schema, resolvers, and server bootstrapping.
 - Documentation is a Next.js site under docs/.
 
 GraphQL stack:
+
 - Core builds on the graphql reference implementation for schema/runtime, and uses @graphql-tools/utils and graphql-js-tree for schema introspection and transformations.
 - The GraphQL Yoga adapter and example server use graphql-yoga; the adapter hydrates the schema, applies directives/scalars, builds per-request context, and exposes a Node http server.
 - Core provides a resolver factory via Axolotl(adapter)<Models>() that returns typed helpers (e.g., createResolvers) bound to the active adapter, and federation helpers (e.g., mergeAxolotls) to compose module resolver maps.
 - Adapter contract: the AxolotlAdapter generic factory is declared in packages/core/index.ts:13; adapters implement it to translate Axolotl resolvers/directives/scalars into a concrete server runtime.
 
 Data modeling and types:
-- Schema-first: the primary domain objects are defined in the GraphQL SDL. The Yoga federated example declares types such as Todo, TodoOps, User, the AuthorizedUser* variants, and the Query/Mutation roots in examples/yoga-federated/schema.graphql:1-55.
-- Codegen: the core generator (packages/core/gen.ts) parses SDL and emits strongly typed Models, Scalars, interfaces, and enums. The example runs npm -w examples/yoga-federated run models to generate examples/yoga-federated/src/models.ts:1-113.
-- Per-slice models: each feature module (e.g., todos, users) maintains its own generated Models and TypeScript interfaces under examples/yoga-federated/src/**/models.ts to keep resolver typing localized.
-- Client types: a generated Zeus client lives under examples/yoga-federated/src/zeus/* and provides a strongly typed query builder powered by fetch/WebSocket; no ORM or DB client is involved.
+
+- Schema-first: the primary domain objects are defined in the GraphQL SDL. The new starter example declares types such as Todo, TodoOps, User, Note, Session, the AuthorizedUser\* variants, and the Query/Mutation/Subscription roots in examples/new/backend/schema.graphql.
+- Codegen: the core generator (packages/core/gen.ts) parses SDL and emits strongly typed Models, Scalars, interfaces, and enums. The example runs npm run models to generate examples/new/backend/src/models.ts and per-module models.
+- Per-slice models: each feature module (auth, users, todos, notes) maintains its own generated Models and TypeScript interfaces under examples/new/backend/src/modules/\*\*/models.ts to keep resolver typing localized.
+- Client types: a generated Zeus client lives under examples/new/frontend/src/zeus/\* and provides a strongly typed query builder powered by fetch; Prisma handles persistence.
 
 Tooling and runtime helpers:
+
 - CLI UX and orchestration leverage commander, chalk, ora, chokidar, clipboardy, and integrate AI-assisted features via openai and @modelcontextprotocol/sdk.
 - TypeScript toolchain relies on typescript, tsx, ts-patch, eslint, and prettier.
 - Testing uses Node’s built-in node:test runner with node:assert (see root package.json test script and packages/core/gen.test.ts).
 - node-fetch and ws provide HTTP and WebSocket interactions used across core/engine and examples.
 
 Testing scope:
+
 - Automated tests currently cover only resolveFieldType in the core generator (packages/core/gen.test.ts), ensuring emitted TypeScript wrapper types match nested GraphQL field shapes.
-- Jest configuration files exist in several packages (e.g., packages/core/jest.config.js and matching files under packages/cli and packages/config), but there are no corresponding .spec.* files; Jest is presently unused.
+- Jest configuration files exist in several packages (e.g., packages/core/jest.config.js and matching files under packages/cli and packages/config), but there are no corresponding .spec.\* files; Jest is presently unused.
 
 Entry points:
+
 - Library: packages/core/index.ts
 - Federation helpers: packages/core/federation.ts
 - Code generator: packages/core/gen.ts
 - CLI binary: packages/cli/index.ts
 - Adapter factory (Yoga): adapters/graphql-yoga/index.ts exports graphqlYogaWithContextAdapter and the ready-to-use graphqlYogaAdapter
-- Example server boot: examples/yoga-federated/src/index.ts
+- Example server boot: examples/new/backend/src/index.ts
 
 ## Communication
 
-- GraphQL wiring: Feature modules register their handlers by calling Axolotl(graphqlYogaAdapter)<Models>(), which returns typed helpers like createResolvers tied to the active adapter (packages/core/index.ts; examples/yoga-federated/src/axolotl.ts). The default graphqlYogaAdapter is the preconfigured instance produced by graphqlYogaWithContextAdapter({}).
-- Resolver contract: Every resolver receives a tuple [source, args, context] supplied by the adapter. Modules communicate strictly through GraphQL field resolution and the Yoga context—there is no custom RPC or HTTP routing layer involved (adapters/graphql-yoga/index.ts; examples/yoga-federated/src/todos/resolvers.ts; examples/yoga-federated/src/users/resolvers.ts).
-- Federation/merging: Modules are stitched together with mergeAxolotls, which fuses multiple resolver maps into a single schema-aware super graph so sub‑modules interoperate without manual wiring (packages/core/federation.ts; examples/yoga-federated/src/resolvers.ts).
-- Transport/runtime: HTTP serving and schema loading are handled entirely by the GraphQL Yoga adapter. It hydrates the schema, injects directives/scalars (via @graphql-tools/utils), builds per-request context, and exposes a Node http server (adapters/graphql-yoga/index.ts; examples/yoga-federated/src/index.ts).
-- Error propagation: Resolver throws are passed through the adapter to GraphQL Yoga for standard error formatting; clients receive HTTP rejections or GraphQL errors per the generated Zeus client behavior (adapters/graphql-yoga/index.ts; examples/yoga-federated/src/zeus/index.ts).
+- GraphQL wiring: Feature modules register their handlers by calling Axolotl(graphqlYogaAdapter)<Models>(), which returns typed helpers like createResolvers tied to the active adapter (packages/core/index.ts; examples/new/backend/src/axolotl.ts). The default graphqlYogaAdapter is the preconfigured instance produced by graphqlYogaWithContextAdapter({}).
+- Resolver contract: Every resolver receives a tuple [source, args, context] supplied by the adapter. Modules communicate strictly through GraphQL field resolution and the Yoga context—there is no custom RPC or HTTP routing layer involved (adapters/graphql-yoga/index.ts; examples/new/backend/src/modules/todos/resolvers; examples/new/backend/src/modules/users/resolvers).
+- Federation/merging: Modules are stitched together with mergeAxolotls, which fuses multiple resolver maps into a single schema-aware super graph so sub‑modules interoperate without manual wiring (packages/core/federation.ts; examples/new/backend/src/resolvers.ts).
+- Transport/runtime: HTTP serving and schema loading are handled entirely by the GraphQL Yoga adapter. It hydrates the schema, injects directives/scalars (via @graphql-tools/utils), builds per-request context, and exposes an Express/Node http server (adapters/graphql-yoga/index.ts; examples/new/backend/src/index.ts).
+- Error propagation: Resolver throws are passed through the adapter to GraphQL Yoga for standard error formatting; clients receive HTTP rejections or GraphQL errors per the generated Zeus client behavior (adapters/graphql-yoga/index.ts; examples/new/frontend/src/zeus/index.ts).
 - Intra-repo package dependencies: CLI and adapters depend on @aexol/axolotl-core; CLI also depends on @aexol/axolotl-config.
 - Core relies on the graphql reference implementation, with @graphql-tools/utils and graphql-js-tree assisting schema inspection and transformations.
 - CLI composes commander-based routing with chalk/ora for UX, chokidar for file watching, clipboardy for clipboard ops, and integrates AI via openai and @modelcontextprotocol/sdk.
 - Runtime helpers node-fetch and ws enable HTTP/WebSocket interactions used by core workflows and example servers.
 - Examples consume published package APIs (core, adapters) and generated models to compose schemas/resolvers and start servers.
 - Workspace maintenance scripts operate across workspaces to sync versions and build outputs.
-- Data access: resolvers in the examples use lightweight in-memory stores (arrays) defined per module (e.g., examples/yoga-federated/src/todos/db.ts, examples/yoga-federated/src/users/db.ts); there is no ORM or external database driver configured.
-- Client consumption: an optional generated Zeus client (examples/yoga-federated/src/zeus) can query/subscribe against the Yoga server using fetch/WebSocket; it shares the same schema-derived types.
+- Data access: resolvers in the examples use Prisma with PostgreSQL for persistence (examples/new/backend/src/db.ts); per-module resolver files are under examples/new/backend/src/modules/\*/resolvers/.
+- Client consumption: a generated Zeus client (examples/new/frontend/src/zeus) can query/subscribe against the Yoga server using fetch; it shares the same schema-derived types.
 
 ## Patterns
 
@@ -114,7 +119,7 @@ Entry points:
 - Federation via mergeAxolotls to compose multiple module resolver maps into a schema-aware super graph.
 - CLI orchestration pattern using Commander to invoke core helpers and configuration, with UX utilities (chalk, ora) and file watching (chokidar).
 - Code generation utilities centralized in core; tests are colocated with sources.
-- Testing approach: Node’s built-in node:test with node:assert; Jest configs are present but dormant due to lack of .spec.* files.
+- Testing approach: Node’s built-in node:test with node:assert; Jest configs are present but dormant due to lack of .spec.\* files.
 - Coverage status: automated tests currently validate only resolveFieldType in the core generator.
 - Layered composition in examples: feature slices (schema/resolvers/data) merged into federated execution.
 - ESM-first packaging; TS sources compiled to lib/ per package.
@@ -126,7 +131,7 @@ Entry points:
   - CLI contains failures at the command boundary using success | { error } results; createAppAction logs a formatted failure banner and exits with code 1, runCommands catches unexpected exceptions and returns a message payload, and runCommand swallows failures, emits context with chalk, and returns false (packages/cli/create/utils.ts).
   - Chaos testing never throws outward; each request is wrapped in try/catch and errors are coerced into structured entries for end-of-run reporting (packages/core/chaos.ts).
   - Adapter passes resolver errors straight through to GraphQL Yoga for framework-level formatting (adapters/graphql-yoga/index.ts).
-  - Example resolvers simply throw Error strings; the generated Zeus client converts HTTP errors into rejected Promises and raises a generated GraphQLError for GraphQL-level failures while retaining the original response (examples/yoga-federated/src/zeus/index.ts).
+  - Example resolvers throw typed errors; the generated Zeus client converts HTTP errors into rejected Promises and raises a generated GraphQLError for GraphQL-level failures while retaining the original response (examples/new/frontend/src/zeus/index.ts).
   - There is no global error helper or shared boundary; consumers wrap calls when richer handling is required.
 
 ## Components
@@ -156,7 +161,7 @@ Entry points:
   - Internals: orchestrates @aexol/axolotl-core helpers and config; additional command modules under packages/cli/create and packages/cli/codegen.
   - Tooling: commander for routing; chalk and ora for terminal UX; chokidar for watching; clipboardy for clipboard operations; integrates AI features via openai and @modelcontextprotocol/sdk.
   - Error handling: commands return success | { error } results rather than throwing; createAppAction logs a failure banner and process.exit(1) on error, runCommands catches unexpected exceptions and returns a message payload, and runCommand swallows failures, emits context, and returns false (packages/cli/create/utils.ts).
-  - Example codegen workflow: npm -w examples/yoga-federated run models invokes the core generator to emit typed models from the example SDL.
+  - Example codegen workflow: npm run models (inside examples/new) invokes the core generator to emit typed models from the example SDL.
   - Testing configs: Jest config present, but no matching Jest tests.
 
 - Automation scripts (packages/scripts)
@@ -174,16 +179,16 @@ Entry points:
     - Error handling: resolver errors are passed through to Yoga, which performs standard GraphQL error formatting; the adapter does not introduce custom error boundaries.
 
 - Examples
-  - examples/yoga-federated
-    - Schema: examples/yoga-federated/schema.graphql defines Todo, TodoOps, User, AuthorizedUser*, Query, and Mutation roots (lines 1–55).
-    - Composition: src/axolotl.ts composes the Yoga adapter with generated models via Axolotl(graphqlYogaAdapter)<Models>() to produce typed resolver helpers (e.g., createResolvers).
-    - Features: feature slices (todos, users) each with schema, resolvers, and local data modules; resolver files consume the [source, args, context] tuple from the adapter.
-    - Data access: lightweight in-memory stores per module (e.g., src/todos/db.ts, src/users/db.ts) back the resolvers; arrays of TodoModel/UserModel are filtered/inserted/mutated—no ORM.
-    - Models: generated models at src/models.ts drive example-wide typings; each slice also keeps its own generated models under src/**/models.ts for localized resolver typing.
-    - Client: a generated Zeus client under src/zeus (index.ts, const.ts) provides typed query/subscription builders using fetch/WebSocket; host configuration is expected at usage time.
-    - Error handling: server-side samples throw Error strings; the generated Zeus client converts HTTP errors into rejected Promises and raises a generated GraphQLError for GraphQL-layer failures, retaining the original response for inspection (examples/yoga-federated/src/zeus/index.ts).
-    - Aggregation: src/resolvers.ts merges feature resolver maps with mergeAxolotls for federated execution.
-    - Entry: src/index.ts boots the HTTP server through the Yoga adapter.
+  - examples/new
+    - Schema: examples/new/backend/schema.graphql defines Todo, TodoOps, User, Note, Session, AuthorizedUser\*, Query, Mutation, and Subscription roots.
+    - Composition: backend/src/axolotl.ts composes the Yoga adapter with generated models via Axolotl(graphqlYogaAdapter)<Models>() to produce typed resolver helpers (e.g., createResolvers).
+    - Features: feature slices (auth, users, todos, notes) each with schema, resolvers, and Prisma-backed data access; resolver files consume the [source, args, context] tuple from the adapter.
+    - Data access: Prisma with PostgreSQL; per-module resolvers under backend/src/modules/\*/resolvers/.
+    - Models: generated models at backend/src/models.ts drive app-wide typings; each module also keeps its own generated models under backend/src/modules/\*\*/models.ts for localized resolver typing.
+    - Client: a generated Zeus client under frontend/src/zeus (index.ts, const.ts) provides typed query builders using fetch; host configuration is read from environment.
+    - Error handling: server-side resolvers throw typed errors; the generated Zeus client converts HTTP errors into rejected Promises and raises a generated GraphQLError for GraphQL-layer failures, retaining the original response for inspection (examples/new/frontend/src/zeus/index.ts).
+    - Aggregation: backend/src/resolvers.ts merges feature resolver maps with mergeAxolotls for federated execution.
+    - Entry: backend/src/index.ts boots the Express+Yoga HTTP server; frontend is served via Vite SSR.
 
 - Docs
   - docs/ is a Next.js site with docs/pages and docs/theme.config.tsx.

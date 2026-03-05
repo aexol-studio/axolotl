@@ -1,0 +1,24 @@
+const meta = {
+  index: 'Axolotl',
+  'getting-started': 'Getting Started',
+  'from-examples': 'Start from Starter',
+  ai: 'AI-Assisted Development',
+  architecture: 'Architecture',
+  config: 'Configuration',
+  resolvers: 'Resolvers',
+  directives: 'Directives',
+  scalars: 'Custom Scalars',
+  'data-loaders': 'Data Loaders',
+  'micro-federation': 'Micro Federation',
+  'best-practices': 'Best Practices',
+  recipes: 'Recipes',
+  tests: 'Tests',
+  inspect: 'Inspect Resolvers',
+  'infer-source': 'Infer Source',
+  adapters: 'Adapters',
+  deploy: 'Deploy',
+  development: 'Development',
+  roadmap: 'Roadmap',
+};
+
+export default meta;

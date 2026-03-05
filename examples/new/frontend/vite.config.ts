@@ -8,12 +8,23 @@ export default defineConfig(({ isSsrBuild }) => ({
   plugins: [
     react(),
     tailwindcss(),
-    devTranslate({
-      apiKey: process.env.DEV_TRANSLATE_API_KEY ?? '',
-      lang: Languages.ENGB,
-      localeDir: 'frontend/public/locales',
-      folderName: 'en',
-    }),
+    ...(process.env.DEV_TRANSLATE_API_KEY?.trim()
+      ? [
+          devTranslate({
+            apiKey: process.env.DEV_TRANSLATE_API_KEY.trim(),
+            lang: Languages.ENGB,
+            localeDir: 'frontend/public/locales',
+            folderName: 'en',
+          }),
+        ]
+      : [
+          {
+            name: 'dev-translate-disabled-info',
+            configResolved() {
+              console.info('[dev-translate] Turned off: DEV_TRANSLATE_API_KEY was not provided.');
+            },
+          },
+        ]),
   ],
   root: path.resolve(__dirname, '.'),
   build: {

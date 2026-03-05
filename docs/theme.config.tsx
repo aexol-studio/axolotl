@@ -32,18 +32,19 @@ const config: DocsThemeConfig = {
     autoCollapse: true,
     defaultMenuCollapseLevel: 1,
   },
-  primaryHue: {
-    dark: 270, // Purple hue for dark mode
-    light: 220, // Blue hue for light mode
-  },
-  primarySaturation: {
-    dark: 70,
-    light: 80,
-  },
-  useNextSeoProps() {
-    return {
-      titleTemplate: '%s – Axolotl GraphQL Framework',
-    };
+  color: {
+    hue: {
+      dark: 270,
+      light: 220,
+    },
+    saturation: {
+      dark: 70,
+      light: 80,
+    },
+    lightness: {
+      dark: 50,
+      light: 45,
+    },
   },
   head: (
     <>

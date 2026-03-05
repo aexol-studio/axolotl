@@ -7,7 +7,14 @@
  */
 
 import { test, expect } from '../fixtures';
-import { ROUTES, TESTING_USER_EMAIL, TESTING_USER_PASSWORD, generateTestPassword } from '../helpers';
+import {
+  completeRegistrationAuthFlow,
+  ROUTES,
+  generateTestPassword,
+  generateTestEmail,
+  isEmailVerificationDisabled,
+} from '../helpers';
+import { LoginPage } from '../page-objects';
 
 // ============================================================================
 // Login page structure and mode toggle
@@ -53,14 +60,25 @@ test.describe('Login page structure and interactions', () => {
 // ============================================================================
 
 test.describe('Login with valid credentials', () => {
-  test.skip(!TESTING_USER_EMAIL, 'TESTING_USER_EMAIL not set — skipping login test');
+  test('logs in and redirects to dashboard', async ({ loginPage, page, browser }) => {
+    const email = generateTestEmail();
+    const password = generateTestPassword();
 
-  test('logs in and redirects to dashboard', async ({ loginPage, page }) => {
     await loginPage.goto();
-    await loginPage.login(TESTING_USER_EMAIL!, TESTING_USER_PASSWORD);
+    await completeRegistrationAuthFlow({ page, loginPage, email, password });
 
-    await page.waitForURL(`**${ROUTES.DASHBOARD}`, { timeout: 30_000 });
-    await expect(page).toHaveURL(new RegExp(ROUTES.DASHBOARD));
+    const isolatedContext = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+    const isolatedPage = await isolatedContext.newPage();
+    const isolatedLoginPage = new LoginPage(isolatedPage);
+
+    await isolatedLoginPage.goto();
+    await isolatedLoginPage.waitForReady();
+    await isolatedLoginPage.login(email, password);
+
+    await isolatedPage.waitForURL(`**${ROUTES.DASHBOARD}`, { timeout: 30_000 });
+    await expect(isolatedPage).toHaveURL(new RegExp(ROUTES.DASHBOARD));
+
+    await isolatedContext.close();
   });
 });
 
@@ -79,20 +97,33 @@ test.describe('Login with invalid credentials', () => {
 // ============================================================================
 
 test.describe('Register flow', () => {
-  test('can register a new account', async ({ loginPage, page }) => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test('register auto-logs in when verification is disabled', async ({ loginPage, page }) => {
+    test.skip(!isEmailVerificationDisabled(), 'Only valid when DISABLE_EMAIL_VERIFICATION=true');
+
     const uniqueEmail = `e2e-test-${Date.now()}@example.com`;
     const password = generateTestPassword();
 
     await loginPage.goto();
-    await loginPage.register(uniqueEmail, password);
-
-    // After registration, one of two outcomes:
-    // A) Verification OFF → redirect to dashboard
-    // B) Verification ON → "Check your email" message
-    // Wait for either — whichever appears first
-    await expect(page.getByText('Check your email', { exact: true }).or(page.locator('text=My Todos'))).toBeVisible({
-      timeout: 15_000,
+    await completeRegistrationAuthFlow({
+      page,
+      loginPage,
+      email: uniqueEmail,
+      password,
     });
+
+    const verificationText = page.getByText('Check your email', { exact: true });
+    const dashboardHeading = page.getByRole('heading', { name: /My Todos/i });
+
+    // Starter app default has email verification disabled.
+    // This assertion is intentionally strict: landing in verify-required branch is a failure.
+    await expect(page).toHaveURL(new RegExp(`${ROUTES.DASHBOARD}$`));
+    await expect(dashboardHeading).toBeVisible({ timeout: 15_000 });
+    await expect(verificationText).toHaveCount(0);
+    await expect(page.locator('body')).not.toContainText(
+      /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/,
+    );
   });
 });
 
@@ -101,20 +132,19 @@ test.describe('Register flow', () => {
 // ============================================================================
 
 test.describe('Logout flow', () => {
-  test.skip(!TESTING_USER_EMAIL, 'TESTING_USER_EMAIL not set — skipping logout test');
+  test('logs out and redirects to login page', async ({ loginPage, dashboardPage, page }) => {
+    const email = generateTestEmail();
+    const password = generateTestPassword();
 
-  test('logs out and redirects to login page', async ({ loginPage, page }) => {
     // First, log in
     await loginPage.goto();
-    await loginPage.login(TESTING_USER_EMAIL!, TESTING_USER_PASSWORD);
-    await page.waitForURL(`**${ROUTES.DASHBOARD}`, { timeout: 30_000 });
+    await completeRegistrationAuthFlow({ page, loginPage, email, password });
 
     // Click the avatar/profile dropdown to reveal the logout button
-    const avatarButton = page.locator('button').filter({ has: page.locator('[class*="avatar"]') });
-    await avatarButton.click();
+    await dashboardPage.openUserMenu();
 
     // Click Logout in the dropdown
-    const logoutItem = page.getByRole('menuitem', { name: /Logout/i });
+    const logoutItem = dashboardPage.userMenuLogoutAction;
     await expect(logoutItem).toBeVisible();
     await logoutItem.click();
 

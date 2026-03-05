@@ -5,10 +5,9 @@ const NextConfig = {
   },
   output: 'export',
 };
-const withNextra = require('nextra')({
+const withNextra = require('nextra').default({
   theme: 'nextra-theme-docs',
   themeConfig: './theme.config.tsx',
-  ...NextConfig,
 });
 
-module.exports = withNextra();
+module.exports = withNextra(NextConfig);

@@ -36,7 +36,7 @@ npm run db:push
 npm run dev
 ```
 
-This starts both the GraphQL backend and React frontend on the same port (http://localhost:4102).
+This starts both the GraphQL backend and React frontend on the same port (http://localhost:8080).
 
 ## Scripts
 
@@ -55,6 +55,58 @@ This starts both the GraphQL backend and React frontend on the same port (http:/
 - `npm run db:migrate` - Create and apply migrations
 - `npm run db:studio` - Open Prisma Studio GUI
 - `npm run db:seed` - Run database seed
+
+## E2E Testing
+
+### Prerequisites
+
+- Install dependencies and configure `.env` from `.env.example`.
+- Start required local services (database via Docker).
+- Use the local app URL `http://localhost:8080` unless you intentionally override it.
+
+### Runbook
+
+Run the full suite:
+
+```sh
+npm run test:e2e
+```
+
+Run with Playwright UI:
+
+```sh
+npm run test:e2e:ui
+```
+
+Run headed browsers:
+
+```sh
+npm run test:e2e:headed
+```
+
+### Auth setup behavior
+
+- The `setup` Playwright project prepares authenticated state used by `chromium-auth`.
+- Guest/auth-flow specs run in the `chromium` project.
+- No `TESTING_USER_*` environment variables are required.
+
+### Recommended spec organization
+
+- Organize specs by domain (for example: `tests/auth/`, `tests/settings/`, `tests/notes/`).
+- Keep auth flows in guest coverage (`chromium`) and keep authenticated app-area tests in `chromium-auth` with setup dependency.
+
+### Email verification and local email artifacts
+
+- `EMAIL_MODE` and `DISABLE_EMAIL_VERIFICATION` are env-driven and parsed in `backend/src/config/env.ts`.
+- Supported values: `EMAIL_MODE=local|mailgun`, `DISABLE_EMAIL_VERIFICATION=true|false`.
+- Local email artifacts are written under `/temp/emails`.
+- Playwright E2E forces `EMAIL_MODE=local` (including CI), even if external env sets `EMAIL_MODE=mailgun`.
+
+### Troubleshooting
+
+- **Stale auth state**: remove `.playwright/user-auth.json`, then rerun `npm run test:e2e`.
+- **Old docs mention `TESTING_USER_*` vars**: ignore them; this setup does not use those variables.
+- **Port mismatch / cannot reach app**: ensure app runs at `http://localhost:8080` or set `E2E_URL` to your running URL.
 
 ## Features
 

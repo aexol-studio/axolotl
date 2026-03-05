@@ -1,23 +1,20 @@
 {
-    "files": [],
-    "references": [
-        {
-            "path": "./packages/core"
-        },
-        {
-            "path": "./packages/config"
-        },
-        {
-            "path": "./packages/cli"
-        },
-        {
-            "path": "./adapters/graphql-yoga"
-        },
-        {
-            "path": "./examples/yoga-federated"
-        },
-        {
-            "path": "./packages/scripts"
-        }
-    ]
+  "files": [],
+  "references": [
+    {
+      "path": "./packages/core"
+    },
+    {
+      "path": "./packages/config"
+    },
+    {
+      "path": "./packages/cli"
+    },
+    {
+      "path": "./adapters/graphql-yoga"
+    },
+    {
+      "path": "./packages/scripts"
+    }
+  ]
 }

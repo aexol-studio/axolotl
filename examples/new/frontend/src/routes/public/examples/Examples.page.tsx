@@ -80,7 +80,9 @@ const ExamplesPageContent = () => {
           <TabsTrigger value="components">{t('Components')}</TabsTrigger>
           <TabsTrigger value="forms">{t('Forms')}</TabsTrigger>
           <TabsTrigger value="graphql">GraphQL</TabsTrigger>
-          <TabsTrigger value="notes">{t('Notes')}</TabsTrigger>
+          <TabsTrigger value="notes" data-testid="examples-notes-tab-trigger">
+            {t('Notes')}
+          </TabsTrigger>
         </TabsList>
 
         {/* ==================== COMPONENTS TAB ==================== */}
