@@ -26,7 +26,7 @@
     "expo-localization": "~17.0.7",
     "expo-router": "~6.0.0",
     "graphql": "^16.12.0",
-    "graphql-zeus": "^7.2.0",
+    "graphql-zeus": "^7.2.1",
     "i18next": "^25.6.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",

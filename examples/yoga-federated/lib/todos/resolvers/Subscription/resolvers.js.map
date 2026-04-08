@@ -1,0 +1,1 @@
+{"version":3,"file":"resolvers.js","sourceRoot":"","sources":["../../../../src/todos/resolvers/Subscription/resolvers.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,eAAe,EAAE,MAAM,kBAAkB,CAAC;AACnD,OAAO,WAAW,MAAM,kBAAkB,CAAC;AAE3C,eAAe,eAAe,CAAC;IAC7B,YAAY,EAAE;QACZ,GAAG,WAAW,CAAC,YAAY;KAC5B;CACF,CAAC,CAAC"}
